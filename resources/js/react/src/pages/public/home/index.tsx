@@ -3,7 +3,7 @@ import { HeroSection } from "./hero-section";
 import { BaseLayout } from "../_components/layout/base-layout";
 import { ProductsSection, TodaysDealSection } from "./product-section";
 import { FeatureHighlights } from "./badge-section";
-import { BrandMarquee } from "./brand-section";
+import { BlogSection } from "./blog-section";
 import { CampaignSection } from "./campaign-section";
 import { useGetHome } from "@/api/home";
 import { CategorySection } from "./category-section";
@@ -55,7 +55,7 @@ const defaultSec = [
         isActive: true,
     },
     {
-        key: "brands",
+        key: "blogs",
         order: 8,
         isActive: true,
     },
@@ -115,7 +115,7 @@ export const HomePage = () => {
         categories: (
             <CategorySection categories={categories} loading={isLoading} />
         ),
-        brands: <BrandMarquee />,
+        blogs: <BlogSection blogs={data?.data?.blogs || []} />,
     };
 
     const renderSections = sections

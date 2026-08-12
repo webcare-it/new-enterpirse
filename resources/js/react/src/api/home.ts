@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/axios";
 import type {
+    IBlog,
     ICampaign,
     ICategoryWithProducts,
     IHeroSlider,
@@ -29,6 +30,7 @@ interface IRes {
         featured: IProduct[];
         categories: ICategoryWithProducts[];
         campaigns: ICampaign[];
+        blogs: IBlog[];
     };
     isLoading: boolean;
     error: unknown;

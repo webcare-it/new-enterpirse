@@ -22,8 +22,8 @@ export const useGetBlogs = () => {
         },
         getNextPageParam: (lastPage) => {
             const current = lastPage?.data?.pagination?.current_page;
-            const total = lastPage?.data?.pagination?.total_pages;
-            return current && total && current < total
+            const last = lastPage?.data?.pagination?.last_page;
+            return current && last && current < last
                 ? current + 1
                 : undefined;
         },

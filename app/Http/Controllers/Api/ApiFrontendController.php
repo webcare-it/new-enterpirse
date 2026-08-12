@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ContactMessageRequest;
@@ -15,7 +15,6 @@ use App\Models\Admin\Attribute;
 use App\Models\Admin\Blog;
 use App\Models\Admin\Color;
 use App\Models\Admin\Counter;
-use App\Models\Admin\Discover;
 use App\Models\Admin\Faq;
 use App\Models\Admin\Product;
 use App\Models\Admin\Slider;
@@ -39,29 +38,28 @@ class ApiFrontendController extends Controller
     }
 
 
-    public function blogs()
+    public function blogs(Request $request)
     {
         try {
+            $perPage = max(1, (int) $request->input('per_page', 12));
 
-            $blogs = Blog::whereIn('id', array_unique($blogIds))
+            $blogs = Blog::with(['user:id,name', 'thumbnailImage'])
                 ->latest('id')
-                ->get();
-
+                ->paginate($perPage);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Blog data fetched successfully',
 
                 'data'    =>  [
-
-                    'blogs' => BlogResource::collection($blogs),
+                    'blogs' => BlogResource::collection($blogs->items()),
                     'pagination' => [
-                        'total' => $blogs->count(),
-                        'per_page' => 10,
-                        'current_page' => 1,
-                        'last_page' => ceil($blogs->count() / 10),
-                        'from' => 1,
-                        'to' => min(10, $blogs->count()),
+                        'total'         => $blogs->total(),
+                        'per_page'      => $blogs->perPage(),
+                        'current_page'  => $blogs->currentPage(),
+                        'last_page'     => $blogs->lastPage(),
+                        'from'          => $blogs->firstItem(),
+                        'to'            => $blogs->lastItem(),
                     ]
                 ]
 

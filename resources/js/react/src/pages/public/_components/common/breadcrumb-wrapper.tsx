@@ -91,7 +91,7 @@ export const BreadcrumbBackground = ({
 
     return (
         <section
-            className="relative w-full h-[180px] md:h-[220px] flex items-center bg-cover bg-center bg-no-repeat overflow-hidden"
+            className="relative w-full h-[180px] md:h-[220px] rounded-2xl flex items-center bg-cover bg-center bg-no-repeat overflow-hidden"
             style={{
                 backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url(${image})`,
             }}

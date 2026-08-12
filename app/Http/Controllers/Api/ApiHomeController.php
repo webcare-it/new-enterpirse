@@ -190,7 +190,7 @@ class ApiHomeController extends Controller
             )->resolve();
         } else {
             $blogs = BlogResource::collection(
-                Blog::latest()->take(3)->get()
+                Blog::latest()->take(4)->get()
             )->resolve();
         }
 

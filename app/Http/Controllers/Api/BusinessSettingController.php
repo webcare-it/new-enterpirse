@@ -140,7 +140,8 @@ class BusinessSettingController extends Controller
             'contact_phone',
             'contact_address',
             'base_color',
-            'base_hov_color'
+            'base_hov_color',
+            'top_bar_offer',
         ];
 
         // Keys that store image IDs (will be converted to URLs)

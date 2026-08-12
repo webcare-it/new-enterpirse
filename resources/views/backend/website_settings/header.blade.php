@@ -18,6 +18,7 @@
                                     placeholder="{{ translate('Website Name') }}" value="{{ get_setting('website_name') }}">
                             </div>
                         </div>
+
                         <div class="form-group row">
                             <label class="col-md-3 col-from-label">{{ translate('Front Store Motto') }}</label>
                             <div class="col-md-9">
@@ -25,6 +26,15 @@
                                 <input type="text" name="site_motto" class="form-control"
                                     placeholder="{{ translate('Best eCommerce Website') }}"
                                     value="{{ get_setting('site_motto') }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-md-3 col-from-label">{{ translate('Top bar Offer Text (120char)') }}</label>
+                            <div class="col-md-9">
+                                <input type="hidden" name="types[]" value="top_bar_offer">
+                                <input type="text" name="top_bar_offer" class="form-control"
+                                    placeholder="{{ translate('Top bar Offer Text') }}"
+                                    value="{{ get_setting('top_bar_offer') }}">
                             </div>
                         </div>
                         <div class="form-group row">

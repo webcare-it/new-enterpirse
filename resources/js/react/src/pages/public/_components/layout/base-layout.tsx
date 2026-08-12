@@ -7,14 +7,6 @@ interface Props {
 }
 
 export const BaseLayout = ({ children }: Props) => {
-    // useEffect(() => {
-    //     nProgress.start();
-    //     nProgress.configure({ showSpinner: false });
-    //     setTimeout(() => {
-    //         nProgress.done();
-    //     }, 300);
-    // }, [location.pathname]);
-
     return (
         <section className="min-h-screen flex flex-col">
             <TopBar />
