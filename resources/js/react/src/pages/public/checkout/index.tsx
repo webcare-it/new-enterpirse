@@ -1,0 +1,152 @@
+import { useEffect, useRef, useState } from "react";
+import { BaseLayout, LayoutContainer } from "../_components/layout/base-layout";
+import { OrderSummary } from "./order-summary";
+import { Button } from "@/components/ui/button";
+import { OrderFrom } from "./from";
+import { Shipping } from "./shipping";
+import { Payments } from "./payment";
+import type { IOrderFrom } from "@/type";
+import { useCheckoutMutation } from "@/api/checkout";
+import { useCart } from "@/hooks/useCart";
+import { TrustedBadge } from "./trusted-badge";
+import { Lock } from "lucide-react";
+import { BreadcrumbWrapper } from "@/components/common/breadcrumb-wrapper";
+import { isValidEmail, removeLocalStorage, renderVariation } from "@/helper";
+import { SeoWrapper } from "@/components/common/seo-wrapper";
+import { EmptyCart } from "../_components/common/empty-cart";
+import { useGtmTracker, type IPurchaseTracker } from "@/hooks/useGtmTracker";
+import { GTM_PURCHASE_TRACKED } from "@/constant";
+
+export const CheckoutPage = () => {
+    const firedRef = useRef(false);
+    const { summary, items } = useCart();
+    const { beginCheckoutTracker } = useGtmTracker();
+    const { mutate, isPending } = useCheckoutMutation();
+    const [form, setForm] = useState<IOrderFrom>({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        notes: "",
+        payment: "",
+        shipping: String(summary?.shipping_id || ""),
+    });
+
+    useEffect(() => {
+        if (firedRef.current) return;
+        if (items?.length > 0) {
+            firedRef.current = true;
+            const trackerData: IPurchaseTracker = {
+                transaction_id: "",
+                value: summary?.total || 0,
+                coupon: summary?.coupon_code || "",
+                items: items?.map((p) => ({
+                    item_id: p?.product?.id.toString() || "",
+                    item_name: p?.product?.name || "",
+                    item_price: p?.product?.price || 0,
+                    item_quantity: p?.product?.quantity || 0,
+                    item_variant: renderVariation(p?.product?.variation) || "",
+                })),
+            };
+
+            beginCheckoutTracker(trackerData);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [items]);
+
+    const handlePlace = () => {
+        removeLocalStorage(GTM_PURCHASE_TRACKED);
+        mutate({
+            shipping_address: form.address,
+            payment_type: form.payment,
+            notes: form.notes,
+            shipping_area: form.shipping,
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+        });
+    };
+
+    return (
+        <>
+            <SeoWrapper title="Checkout" description="Complete your order" />
+            <BaseLayout>
+                <LayoutContainer className="pb-16 md:pb-20">
+                    <BreadcrumbWrapper
+                        className="mt-4 hidden md:block"
+                        items={[
+                            {
+                                title: "My Cart",
+                                path: "/my-cart",
+                            },
+                            { title: "Checkout", path: "/checkout" },
+                        ]}
+                    />
+                    <h1 className="text-2xl md:text-3xl font-bold md:text-start text-center uppercase my-4">
+                        Checkout
+                    </h1>
+                    {items?.length === 0 ? (
+                        <EmptyCart />
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-7 gap-6">
+                            <div className="md:col-span-4">
+                                <div className="md:sticky md:top-28 space-y-6">
+                                    <div className="border border-border shadow-lg rounded-3xl p-4 md:p-5 space-y-5">
+                                        <h2 className="font-semibold text-lg uppercase">
+                                            Shipping Information
+                                        </h2>
+
+                                        <OrderFrom
+                                            form={form}
+                                            setForm={setForm}
+                                        />
+                                        <Shipping
+                                            form={form}
+                                            setForm={setForm}
+                                        />
+                                        <TrustedBadge />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="md:col-span-3">
+                                <div className="border border-border shadow-lg rounded-3xl p-4 md:p-5 md:sticky md:top-28 space-y-4">
+                                    <OrderSummary>
+                                        <Payments
+                                            form={form}
+                                            setForm={setForm}
+                                        />
+                                    </OrderSummary>
+                                    <Button
+                                        className="w-full inline-flex"
+                                        size="xl"
+                                        onClick={handlePlace}
+                                        disabled={
+                                            isPending ||
+                                            !form.shipping ||
+                                            !form.payment ||
+                                            !form.address ||
+                                            !form.name ||
+                                            !form.phone ||
+                                            !form.email ||
+                                            !isValidEmail(form.email)
+                                        }
+                                    >
+                                        <Lock className="size-4" />
+                                        {isPending
+                                            ? "Processing..."
+                                            : "Place Order"}
+                                    </Button>
+                                    <div className="flex items-center gap-2 text-xs justify-center mt-2">
+                                        <Lock className="size-4 text-primary" />{" "}
+                                        100% Secure checkout
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </LayoutContainer>
+            </BaseLayout>
+        </>
+    );
+};
