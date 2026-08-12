@@ -466,7 +466,17 @@
                                     </div>
                                 </td>
                                 <td>
+                                    @php
+                                        $fraudPhone = $order->phone_number;
+                                        $fraudCheckerRoute = $fraudPhone
+                                            ? route('fraud_checker', ['phone' => $fraudPhone])
+                                            : route('fraud_checker');
+                                    @endphp
                                     <div class="btn-group" role="group">
+                                        <a href="{{ $fraudCheckerRoute }}" class="btn btn-sm btn-icon btn-warning"
+                                            title="{{ translate('Fraud Checker') }}">
+                                            <i class="las la-user-shield"></i>
+                                        </a>
                                         <a href="{{ route('orders.show', $order->id) }}"
                                             class="btn btn-sm btn-icon btn-info" title="{{ translate('View') }}">
                                             <i class="las la-eye"></i>

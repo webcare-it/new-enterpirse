@@ -179,16 +179,16 @@
                             <label
                                 class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('Fraud Checker Secret Key') }}</label>
                             <div class="col-md-9">
-                                <input type="hidden" name="types[]" value="froud_checker_api_key">
+                                <input type="hidden" name="types[]" value="fraud_checker_api_key">
                                 <div class="input-group">
-                                    <input type="password" name="froud_checker_api_key"
+                                    <input type="password" name="fraud_checker_api_key"
                                         class="form-control border-right-0"
-                                        value="{{ get_setting('froud_checker_api_key') }}"
-                                        placeholder="Enter Fraud Checker Secret Key" id="froud_checker_api_key">
+                                        value="{{ get_setting('fraud_checker_api_key') }}"
+                                        placeholder="Enter Fraud Checker Secret Key" id="fraud_checker_api_key">
                                     <div class="input-group-append">
                                         <button type="button" class="btn btn-outline-light border-left-0 text-muted"
                                             style="border: 1px solid #ced4da;"
-                                            onclick="togglePasswordVisibility('froud_checker_api_key', 'toggleIconFraudChecker')">
+                                            onclick="togglePasswordVisibility('fraud_checker_api_key', 'toggleIconFraudChecker')">
                                             <i class="lar la-eye" id="toggleIconFraudChecker"></i>
                                         </button>
                                     </div>

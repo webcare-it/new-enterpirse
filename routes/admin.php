@@ -25,6 +25,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
 
     Route::resource('shipping_costs', '\App\Http\Controllers\Admin\ShippingCostController')->except(['show']);
+    Route::get('/fraud_checker', '\App\Http\Controllers\Admin\FraudCheckerController@index')->name('fraud_checker');
+
 
 
     // Business Settings

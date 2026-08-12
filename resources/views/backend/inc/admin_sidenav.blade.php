@@ -508,6 +508,18 @@
                     </li>
                 @endif
 
+                @if (Auth::check() &&
+                        Auth::user() &&
+                        (Auth::user()->user_type == 'admin' || in_array('22', json_decode(Auth::user()->staff->role->permissions))))
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('fraud_checker') }}"
+                            class="aiz-side-nav-link {{ areActiveRoutes(['fraud_checker']) }}">
+                            <i class="las la-user-shield aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Fraud Checker') }}</span>
+                        </a>
+                    </li>
+                @endif
+
                 @if (Auth::user()->user_type == 'admin' || in_array('13', json_decode(Auth::user()->staff->role->permissions)))
                     <li
                         class="aiz-side-nav-item {{ request()->routeIs('customers.*', 'wishlists.*', 'carts.*', 'reviews.*', 'searches.*') ? 'mm-active' : '' }}">
