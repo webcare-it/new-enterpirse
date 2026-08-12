@@ -70,28 +70,3 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     require __DIR__ . '/droploo.php';
     require __DIR__ . '/ecommerce.php';
 });
-
-Route::prefix('dropshipper')
-    ->name('dropshipper.')
-    ->group(function () {
-
-        // Guest Only
-        Route::middleware('guest:dropshipper')->group(function () {
-
-            Route::get('/login', [VendorLoginController::class, 'showLoginForm'])
-                ->name('login');
-
-            Route::post('/login', [VendorLoginController::class, 'login']);
-        });
-
-        // Authenticated Dropshipper Only
-        Route::middleware('auth:dropshipper')->group(function () {
-
-            Route::get('/dashboard', function () {
-                return view('dropshipper.dashboard');
-            })->name('dashboard');
-
-            Route::post('/logout', [VendorLoginController::class, 'logout'])
-                ->name('logout');
-        });
-    });

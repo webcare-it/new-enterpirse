@@ -3,28 +3,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { OptimizedImage } from "@/components/common/optimized-image";
 import type { IOrderFrom, IPayment } from "@/type";
 import { useEffect } from "react";
+import { useConfig } from "@/hooks/useConfig";
 
-const payments: IPayment[] = [
+const defaultPayment: IPayment[] = [
     {
         id: 0,
-        default: true,
+        is_default: true,
         title: "Cash On Delivery",
         type: "cod",
         image: "https://png.pngtree.com/png-vector/20210602/ourmid/pngtree-truck-for-the-cash-on-delivery-logo-vector-png-image_3401504.jpg",
-    },
-    {
-        id: 1,
-        default: false,
-        title: "Card",
-        type: "card",
-        image: "https://cdn-icons-png.magnific.com/256/5307/5307123.png",
-    },
-    {
-        id: 2,
-        default: false,
-        type: "bkash",
-        title: "Bkash",
-        image: "https://images.seeklogo.com/logo-png/27/1/bkash-logo-png_seeklogo-273684.png",
     },
 ];
 
@@ -34,11 +21,15 @@ interface Props {
 }
 
 export const Payments = ({ form, setForm }: Props) => {
+    const config = useConfig();
+    const list = (config?.payments as IPayment[]) || [];
+    const payments = list?.length ? list : defaultPayment;
+
     useEffect(() => {
-        const payment = payments.find((p) => p.default);
+        const payment = payments.find((p) => p.is_default);
         if (payment)
             setForm((prev) => ({ ...prev, payment: String(payment.type) }));
-    }, [setForm]);
+    }, [setForm, payments]);
 
     return (
         <div className="space-y-4 border-t pt-3 border-border">

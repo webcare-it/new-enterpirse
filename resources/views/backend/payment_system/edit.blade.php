@@ -63,12 +63,6 @@
                                         class="selected-files">
                                 </div>
                                 <div class="file-preview box sm"></div>
-                                @if ($paymentSystem->image)
-                                    <div class="mt-2">
-                                        <img src="{{ uploaded_asset($paymentSystem->image) }}"
-                                            style="height:60px; border-radius:6px;">
-                                    </div>
-                                @endif
                                 @error('image')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror

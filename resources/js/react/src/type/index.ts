@@ -91,7 +91,7 @@ export interface IPayment {
     title: string;
     type: string;
     image: string;
-    default: boolean;
+    is_default: boolean;
 }
 
 export interface IPage {
