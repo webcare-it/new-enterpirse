@@ -146,7 +146,7 @@ const DrawerContent = ({
             {/* Search Input */}
             <div className="px-2 md:px-4 py-3">
                 <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
                         <CustomSearchIcon />
                     </div>
                     <input
@@ -154,9 +154,18 @@ const DrawerContent = ({
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Search products..."
-                        className="w-full pl-10 pr-5 py-2.5 border border-gray-400 rounded-lg focus:outline-none text-base "
+                        className="w-full pl-10 pr-5 py-2.5 bg-gray-100 rounded-lg focus:outline-none text-base"
                         autoFocus
                     />
+
+                    {searchTerm.trim() !== "" && (
+                        <button
+                            onClick={() => setSearchTerm("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-600 transition-all duration-200"
+                        >
+                            <X className="size-5" strokeWidth={2} />
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -186,7 +195,7 @@ const DrawerContent = ({
                         <div className="flex justify-center py-12">
                             <Loader2 className="size-8 animate-spin text-gray-400" />
                         </div>
-                    ) : results.length > 0 ? (
+                    ) : results?.length > 0 ? (
                         <div className="space-y-4">
                             {results?.map((product, i) => (
                                 <AnimationWrapper
@@ -206,7 +215,7 @@ const DrawerContent = ({
                                 >
                                     <div
                                         key={product?.id}
-                                        className="flex gap-3 md:gap-4 pb-4 border-b border-gray-100 last:border-0"
+                                        className="flex gap-3 md:gap-4 pb-4 border-b"
                                     >
                                         <Link to={`/products/${product?.slug}`}>
                                             <div className="relative size-20 md:size-24 rounded-lg bg-gray-50 overflow-hidden shrink-0">

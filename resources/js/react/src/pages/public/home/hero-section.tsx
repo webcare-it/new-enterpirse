@@ -33,11 +33,11 @@ export const HeroSection = ({
                     delay: 4000,
                     disableOnInteraction: false,
                 }}
-                className="mySwiper rounded-2xl mt-2 md:mt-0 md:rounded-3xl md:rounded-t-none overflow-hidden"
+                className="mySwiper rounded-2xl mt-2 md:rounded-4xl overflow-hidden"
             >
                 {heroSlides?.map((item, index) => (
                     <SwiperSlide key={item?.id}>
-                        <div className="relative w-full aspect-[4/2] sm:aspect-[16/6] md:aspect-[16/4] overflow-hidden bg-neutral-100">
+                        <div className="relative w-full border aspect-[4/2] md:aspect-[16/5.5] overflow-hidden bg-neutral-100">
                             {/* MEDIA */}
                             {item?.type === "video" ? (
                                 <video

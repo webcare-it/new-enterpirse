@@ -49,7 +49,7 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
 
                     <div
                         aria-label={`Rating: ${p?.rating} out of 5`}
-                        className="absolute top-2 right-2 bg-white backdrop-blur px-1.5 transition-all duration-300 z-10 text-gray-900 flex items-center gap-1 rounded-sm opacity-100 scale-100 pointer-events-none group-hover/product:opacity-0 group-hover/product:scale-75"
+                        className="absolute right-1 top-1 md:top-2 md:right-2 bg-white backdrop-blur px-1.5 transition-all duration-300 z-10 text-gray-900 flex items-center gap-1 rounded-sm opacity-100 scale-100 pointer-events-none group-hover/product:opacity-0 group-hover/product:scale-75"
                     >
                         <span className="text-sm font-semibold text-yellow-400">
                             ★
@@ -120,7 +120,6 @@ const RegularPrice = ({ p }: { p: IProduct }) => {
                 </span>
             ) : (
                 <>
-                    {" "}
                     <span className="text-[15px] md:text-lg font-bold text-primary">
                         {getPriceWithCurrency(p?.price)}
                     </span>
@@ -151,7 +150,7 @@ const RegularDiscount = ({ p }: { p: IProduct }) => {
             : `-${getCurrencySymbol()}${p?.discount}`;
 
     return (
-        <div className="absolute top-2 left-2 bg-red-500  text-white px-1.5 py-0.5 rounded-sm font-semibold text-xs">
+        <div className="absolute left-1 top-1 md:top-2 md:left-2 bg-red-500  text-white px-1.5 py-0.5 rounded-sm font-semibold text-xs">
             {amount}
         </div>
     );
@@ -166,7 +165,7 @@ const CampaignDiscount = ({ c }: ICP) => {
             : `-${getCurrencySymbol()}${c?.discount_amount}`;
 
     return (
-        <div className="absolute top-2 left-2 rounded-sm bg-red-500 px-1.5 py-0.5 text-xs font-semibold text-white">
+        <div className="absolute left-1 top-1 md:top-2 md:left-2 rounded-sm bg-red-500 px-1.5 py-0.5 text-xs font-semibold text-white">
             {label}
         </div>
     );
