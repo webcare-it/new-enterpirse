@@ -47,18 +47,6 @@ Route::prefix('contact-message')->name('contact-message.')->group(function () {
 });
 
 
-Route::prefix('team')->name('team.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Admin\TeamController::class, 'index'])->name('index');
-    Route::get('/create', [\App\Http\Controllers\Admin\TeamController::class, 'create'])->name('create');
-    Route::post('/', [\App\Http\Controllers\Admin\TeamController::class, 'store'])->name('store');
-    Route::get('/{team}/edit', [\App\Http\Controllers\Admin\TeamController::class, 'edit'])->name('edit');
-    Route::put('/{team}', [\App\Http\Controllers\Admin\TeamController::class, 'update'])->name('update');
-    Route::delete('/{id}', [\App\Http\Controllers\Admin\TeamController::class, 'destroy'])->name('destroy');
-    Route::post('/team/sort', [\App\Http\Controllers\Admin\TeamController::class, 'sort'])->name('sort');
-});
-
-
-
 Route::prefix('about')->name('about.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Admin\AboutController::class, 'index'])->name('index');
     Route::put('/update', [\App\Http\Controllers\Admin\AboutController::class, 'update'])->name('update');

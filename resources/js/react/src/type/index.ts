@@ -120,3 +120,14 @@ export interface ICampaign {
     status: string;
     image: string;
 }
+
+export interface IBlog {
+    id: number;
+    title: string;
+    slug: string;
+    thumbnail_id: string;
+    thumbnail: string;
+    short_description: string;
+    created_at: string;
+    author: string;
+}

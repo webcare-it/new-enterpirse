@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\BrandResource;
 use App\Http\Resources\SliderResource;
+use App\Http\Resources\BlogResource;
 use App\Models\Admin\Product;
 use App\Models\Admin\Category;
 use App\Models\Admin\Brand;
+use App\Models\Admin\Blog;
 use App\Models\Search;
 use App\Models\Admin\Campaign;
 use App\Models\Admin\Newsletter;
@@ -19,147 +21,6 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiHomeController extends Controller
 {
-    public function index1()
-    {
-        // Read settings
-        $sliderIds = json_decode(get_setting('home_sliders'), true) ?? [];
-        $campaignIds = json_decode(get_setting('home_campaigns'), true) ?? [];
-        $newArrivalIds = json_decode(get_setting('h_new_a_products'), true) ?? [];
-        $bestSellingIds = json_decode(get_setting('h_best_s_products'), true) ?? [];
-        $todaysDealIds = json_decode(get_setting('h_todays_d_products'), true) ?? [];
-        $featuredIds = json_decode(get_setting('h_featured_products'), true) ?? [];
-        $categoryIds = json_decode(get_setting('home_categories'), true) ?? [];
-        $categoryProductLimit = (int) (get_setting('h_category_p_limit') ?? 10);
-
-        // ---- BASE QUERY ----
-        $baseQuery = Product::query()
-            ->where('is_published', true)
-            ->latest()
-            ->with([
-                'brand' => fn($q) => $q->select('id', 'name'),
-                'category' => fn($q) => $q->select('id', 'category_name', 'slug'),
-                'price' => fn($q) => $q->select(
-                    'product_id',
-                    'regular_price',
-                    'sale_price',
-                    'discount',
-                    'discount_type'
-                ),
-                'inventory' => fn($q) => $q->select('product_id', 'stock'),
-                'reviews' => fn($q) => $q->where('status', 1),
-                'variants' => fn($q) => $q->select('id', 'product_id'),
-            ])
-            ->select([
-                'id',
-                'name',
-                'slug',
-                'thumbnail',
-                'brand_id',
-                'category_id',
-                'num_of_sale',
-                'status',
-                'is_published',
-                'is_variant',
-                'created_at',
-                'updated_at',
-            ]);
-
-        // Sliders
-        $sliders = SliderResource::collection(
-            !empty($sliderIds)
-                ? Slider::whereIn('id', $sliderIds)->latest('id')->get()
-                : Slider::latest('id')->get()
-        );
-
-        // Campaigns
-        $campaigns = [];
-        if (!empty($campaignIds)) {
-            $campaigns = Campaign::whereIn('id', $campaignIds)->latest()->get()->map(function ($campaign) {
-                return [
-                    'id' => $campaign->id,
-                    'name' => $campaign->name,
-                    'slug' => $campaign->slug,
-                    'start_date' => $campaign->start_date,
-                    'end_date' => $campaign->end_date,
-                    'discount_amount' => $campaign->discount_amount,
-                    'discount_type' => $campaign->discount_type,
-                    'image' => $campaign->image ? uploaded_asset($campaign->image) : null,
-                ];
-            });
-        }
-
-        // Today's deals
-        $todays_deal = ProductResource::collection(
-            !empty($todaysDealIds)
-                ? (clone $baseQuery)->whereIn('id', $todaysDealIds)->get()
-                : (clone $baseQuery)->where('todays_deal', '>', 0)->limit(10)->get()
-        )->resolve();
-
-        // Best selling
-        $best_sellers = ProductResource::collection(
-            !empty($bestSellingIds)
-                ? (clone $baseQuery)->whereIn('id', $bestSellingIds)->get()
-                : (clone $baseQuery)->where('best_selling', true)->limit(10)->get()
-        )->resolve();
-
-        // Featured
-        $featured = ProductResource::collection(
-            !empty($featuredIds)
-                ? (clone $baseQuery)->whereIn('id', $featuredIds)->get()
-                : (clone $baseQuery)->where('is_featured', true)->limit(10)->get()
-        )->resolve();
-
-        // New arrivals
-        $new_arrivals = ProductResource::collection(
-            !empty($newArrivalIds)
-                ? (clone $baseQuery)->whereIn('id', $newArrivalIds)->get()
-                : (clone $baseQuery)->where('is_new_arrival', true)->orderBy('created_at', 'desc')->limit(10)->get()
-        )->resolve();
-
-
-
-        // Categories
-        $categories = [];
-        $targetCategoryIds = !empty($categoryIds) ? $categoryIds : Category::pluck('id')->toArray();
-
-        foreach ($targetCategoryIds as $categoryId) {
-            $category = Category::find($categoryId);
-            if ($category) {
-                $categoryProducts = ProductResource::collection(
-                    (clone $baseQuery)
-                        ->where('category_id', $categoryId)
-                        ->limit($categoryProductLimit)
-                        ->get()
-                )->resolve();
-
-                $categories[] = [
-                    'id' => (int) $category->id,
-                    'name' => $category->category_name,
-                    'slug' => $category->slug,
-                    'image' => $category->category_image,
-                    'hero_image' => uploaded_asset($category->hero_image),
-                    'products' => $categoryProducts,
-                ];
-            }
-        }
-
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Data fetched successfully',
-            'data' => [
-                'sliders' => $sliders,
-                'todays_deal' => $todays_deal,
-                'best_selling' => $best_sellers,
-                'new_arrivals' => $new_arrivals,
-                'featured' => $featured,
-                'categories' => $categories,
-                'campaigns' => $campaigns,
-            ],
-        ], 200);
-    }
-
-
     public function index()
     {
         // Read settings
@@ -171,6 +32,7 @@ class ApiHomeController extends Controller
         $featuredIds = json_decode(get_setting('h_featured_products'), true) ?? [];
         $categoryIds = json_decode(get_setting('home_categories'), true) ?? [];
         $categoryProductLimit = (int) (get_setting('h_category_p_limit') ?? 10);
+        $blogIds = json_decode(get_setting('home_blogs'), true) ?? [];
 
         // ---- BASE QUERY (with eager loads) ----
         $baseQuery = Product::query()
@@ -212,14 +74,11 @@ class ApiHomeController extends Controller
             foreach ($items as $index => &$item) {
                 $model = $models->firstWhere('id', $item['id']);
                 if (! $model) {
-                    $item['wholesale_price'] = null;
                     unset($item['price_range']);
                     continue;
                 }
 
                 if ($model->variants->isNotEmpty()) {
-                    // Variant product → use max wholesale among variants
-                    $item['wholesale_price'] = (float) $model->variants->max('wholesale_price');
 
                     // Add price range from variant retail prices
                     $prices = $model->variants->pluck('price')->map(fn($p) => (float) $p);
@@ -229,7 +88,6 @@ class ApiHomeController extends Controller
                     ];
                 } else {
                     // Simple product → fallback to parent wholesale_price
-                    $item['wholesale_price'] = $model->price ? (float) $model->price->wholesale_price : null;
                     unset($item['price_range']); // or set to null
                 }
             }
@@ -324,12 +182,25 @@ class ApiHomeController extends Controller
             ];
         }
 
+                // Blogs
+        $blogs = [];
+        if (!empty($blogIds)) {
+            $blogs = BlogResource::collection(
+                Blog::whereIn('id', $blogIds)->latest()->get()
+            )->resolve();
+        } else {
+            $blogs = BlogResource::collection(
+                Blog::latest()->take(3)->get()
+            )->resolve();
+        }
+
         // ---- Final response ----
         return response()->json([
             'success' => true,
             'message' => 'Data fetched successfully',
             'data' => [
                 'sliders' => $sliders,
+                'blogs' => $blogs,
                 'todays_deal' => $todays_deal,
                 'best_selling' => $best_sellers,
                 'new_arrivals' => $new_arrivals,

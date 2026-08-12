@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Campaign;
+use App\Models\Admin\Blog;
 use App\Models\Admin\Category;
 use App\Models\Admin\Product;
 use App\Models\Admin\ProductPrice;
@@ -26,12 +27,13 @@ class HomeSectionController extends Controller
         $page_name = $request->page;
 
         $sliders = Slider::all();
+        $blogs = Blog::all();
         $categories = Category::all();
         $products = Product::all();
         $campaigns = Campaign::all();
         $sectionconfigs = SectionConfig::orderBy('order')->paginate(20);
 
-        return view('backend.website_settings.pages.home_page', compact('sliders', 'categories', 'products', 'campaigns', 'sectionconfigs'));
+        return view('backend.website_settings.pages.home_page', compact('sliders', 'blogs', 'categories', 'products', 'campaigns', 'sectionconfigs'));
     }
 
     public function mainPageUpdate(Request $request)

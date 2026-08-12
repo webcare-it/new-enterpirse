@@ -72,6 +72,17 @@ const AboutPage = lazy(() =>
     })),
 );
 
+const Blogs = lazy(() =>
+    import("./public/blogs").then((m) => ({
+        default: m.BlogsPage,
+    })),
+);
+const BlogDetails = lazy(() =>
+    import("./public/blog-details").then((m) => ({
+        default: m.BlogDetailsPage,
+    })),
+);
+
 const PolicyPage = lazy(() =>
     import("./public/policy").then((m) => ({
         default: m.PolicyPage,
@@ -162,6 +173,8 @@ export const AppRoutes = () => {
                         element={<Collections />}
                     />
                     <Route path="/campaigns/:slug" element={<CampaignPage />} />
+                    <Route path="/blogs" element={<Blogs />} />
+                    <Route path="/blogs/:slug" element={<BlogDetails />} />
                     <Route path="/search" element={<Search />} />
                     <Route path="/contact-us" element={<ContactPage />} />
                     <Route path="/about-us" element={<AboutPage />} />

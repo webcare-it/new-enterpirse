@@ -566,9 +566,9 @@
 
                 @if (Auth::user()->user_type == 'admin' || in_array('13', json_decode(Auth::user()->staff->role->permissions)))
                     <li
-                        class="aiz-side-nav-item {{ request()->routeIs('blog.*', 'slider.*', 'faq.*', 'team.*', 'about.*', 'contact-message.*', 'newsletter.*') ? 'mm-active' : '' }}">
+                        class="aiz-side-nav-item {{ request()->routeIs('blog.*', 'slider.*', 'faq.*', 'about.*', 'contact-message.*', 'newsletter.*') ? 'mm-active' : '' }}">
                         <a href="#"
-                            class="aiz-side-nav-link {{ areActiveRoutes(['blog.*', 'slider.*', 'faq.*', 'team.*', 'about.*', 'contact-message.*', 'newsletter.*']) }}">
+                            class="aiz-side-nav-link {{ areActiveRoutes(['blog.*', 'slider.*', 'faq.*', 'about.*', 'contact-message.*', 'newsletter.*']) }}">
                             <i class="las la-file-alt aiz-side-nav-icon"></i>
                             <span class="aiz-side-nav-text">{{ translate('Content') }}</span>
                             <span class="aiz-side-nav-arrow"></span>
@@ -590,12 +590,6 @@
                                 <a href="{{ route('faq.index') }}"
                                     class="aiz-side-nav-link {{ areActiveRoutes(['faq.*']) }}">
                                     <span class="aiz-side-nav-text">{{ translate('FAQs') }}</span>
-                                </a>
-                            </li>
-                            <li class="aiz-side-nav-item">
-                                <a href="{{ route('team.index') }}"
-                                    class="aiz-side-nav-link {{ areActiveRoutes(['team.*']) }}">
-                                    <span class="aiz-side-nav-text">{{ translate('Team Members') }}</span>
                                 </a>
                             </li>
                             <li class="aiz-side-nav-item">

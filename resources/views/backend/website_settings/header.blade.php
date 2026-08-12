@@ -60,7 +60,23 @@
                                 <div class="file-preview"></div>
                             </div>
                         </div>
-
+                        <div class="form-group row">
+                            <label class="col-md-3 col-form-label">{{ translate('Breadcrumb Image') }}</label>
+                            <div class="col-md-9">
+                                <div class="input-group" data-toggle="aizuploader" data-type="image">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text bg-soft-secondary font-weight-medium">
+                                            {{ translate('Browse') }}
+                                        </div>
+                                    </div>
+                                    <div class="form-control file-amount">{{ translate('Choose File') }}</div>
+                                    <input type="hidden" name="types[]" value="breadcrumb_image">
+                                    <input type="hidden" name="breadcrumb_image" class="selected-files"
+                                        value="{{ get_setting('breadcrumb_image') }}">
+                                </div>
+                                <div class="file-preview"></div>
+                            </div>
+                        </div>
                         <div class="form-group row">
                             <label class="col-md-3 col-form-label">{{ translate('Help line number') }}</label>
                             <div class="col-md-9">
@@ -72,7 +88,7 @@
                         </div>
                         <div class="form-group row">
                             <label class="col-md-3 col-from-label">{{ translate('Facebook Page Username') }}</label>
-                            <div class="col-md-8">
+                            <div class="col-md-9">
                                 <input type="hidden" name="types[]" value="fb_page_username">
                                 <input type="text" name="fb_page_username" class="form-control"
                                     placeholder="{{ translate('ExampleBD') }}"
@@ -85,7 +101,7 @@
                         </div>
                         <div class="form-group row">
                             <label class="col-md-3 col-from-label">{{ translate('Whatsapp Number') }}</label>
-                            <div class="col-md-8">
+                            <div class="col-md-9">
                                 <input type="hidden" name="types[]" value="whatsapp_number">
                                 <input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                     name="whatsapp_number" class="form-control"
@@ -100,7 +116,7 @@
                         <div class="form-group row">
                             <label
                                 class="col-md-3 col-from-label">{{ translate('Product Details Whatsapp Message') }}</label>
-                            <div class="col-md-8">
+                            <div class="col-md-9">
                                 <input type="hidden" name="types[]" value="details_whatsapp_message">
                                 <input type="text" name="details_whatsapp_message" class="form-control"
                                     placeholder="{{ translate('Product Details Whatsapp Message') }}"
@@ -110,18 +126,18 @@
 
                         <div class="form-group row">
                             <label class="col-md-3 col-from-label">{{ translate('Website Base Color') }}</label>
-                            <div class="col-md-8 d-flex align-items-center gap-2">
+                            <div class="col-md-9 d-flex align-items-center gap-2">
                                 <input type="hidden" name="types[]" value="base_color">
                                 <input type="color" id="base_color_picker" class="form-control form-control-color"
                                     value="{{ get_setting('base_color') ?? '#f04d6e' }}" title="Choose color">
                                 <input type="text" name="base_color" id="base_color_input" class="form-control"
                                     placeholder="#f04d6e" value="{{ get_setting('base_color') ?? '#f04d6e' }}">
                             </div>
-                            <small class="text-muted offset-md-3 col-md-8">{{ translate('Hex Color Code') }}</small>
+                            <small class="text-muted offset-md-3 col-md-9">{{ translate('Hex Color Code') }}</small>
                         </div>
                         <div class="form-group row">
                             <label class="col-md-3 col-from-label">{{ translate('Website Base Font Color') }}</label>
-                            <div class="col-md-8 d-flex align-items-center gap-2">
+                            <div class="col-md-9 d-flex align-items-center gap-2">
                                 <input type="hidden" name="types[]" value="base_hov_color">
                                 <input type="color" id="base_hov_color_picker" class="form-control form-control-color"
                                     value="{{ get_setting('base_hov_color') ?? '#f04d6e' }}" title="Choose color">
@@ -129,7 +145,7 @@
                                     class="form-control" placeholder="#f04d6e"
                                     value="{{ get_setting('base_hov_color') ?? '#f04d6e' }}">
                             </div>
-                            <small class="text-muted offset-md-3 col-md-8">{{ translate('Hex Color Code') }}</small>
+                            <small class="text-muted offset-md-3 col-md-9">{{ translate('Hex Color Code') }}</small>
                         </div>
                         <script>
                             document.addEventListener('DOMContentLoaded', function() {

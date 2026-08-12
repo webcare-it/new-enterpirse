@@ -235,6 +235,44 @@
                     </form>
                 </div>
             </div>
+
+            {{-- Home Section Products --}}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">{{ translate('Home Section Blogs') }}</h6>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('business_settings.update') }}" method="POST" enctype="multipart/form-data">
+                        <div class="alert alert-info">
+                            {{ translate('Select blogs for each section of the home page.') }}
+                        </div>
+                        @csrf
+
+                        <div class="form-group">
+                            <label class="col-md-12 control-label">{{ translate('Selected Blogs') }}</label>
+                            <div class="col-md-12">
+                                <input type="hidden" name="types[]" value="home_blogs">
+                                @php
+                                    $saved_blogs = json_decode(get_setting('home_blogs'), true) ?? [];
+                                @endphp
+                                <select class="form-control aiz-selectpicker" name="home_blogs[]" id="home_blogs"
+                                    data-live-search="true" data-selected-text-format="count" multiple required>
+                                    @foreach ($blogs as $blog)
+                                        <option value="{{ $blog->id }}"
+                                            {{ in_array($blog->id, $saved_blogs) ? 'selected' : '' }}>
+                                            {{ $blog->blog_title }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-primary">{{ translate('Update') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
         {{-- RIGHT: All Sections  --}}

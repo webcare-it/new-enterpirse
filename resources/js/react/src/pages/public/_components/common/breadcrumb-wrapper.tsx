@@ -1,3 +1,4 @@
+import { useConfig } from "@/hooks/useConfig";
 import { ChevronRight, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -18,8 +19,11 @@ export const BreadcrumbBackground = ({
     breadcrumb = [],
     bgImg,
 }: BreadcrumbProps) => {
+    const config = useConfig();
+    const bg = config?.breadcrumb_image as string;
     const image =
         bgImg ||
+        bg ||
         `https://img.magnific.com/free-photo/top-view-black-friday-sales-assortment-with-copy-space_23-2148665597.jpg`;
 
     const allBreadcrumbs = [{ title: "Home", path: "/" }, ...breadcrumb];

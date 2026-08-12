@@ -29,14 +29,14 @@ Route::group(['prefix' => 'v1'], function () {
 
     // in progress
 
-    Route::get('blogs', [\App\Http\Controllers\Admin\ApiFrontendController::class, 'blog']);
-    Route::get('blogs/{slug}', [\App\Http\Controllers\Admin\ApiFrontendController::class, 'singleBlog']);
-    Route::get('about-us', [\App\Http\Controllers\Admin\ApiFrontendController::class, 'aboutUs']);
-    Route::get('contact-us', [\App\Http\Controllers\Admin\ApiFrontendController::class, 'contactUs']);
-    Route::get('integration', [\App\Http\Controllers\Admin\ApiFrontendController::class, 'integration']);
-    Route::post('contact-store', [\App\Http\Controllers\Admin\ApiFrontendController::class, 'contactStore']);
-    Route::get('settings', [\App\Http\Controllers\Admin\ApiFrontendController::class, 'settings']);
-    Route::get('product/{slug}/show', [\App\Http\Controllers\Admin\ApiFrontendController::class, 'productShow']);
+    Route::get('blogs', [\App\Http\Controllers\Api\ApiFrontendController::class, 'blogs']);
+    Route::get('blogs/{slug}', [\App\Http\Controllers\Api\ApiFrontendController::class, 'singleBlog']);
+    Route::get('about-us', [\App\Http\Controllers\Api\ApiFrontendController::class, 'aboutUs']);
+    Route::get('contact-us', [\App\Http\Controllers\Api\ApiFrontendController::class, 'contactUs']);
+    Route::get('integration', [\App\Http\Controllers\Api\ApiFrontendController::class, 'integration']);
+    Route::post('contact-store', [\App\Http\Controllers\Api\ApiFrontendController::class, 'contactStore']);
+    Route::get('settings', [\App\Http\Controllers\Api\ApiFrontendController::class, 'settings']);
+    Route::get('product/{slug}/show', [\App\Http\Controllers\Api\ApiFrontendController::class, 'productShow']);
 
 
 

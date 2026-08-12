@@ -9,8 +9,6 @@ use App\Http\Resources\SingleBlogResource;
 use App\Http\Resources\SliderResource;
 use App\Http\Resources\CounterResource;
 use App\Http\Resources\DiscoverResource;
-use App\Http\Resources\VideoResource;
-use App\Http\Resources\DropshiperReviewResource;
 use App\Http\Resources\FaqResource;
 use App\Http\Resources\SettingResource;
 use App\Models\Admin\Attribute;
@@ -18,11 +16,9 @@ use App\Models\Admin\Blog;
 use App\Models\Admin\Color;
 use App\Models\Admin\Counter;
 use App\Models\Admin\Discover;
-use App\Models\Admin\DropshiperReview;
 use App\Models\Admin\Faq;
 use App\Models\Admin\Product;
 use App\Models\Admin\Slider;
-use App\Models\Admin\Team;
 use App\Models\Admin\Video;
 use App\Models\BusinessSetting;
 use App\Models\User;
@@ -42,77 +38,34 @@ class ApiFrontendController extends Controller
         );
     }
 
-    public function index()
-    {
-        $slider = BusinessSetting::where('type', 'home_slider')->first();
-        $sliderIds = json_decode($slider->value ?? '[]', true);
-        $sliders = Slider::whereIn('id', array_unique($sliderIds))
-            ->latest()
-            ->get();
 
-        $counter = Counter::firstOrFail();
-        $discovers = Discover::latest('id')->get();
-        $video = Video::firstOrFail();
-        $reviews = DropshiperReview::latest('id')->where('status', DropshiperReview::ACTIVE)->get();
-
-
-        $blog = BusinessSetting::where('type', 'home_blog')->first();
-        $blogIds = json_decode($blog->value, true) ?? [];
-
-        $blogs = Blog::whereIn('id', array_unique($blogIds))
-            ->latest('id')
-            ->get();
-
-        $faqs = Faq::oldest('position')->get();
-
-        // return response()->json($faqs);
-
-        return successResponse(
-            'Home data fetched successfully',
-            [
-                'sliders'   => SliderResource::collection($sliders),
-                'counter'   => new CounterResource($counter),
-                'discovers' => DiscoverResource::collection($discovers),
-                'video'     => new VideoResource($video),
-                'reviews'   => DropshiperReviewResource::collection($reviews),
-                'blogs'     => BlogResource::collection($blogs),
-                'faqs'      => FaqResource::collection($faqs)
-            ],
-            200
-        );
-
-        return response()->json($sliders);
-    }
-
-    public function blog()
+    public function blogs()
     {
         try {
-            $blog = BusinessSetting::where('type', 'blog_blog')->first();
-            $slider = BusinessSetting::where('type', 'blog_slider')->first();
-
-            if (!$blog) {
-                return errorResponse('Blog setting not found', [], 404);
-            }
-
-            $blogIds = json_decode($blog->value, true) ?? [];
-            $sliderIds = json_decode($slider->value ?? '[]', true);
 
             $blogs = Blog::whereIn('id', array_unique($blogIds))
                 ->latest('id')
                 ->get();
 
-            $sliders = Slider::whereIn('id', array_unique($sliderIds))
-                ->latest()
-                ->get();
 
-            return successResponse(
-                'Blog data fetched successfully',
-                [
-                    'sliders' => SliderResource::collection($sliders),
-                    'blogs'   => BlogResource::collection($blogs),
-                ],
-                200
-            );
+            return response()->json([
+                'success' => true,
+                'message' => 'Blog data fetched successfully',
+
+                'data'    =>  [
+
+                    'blogs' => BlogResource::collection($blogs),
+                    'pagination' => [
+                        'total' => $blogs->count(),
+                        'per_page' => 10,
+                        'current_page' => 1,
+                        'last_page' => ceil($blogs->count() / 10),
+                        'from' => 1,
+                        'to' => min(10, $blogs->count()),
+                    ]
+                ]
+
+            ]);
         } catch (\Throwable $th) {
             throw $th;
         }

@@ -22,7 +22,7 @@ class SectionConfigSeeder extends Seeder
             ['key' => 'best_selling',  'order' => 5, 'isActive' => true],
             ['key' => 'featured',      'order' => 6, 'isActive' => true],
             ['key' => 'categories',    'order' => 7, 'isActive' => true],
-            ['key' => 'brands',        'order' => 8, 'isActive' => true],
+            ['key' => 'blogs',        'order' => 8, 'isActive' => true],
             ['key' => 'campaigns',     'order' => 9, 'isActive' => true],
         ];
 
