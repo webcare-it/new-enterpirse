@@ -129,29 +129,27 @@ export const ProductsSection = ({
     return (
         <div className={`relative group ${className || ""}`}>
             <LayoutContainer>
-                {title && (
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                        <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground transition-all duration-500 ease-out hover:tracking-wide hover:text-primary">
-                            {title}
-                        </h2>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={scrollLeft}
-                                disabled={!canScrollLeft}
-                                className="flex size-10 md:size-12 items-center justify-center rounded-full border border-border bg-background text-foreground transition-all duration-300 hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                            >
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
-                            <button
-                                onClick={scrollRight}
-                                disabled={!canScrollRight}
-                                className="flex size-10 md:size-12 items-center justify-center rounded-full border border-border bg-background text-foreground transition-all duration-300 hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                            >
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground transition-all duration-500 ease-out hover:tracking-wide hover:text-primary">
+                        {title}
+                    </h2>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={scrollLeft}
+                            disabled={!canScrollLeft}
+                            className="flex size-10 md:size-12 items-center justify-center rounded-full border border-gray-800 bg-background text-foreground transition-all duration-300 hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <button
+                            onClick={scrollRight}
+                            disabled={!canScrollRight}
+                            className="flex size-10 md:size-12 items-center justify-center rounded-full border border-gray-800 bg-background text-foreground transition-all duration-300 hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                        >
+                            <ChevronRight className="h-5 w-5" />
+                        </button>
                     </div>
-                )}
+                </div>
 
                 <div
                     className="overflow-hidden touch-pan-y"

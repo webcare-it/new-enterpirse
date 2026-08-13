@@ -57,14 +57,14 @@ export const HeroSection = ({
                                 />
                             )}
                             {/* CONTENT */}
-                            <div className="absolute inset-0 flex flex-col justify-end pl-4 md:pl-8 pb-4 md:pb-8 text-white bg-black/20">
-                                <h2 className="text-lg md:text-4xl font-bold max-w-xl">
+                            <div className="absolute inset-0 flex flex-col justify-end items-end pr-4 md:pr-8 pb-4 md:pb-8 text-white bg-black/20">
+                                <h2 className="text-lg md:text-3xl font-bold max-w-xl">
                                     {item?.title}
                                 </h2>
 
                                 <Link
                                     to={item?.link || "/"}
-                                    className="mt-2 md:mt-4 inline-flex items-center gap-2 text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 rounded-full bg-primary text-primary-foreground w-fit"
+                                    className="mt-2 inline-flex items-center gap-2 text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 rounded-full bg-primary text-primary-foreground w-fit"
                                 >
                                     {item?.button || "Shop Now"}
                                     <ArrowRight className="size-3 md:size-4" />
