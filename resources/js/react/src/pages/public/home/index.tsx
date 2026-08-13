@@ -1,11 +1,7 @@
 import React from "react";
 import { HeroSection } from "./hero-section";
 import { BaseLayout } from "../_components/layout/base-layout";
-import {
-    CategoryProductSection,
-    ProductsSection,
-    TodaysDealSection,
-} from "./product-section";
+import { CategoryProductSection, ProductsSection } from "./product-section";
 import { BlogSection } from "./blog-section";
 import { CampaignSection } from "./campaign-section";
 import { useGetHome } from "@/api/home";
@@ -88,15 +84,13 @@ export const HomePage = () => {
                 title="New Arrivals"
                 products={products_new_arrivals}
                 href={product_collection_path.new_arrivals}
-                loading={false}
             />
         ),
         todays_deal: (
-            <TodaysDealSection
+            <ProductsSection
                 title="Today's Deal"
                 products={products_todays}
                 href={product_collection_path.todys_deal}
-                loading={false}
             />
         ),
         best_selling: (
@@ -104,7 +98,6 @@ export const HomePage = () => {
                 title="Best Selling"
                 products={products_best_selling}
                 href={product_collection_path.best_selling}
-                loading={false}
             />
         ),
         featured: (
@@ -112,15 +105,9 @@ export const HomePage = () => {
                 title="Featured Products"
                 products={products_featured}
                 href={product_collection_path.featured}
-                loading={false}
             />
         ),
-        categories: (
-            <CategoryProductSection
-                categories={categories}
-                loading={isLoading}
-            />
-        ),
+        categories: <CategoryProductSection categories={categories} />,
         blogs: <BlogSection blogs={data?.data?.blogs || []} />,
     };
 

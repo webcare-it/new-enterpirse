@@ -3,15 +3,19 @@ import type { IBlog } from "@/type";
 import { AnimationWrapper } from "@/components/common/animation-wrapper";
 import { BlogCard } from "../_components/common/blog";
 import { BlogLayout } from "../_components/common/layout";
-import { SectionTitleWithLink } from "./product-section";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 export const BlogSection = ({ blogs }: { blogs: IBlog[] }) => {
     if (blogs?.length === 0) return null;
 
     return (
         <LayoutContainer className="py-4">
-            <SectionTitleWithLink title="Latest Blogs" href="/blogs" />
-            <BlogLayout className="pb-16 md:pb-20 mt-6">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mt-1 transition-all duration-500 ease-out hover:tracking-wide hover:text-primary text-center">
+                Latest Blogs
+            </h2>
+            <BlogLayout className="my-6">
                 {blogs?.map((blog, i: number) => (
                     <AnimationWrapper
                         key={blog?.id}
@@ -30,6 +34,15 @@ export const BlogSection = ({ blogs }: { blogs: IBlog[] }) => {
                     </AnimationWrapper>
                 ))}
             </BlogLayout>
+
+            <div className="flex justify-center mt-4">
+                <Link to="/blogs">
+                    <Button>
+                        View all
+                        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/view-all:translate-x-1" />{" "}
+                    </Button>
+                </Link>
+            </div>
         </LayoutContainer>
     );
 };
