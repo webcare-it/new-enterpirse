@@ -14,42 +14,18 @@ import { FooterLogo } from "@/components/common/logo";
 import { Newsletter } from "./newsletter";
 import { useConfig } from "@/hooks/useConfig";
 import { Link } from "react-router-dom";
-import { product_collection_path } from "@/data";
 
 const linkData = {
-    shop: [
-        { label: "Vendor", href: "#" },
-        { label: "Affiliate", href: "#" },
-        { label: "Referral", href: "#" },
-        { label: "Reseller", href: "#" },
-        { label: "Dropshipping", href: "#" },
-    ],
-    explore: [
-        { label: "Home", href: "/" },
-        { label: "Today's Deal", href: product_collection_path.todys_deal },
-        { label: "Flash Sale", href: "#" },
-        { label: "Best Sellers", href: product_collection_path.best_selling },
-        { label: "New Arrivals", href: product_collection_path.new_arrivals },
-    ],
     help: [
-        { label: "Contact Us", href: "/contact-us" },
-        { label: "Track Order", href: "/track-order" },
-        { label: "Returns", href: "#" },
         { label: "FAQ", href: "/faqs" },
-        { label: "Shipping Info", href: "#" },
-    ],
-    company: [
+        { label: "Blogs", href: "/blogs" },
         { label: "About Us", href: "/about-us" },
-        { label: "Careers", href: "#" },
-        { label: "Blogs", href: "#" },
-        { label: "Press", href: "#" },
-        { label: "Affiliates", href: "#" },
+        { label: "Contact Us", href: "/contact-us" },
     ],
     legal: [
         { label: "Privacy Policy", href: "/pages/privacy_policy" },
         { label: "Terms of Service", href: "/pages/terms_and_conditions" },
         { label: "Cookie Policy", href: "/pages/cookie_policy" },
-        { label: "Disclaimer", href: "#" },
         { label: "Return Policy", href: "/pages/return_policy" },
     ],
 };
@@ -57,9 +33,7 @@ const linkData = {
 export function Footer() {
     const config = useConfig();
     return (
-        <footer className="bg-gray-950 text-white relative mt-24">
-            <Newsletter />
-
+        <footer className="bg-gray-800 text-white relative mt-24">
             <LayoutContainer>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-8 mb-4 pt-8 md:pt-12">
                     <div className="col-span-2 md:col-span-3 lg:col-span-2">
@@ -68,23 +42,32 @@ export function Footer() {
                             {(config?.about_us_description as string) ||
                                 "Nittoz is a leading e-commerce platform that provides a wide range of products and services to customers around the world."}
                         </p>
-                        <div className="space-y-3 mb-6">
+                    </div>
+
+                    {/* Link Columns */}
+                    <LinkColumn title="Help" links={linkData.help} />
+                    <LinkColumn title="Legal" links={linkData.legal} />
+                    <Newsletter />
+                    <div>
+                        <h2 className="text-xs font-semibold text-white uppercase tracking-[0.15em] mb-5 relative inline-block">
+                            Contact
+                            <span className="absolute -bottom-1 left-0 w-8 h-[2px] bg-primary rounded-full transition-all duration-500 group-hover:w-full" />
+                        </h2>
+                        <div className="space-y-2 mb-2">
                             <p className="text-sm flex items-center gap-3 hover:text-primary transition-colors duration-500 group">
-                                <span className="size-8 rounded-lg bg-gray-800 flex items-center justify-center group-hover:bg-primary/20 transition-all duration-500">
-                                    <Mail className="size-4 text-primary" />
-                                </span>
-                                {(config?.email as string) || "info@nittoz.com"}
+                                <Mail className="size-4" />
+
+                                {(config?.email as string) ||
+                                    "info@company.com"}
                             </p>
                             <p className="text-sm flex items-center gap-3 hover:text-primary transition-colors duration-500 group">
-                                <span className="size-8 rounded-lg bg-gray-800 flex items-center justify-center group-hover:bg-primary/20 transition-all duration-500">
-                                    <Headphones className="size-4 text-primary" />
-                                </span>
+                                <Headphones className="size-4" />
+
                                 {(config?.phone as string) || "+880123456789"}
                             </p>
                             <p className="text-sm flex items-center gap-3 hover:text-primary transition-colors duration-500 group">
-                                <span className="size-8 rounded-lg bg-gray-800 flex items-center justify-center group-hover:bg-primary/20 transition-all duration-500">
-                                    <MapPin className="size-4 text-primary" />
-                                </span>
+                                <MapPin className="size-4" />
+
                                 {(config?.address as string) ||
                                     "Dhaka, Bangladesh"}
                             </p>
@@ -138,13 +121,6 @@ export function Footer() {
                             ))}
                         </div>
                     </div>
-
-                    {/* Link Columns */}
-                    <LinkColumn title="Shop" links={linkData.shop} />
-                    <LinkColumn title="Explore" links={linkData.explore} />
-                    <LinkColumn title="Help" links={linkData.help} />
-                    <LinkColumn title="Company" links={linkData.company} />
-                    <LinkColumn title="Legal" links={linkData.legal} />
                 </div>
 
                 {/* Bottom Bar */}
@@ -157,11 +133,11 @@ export function Footer() {
                         className="h-fit w-fit"
                     />
                 </div>
-                <div className="border-t border-gray-800 pt-6 pb-8 flex justify-center items-center flex-wrap gap-4">
+                <div className="border-t border-gray-200 pt-6 pb-8 flex justify-center items-center flex-wrap gap-4">
                     <p className="text-sm text-white">
                         &copy; {new Date().getFullYear()}{" "}
                         {(config?.frontend_copyright_text as string) ||
-                            "Nittoz™. All Rights Reserved"}
+                            "Team™. All Rights Reserved"}
                     </p>
                 </div>
             </LayoutContainer>
