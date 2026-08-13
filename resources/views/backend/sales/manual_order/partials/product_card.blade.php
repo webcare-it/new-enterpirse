@@ -39,10 +39,18 @@
                 <select class="variant-select" id="variant_select_{{ $product->id }}"
                     onchange="updateVariantInfo('{{ $product->id }}')">
                     @foreach ($product->variants as $variant)
+                        @php
+                            $attr = json_decode($variant->attribute_value, true);
+                            $displayValue = is_array($attr)
+                                ? implode(' / ', array_values($attr))
+                                : $variant->attribute_value;
+                        @endphp
+
                         <option value="{{ $variant->id }}" data-stock="{{ $variant->quantity ?? 0 }}"
                             data-price="{{ $variant->price ?? 0 }}" data-discount="{{ $discount }}"
                             {{ $loop->first ? 'selected' : '' }}>
-                            {{ $variant->attribute_value }} - {{ number_format($variant->price ?? 0) }} BDT
+                            {{ $displayValue }} - {{ number_format($variant->price ?? 0) }}
+                            {{ get_setting('currency') }}
                         </option>
                     @endforeach
                 </select>
@@ -52,11 +60,11 @@
             <div class="price-section" id="price_section_{{ $product->id }}">
                 @if ($hasDiscount)
                     <span class="original-price" id="original_price_{{ $product->id }}">
-                        {{ number_format($originalPrice) }} BDT
+                        {{ number_format($originalPrice) }} {{ get_setting('currency') }}
                     </span>
                 @endif
                 <span class="product-price" id="product_price_{{ $product->id }}">
-                    {{ number_format($price) }} <span>BDT</span>
+                    {{ number_format($price) }} <span> {{ get_setting('currency') }}</span>
                 </span>
             </div>
 
@@ -736,13 +744,13 @@
         const originalPriceElement = document.getElementById('original_price_' + productId);
 
         if (priceElement) {
-            priceElement.innerHTML = numberFormat(price) + ' <span>BDT</span>';
+            priceElement.innerHTML = numberFormat(price) + ' <span>{{ get_setting('currency') }}</span>';
         }
 
         if (originalPriceElement) {
             if (discount > 0) {
                 originalPriceElement.style.display = 'inline';
-                originalPriceElement.textContent = numberFormat(originalPrice) + ' BDT';
+                originalPriceElement.textContent = numberFormat(originalPrice) + {{ get_setting('currency') }};
             } else {
                 originalPriceElement.style.display = 'none';
             }
