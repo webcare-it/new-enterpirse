@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { LayoutContainer } from "../_components/layout/base-layout";
-import type { IProduct } from "@/type";
+import type { ICategoryWithProducts, IProduct } from "@/type";
 import { ProductCard } from "../_components/common/product";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -180,7 +180,7 @@ const ProductsGrid = ({
     );
 };
 
-interface SectionProductProps {
+interface Props {
     products: IProduct[];
     loading: boolean;
     title: string;
@@ -194,7 +194,7 @@ export const ProductsSection = ({
     title,
     href,
     background = "",
-}: SectionProductProps) => {
+}: Props) => {
     if (loading) {
         return <div>Loading...</div>;
     }
@@ -218,7 +218,7 @@ export const TodaysDealSection = ({
     title,
     href,
     background = "",
-}: SectionProductProps) => {
+}: Props) => {
     const { hours, minutes, seconds } = useDailyCountdown();
     if (loading) {
         return <div>Loading...</div>;
@@ -312,5 +312,33 @@ export const SectionTitleWithLink = ({
                 )}
             </div>
         </div>
+    );
+};
+
+export const CategoryProductSection = ({
+    categories,
+    loading,
+}: {
+    loading: boolean;
+    categories: ICategoryWithProducts[];
+}) => {
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (categories?.length === 0) return null;
+
+    return (
+        <>
+            {categories?.map((category, index) => (
+                <ProductsSection
+                    key={category?.id + "_" + index}
+                    title={category?.name}
+                    products={category?.products || []}
+                    href={`/categories/${category?.slug}`}
+                    loading={loading}
+                />
+            ))}
+        </>
     );
 };

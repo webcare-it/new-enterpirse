@@ -1,16 +1,19 @@
 import React from "react";
 import { HeroSection } from "./hero-section";
 import { BaseLayout } from "../_components/layout/base-layout";
-import { ProductsSection, TodaysDealSection } from "./product-section";
-import { FeatureHighlights } from "./badge-section";
+import {
+    CategoryProductSection,
+    ProductsSection,
+    TodaysDealSection,
+} from "./product-section";
 import { BlogSection } from "./blog-section";
 import { CampaignSection } from "./campaign-section";
 import { useGetHome } from "@/api/home";
-import { CategorySection } from "./category-section";
 import { useConfig } from "@/hooks/useConfig";
 import { Loading } from "../_components/common/loading";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
 import { product_collection_path } from "@/data";
+import { CategorySection } from "./category-section";
 
 interface ISection {
     key: string;
@@ -63,23 +66,23 @@ const defaultSec = [
 
 export const HomePage = () => {
     const config = useConfig();
-    const sec = config?.sections as ISection[];
     const { data, isLoading } = useGetHome();
+    const sec = config?.sections as ISection[];
 
     const sliders = data?.data?.sliders || [];
+    const campaigns = data?.data?.campaigns || [];
     const categories = data?.data?.categories || [];
     const products_featured = data?.data?.featured || [];
     const products_todays = data?.data?.todays_deal || [];
     const products_new_arrivals = data?.data?.new_arrivals || [];
     const products_best_selling = data?.data?.best_selling || [];
-    const campaigns = data?.data?.campaigns || [];
 
     const sections: ISection[] = sec?.length > 0 ? sec : defaultSec;
 
     const sectionComponents = {
         sliders: <HeroSection heroSlides={sliders} loading={false} />,
         campaigns: <CampaignSection campaigns={campaigns} />,
-        features: <FeatureHighlights />,
+        features: <CategorySection />,
         new_arrivals: (
             <ProductsSection
                 title="New Arrivals"
@@ -113,7 +116,10 @@ export const HomePage = () => {
             />
         ),
         categories: (
-            <CategorySection categories={categories} loading={isLoading} />
+            <CategoryProductSection
+                categories={categories}
+                loading={isLoading}
+            />
         ),
         blogs: <BlogSection blogs={data?.data?.blogs || []} />,
     };
