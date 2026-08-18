@@ -1,19 +1,37 @@
+import { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay, EffectFade } from "swiper/modules";
 import { LayoutContainer } from "../_components/layout/base-layout";
 import { OptimizedImage } from "@/components/common/optimized-image";
 import { Link } from "react-router-dom";
-import { usePrice } from "@/hooks/usePrice";
 import type { ICampaign } from "@/type";
-import { getBaseUrl } from "@/helper";
+import { ArrowRight } from "lucide-react";
 
 export const CampaignSection = ({ campaigns }: { campaigns: ICampaign[] }) => {
+    const [activeIndex, setActiveIndex] = useState(0);
+
     if (campaigns?.length === 0) {
         return null;
     }
 
+    const currentCampaign = campaigns?.[activeIndex];
+
     return (
         <LayoutContainer>
+            <div className="flex items-center justify-between gap-2 pb-6">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground transition-all duration-500 ease-out hover:tracking-wide hover:text-primary">
+                    Campaign
+                </h2>
+
+                <Link
+                    to={`/campaigns/${currentCampaign?.slug}`}
+                    className="group/view-all text-sm font-medium text-primary flex items-center gap-1.5 hover:translate-x-1 transition-all duration-300 ease-out"
+                >
+                    View details
+                    <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/view-all:translate-x-1" />
+                </Link>
+            </div>
+
             <Swiper
                 modules={[Pagination, EffectFade, Autoplay]}
                 slidesPerView={1}
@@ -25,15 +43,18 @@ export const CampaignSection = ({ campaigns }: { campaigns: ICampaign[] }) => {
                     delay: 6000,
                     disableOnInteraction: false,
                 }}
+                onSlideChange={(swiper) => {
+                    setActiveIndex(swiper.realIndex);
+                }}
                 className="mySwiper rounded-xl md:rounded-3xl overflow-hidden"
             >
-                {campaigns?.map((campaign) => (
-                    <SwiperSlide key={campaign?.id}>
-                        <Link to={`/campaigns/${campaign?.slug}`}>
+                {campaigns.map((campaign) => (
+                    <SwiperSlide key={campaign.id}>
+                        <Link to={`/campaigns/${campaign.slug}`}>
                             <div className="aspect-[4/1.5] sm:aspect-[16/5] md:aspect-[16/2.5] overflow-hidden rounded-xl md:rounded-3xl">
                                 <OptimizedImage
-                                    src={campaign?.image}
-                                    alt={campaign?.name}
+                                    src={campaign.image}
+                                    alt={campaign.name}
                                     className="w-full h-full object-cover"
                                 />
                             </div>
@@ -42,41 +63,5 @@ export const CampaignSection = ({ campaigns }: { campaigns: ICampaign[] }) => {
                 ))}
             </Swiper>
         </LayoutContainer>
-    );
-};
-
-export const SVG = ({ c }: { c: ICampaign }) => {
-    const { getCurrencySymbol } = usePrice();
-    const getPercentageOrFlat = () => {
-        const discountType = c?.discount_type;
-        if (discountType === "percent") {
-            return `${Math.round(Number(c?.discount_amount))}%`;
-        } else if (discountType === "flat") {
-            return `${getCurrencySymbol()}${Math.round(Number(c?.discount_amount))}`;
-        }
-    };
-    const img = `${getBaseUrl()}/assets/img/offer.png`;
-
-    return (
-        <div className="absolute top-1 right-1 md:top-4 md:right-4 size-20 md:size-40">
-            <OptimizedImage
-                src={img}
-                alt="Offer"
-                className="absolute inset-0 h-full w-full object-contain"
-            />
-
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center">
-                <span className="text-[9px] md:text-sm font-bold uppercase tracking-wider text-white">
-                    UP TO
-                </span>
-
-                <span className="text-xl md:text-3xl font-extrabold leading-none text-white">
-                    {getPercentageOrFlat()}
-                </span>
-                <span className="text-sm md:text-2xl font-extrabold leading-none text-white">
-                    OFF
-                </span>
-            </div>
-        </div>
     );
 };

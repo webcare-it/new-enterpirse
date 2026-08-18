@@ -55,7 +55,7 @@ export const ProductsSearchPage = () => {
             />
             <BaseLayout>
                 <BreadcrumbBackground
-                    title={q ? `Search: ${q}` : "Search Products"}
+                    title={q ? q : "Search Products"}
                     breadcrumb={[
                         {
                             title: "Products",
