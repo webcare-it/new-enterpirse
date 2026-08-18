@@ -46,33 +46,27 @@ export const AddToCart = ({
 
     if (type === "CARD")
         return (
-            <>
-                {/* DESKTOP */}
-                <div className="hidden md:block absolute inset-x-0 bottom-0 z-10 md:px-4 md:pb-4 md:opacity-0 md:translate-y-8 transition-all duration-500 ease-out md:group-hover/product:opacity-100 md:group-hover/product:translate-y-0">
-                    <button
-                        type="button"
-                        onClick={handleAddToCart}
-                        disabled={isAdding}
-                        aria-label={`Add ${p?.product_id ?? "product"} to cart`}
-                        className="w-full h-10 backdrop-blur rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 text-base font-normal bg-primary/90 hover:bg-primary text-primary-foreground"
-                    >
-                        <CartIcon />
-                        {isAdding ? "loading..." : "Add to cart"}
-                    </button>
-                </div>
+            <div className="flex justify-between items-center gap-2 mt-1">
+                <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    disabled={isAdding}
+                    aria-label={`Add ${p?.product_id ?? "product"} to cart`}
+                    className="flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-10 md:h-12 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border text-sm md:text-base border-primary gap-1 md:gap-2"
+                >
+                    <LockIcon className="size-4 md:size-5" />
+                    {isAdding ? "loading..." : " Order now"}
+                </button>
 
-                {/*  MOBILE */}
-                <div className="flex justify-end md:hidden absolute inset-x-0 bottom-0 z-10 px-2 pb-2 transition-all duration-500 ease-out">
-                    <button
-                        onClick={handleAddToCart}
-                        disabled={isAdding}
-                        aria-label={`Add ${p?.product_id ?? "product"} to cart`}
-                        className={`size-10 rounded-full transition-all duration-300 cursor-pointer inline-flex items-center justify-center bg-primary/90 hover:bg-primary text-primary-foreground`}
-                    >
-                        {isAdding ? <Spinner /> : <CartIcon />}
-                    </button>
-                </div>
-            </>
+                <button
+                    onClick={handleAddToCart}
+                    disabled={isAdding}
+                    aria-label={`Add ${p?.product_id ?? "product"} to cart`}
+                    className={`size-10 md:size-12 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center border border-primary bg-primary/90 text-primary-foreground hover:bg-primary-foreground hover:text-primary`}
+                >
+                    {isAdding ? <Spinner /> : <CartIcon />}
+                </button>
+            </div>
         );
 
     if (type === "DETAILS") {
@@ -90,32 +84,21 @@ export const AddToCart = ({
 
 export const AddToCartLink = ({ slug }: { slug: string }) => {
     return (
-        <>
-            {/* DESKTOP */}
-            <Link
-                to={slug}
-                className="hidden md:block absolute inset-x-0 bottom-0 z-10 md:px-4 md:pb-4 md:opacity-0 md:translate-y-8 transition-all duration-500 ease-out md:group-hover/product:opacity-100 md:group-hover/product:translate-y-0"
-            >
-                <button className="w-full h-10 backdrop-blur rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 text-base font-normal bg-primary/90 hover:bg-primary text-primary-foreground">
-                    <CartIcon />
-                    Add to cart
-                </button>
-            </Link>
+        <Link
+            to={slug}
+            className="flex justify-between items-center gap-2 mt-1"
+        >
+            <button className="flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-10 md:h-12 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border text-sm md:text-base border-primary gap-1 md:gap-2">
+                <LockIcon className="size-4 md:size-5" />
+                Order now
+            </button>
 
-            {/*  MOBILE */}
-            <Link
-                to={slug}
-                aria-label={`View ${slug} details`}
-                className="flex justify-end md:hidden absolute inset-x-0 bottom-0 z-10 px-2 pb-2 transition-all duration-500 ease-out"
+            <button
+                className={`size-10 md:size-12 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center border border-primary bg-primary/90 text-primary-foreground hover:bg-primary-foreground hover:text-primary`}
             >
-                <button
-                    aria-label={`View ${slug} details`}
-                    className={`size-10 rounded-full transition-all duration-300 cursor-pointer inline-flex items-center justify-center bg-primary/90 hover:bg-primary text-primary-foreground`}
-                >
-                    <CartIcon />
-                </button>
-            </Link>
-        </>
+                <CartIcon />
+            </button>
+        </Link>
     );
 };
 

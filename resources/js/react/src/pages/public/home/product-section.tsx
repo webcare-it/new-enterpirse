@@ -195,7 +195,7 @@ export const ProductsSection = ({
                 </div>
 
                 {href && (
-                    <div className="flex justify-center mt-4">
+                    <div className="flex justify-center mt-2 md:mt-4">
                         <Link to={href}>
                             <Button>
                                 View all

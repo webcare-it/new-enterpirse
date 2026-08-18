@@ -28,9 +28,9 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
         <>
             <div
                 key={p?.id}
-                className="bg-white rounded-lg md:rounded-xl overflow-hidden border border-gray-300 transition shadow md:shadow-lg"
+                className="bg-white rounded-xl md:rounded-2xl overflow-hidden border border-gray-300 transition shadow md:shadow-lg"
             >
-                <div className="relative bg-muted/20 aspect-[16/18] flex items-center justify-center overflow-hidden group/product">
+                <div className="relative bg-muted/20 aspect-[16/17] flex items-center justify-center overflow-hidden group/product">
                     <Link to={link} className="absolute z-0 inset-0">
                         <OptimizedImage
                             src={p?.image || ""}
@@ -46,28 +46,34 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
                     )}
 
                     <WishlistToggle id={Number(p?.id)} />
+                </div>
 
-                    <div
-                        aria-label={`Rating: ${p?.rating} out of 5`}
-                        className="absolute right-1 top-1 md:top-2 md:right-2 bg-white backdrop-blur px-1.5 transition-all duration-300 z-10 text-gray-900 flex items-center gap-1 rounded-sm opacity-100 scale-100 pointer-events-none group-hover/product:opacity-0 group-hover/product:scale-75"
-                    >
-                        <span className="text-sm font-semibold text-yellow-400">
-                            ★
-                        </span>
-                        <span className="text-xs">{p?.rating}</span>
-                    </div>
+                <div className="p-1.5 md:p-3 select-none">
+                    <Link to={link}>
+                        <div className="flex items-center justify-between gap-2">
+                            <div
+                                aria-label={`Rating: ${p?.rating} out of 5`}
+                                className="flex items-center gap-0.5 md:gap-1.5 px-2 rounded bg-gray-100 text-xs font-medium"
+                            >
+                                <span className="text-base font-semibold text-yellow-400">
+                                    ★
+                                </span>
+                                <span className="text-base">{p?.rating}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5 md:gap-1.5 px-2 py-1 rounded bg-primary/10 text-xs font-medium text-primary border">
+                                <ChartNoAxesCombined className="size-2.5 md:size-3.5" />
+                                <span className="font-semibold">{p?.sold}</span>
+                                sold
+                            </div>
+                        </div>
+                        <div className="relative inline-block max-w-full">
+                            <h3 className="text-sm font-medium md:text-base md:font-semibold text-gray-900 truncate after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[1px] after:w-0 after:bg-gray-900 after:transition-all after:duration-300 hover:after:w-full mt-1">
+                                {p?.name}
+                            </h3>
+                        </div>
+                    </Link>
 
-                    {/* <div className="absolute inset-x-0 bottom-0 h-full translate-y-full bg-gradient-to-t from-black/30 via-black/15 to-transparent opacity-0 transition-all duration-500 ease-out group-hover/product:translate-y-0 group-hover/product:opacity-100" /> */}
-
-                    {/* <div className=" hidden md:inline-flex items-center justify-center opacity-0 translate-y-8 transition-all duration-500 ease-out group-hover/product:opacity-100 group-hover/product:translate-y-0">
-                        <button
-                            title="Quick View"
-                            onClick={() => setQuickViewOpen(true)}
-                            className="size-10 md:size-12 rounded-full bg-white/90 backdrop-blur p-1.5 cursor-pointer text-gray-900 flex items-center justify-center transition duration-300 hover:bg-white hover:scale-105"
-                        >
-                            <Eye className="size-5 md:size-6" />
-                        </button>
-                    </div> */}
+                    <RegularPrice p={p} />
 
                     {p?.has_variants ? (
                         <AddToCartLink slug={link} />
@@ -81,27 +87,6 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
                             trackerData={trackerData}
                         />
                     )}
-                </div>
-
-                <div className="p-1.5 md:p-3 select-none">
-                    <Link
-                        to={link}
-                        className="relative inline-block max-w-full"
-                    >
-                        <h3 className="text-sm font-medium md:text-base md:font-semibold text-gray-900 truncate after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[1px] after:w-0 after:bg-gray-900 after:transition-all after:duration-300 hover:after:w-full">
-                            {p?.name}
-                        </h3>
-                    </Link>
-
-                    <div className="flex items-center justify-between gap-1 md:gap-2">
-                        <RegularPrice p={p} />
-
-                        <div className="flex items-center gap-0.5 md:gap-1.5 px-1 md:px-2 py-0.5 md:py-1 rounded md:rounded-md bg-primary/10 text-[9px] md:text-xs font-medium text-primary border">
-                            <ChartNoAxesCombined className="size-2.5 md:size-3.5" />
-                            <span className="font-semibold">{p?.sold}</span>
-                            sold
-                        </div>
-                    </div>
                 </div>
             </div>
         </>
@@ -149,11 +134,7 @@ const RegularDiscount = ({ p }: { p: IProduct }) => {
             ? `-${p?.discount}%`
             : `-${getCurrencySymbol()}${p?.discount}`;
 
-    return (
-        <div className="absolute left-1 top-1 md:top-2 md:left-2 bg-red-500  text-white px-1.5 py-0.5 rounded-sm font-semibold text-xs">
-            {amount}
-        </div>
-    );
+    return <DiscountLabel>{amount}</DiscountLabel>;
 };
 const CampaignDiscount = ({ c }: ICP) => {
     const { getCurrencySymbol } = usePrice();
@@ -164,9 +145,13 @@ const CampaignDiscount = ({ c }: ICP) => {
             ? `-${c.discount_amount}%`
             : `-${getCurrencySymbol()}${c?.discount_amount}`;
 
+    return <DiscountLabel>{label}</DiscountLabel>;
+};
+
+const DiscountLabel = ({ children }: { children: string }) => {
     return (
-        <div className="absolute left-1 top-1 md:top-2 md:left-2 rounded-sm bg-red-500 px-1.5 py-0.5 text-xs font-semibold text-white">
-            {label}
+        <div className="absolute top-2 left-2 bg-red-500  text-white px-1.5 py-0.5 rounded-sm font-semibold text-xs">
+            {children}
         </div>
     );
 };

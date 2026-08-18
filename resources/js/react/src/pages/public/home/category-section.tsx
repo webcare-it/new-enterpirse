@@ -53,11 +53,11 @@ export const CategorySection = () => {
         <LayoutContainer>
             <div className="space-y-6">
                 <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mt-1 transition-all duration-500 ease-out hover:tracking-wide hover:text-primary whitespace-nowrap">
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground transition-all duration-500 ease-out hover:tracking-wide hover:text-primary whitespace-nowrap">
                         Categories
                     </h2>
 
-                    <div className="hidden sm:flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => scrollByAmount("left")}
                             disabled={!canScrollLeft}
