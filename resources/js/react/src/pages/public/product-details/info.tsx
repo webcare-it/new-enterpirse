@@ -155,7 +155,7 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
     }, [product?.id]);
 
     return (
-        <div className="md:col-span-1 lg:col-span-5 xl:col-span-4 md:sticky md:top-28 lg:sticky lg:top-28 h-fit space-y-4">
+        <div className="md:col-span-1 lg:col-span-6 md:sticky md:top-28 lg:sticky lg:top-28 h-fit space-y-4">
             <div>
                 <h1 className="flex-1 text-3xl md:text-4xl font-semibold leading-tight">
                     {product?.name}

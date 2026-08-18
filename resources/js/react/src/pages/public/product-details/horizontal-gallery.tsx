@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { OptimizedImage } from "@/components/common/optimized-image";
 import type { IProductImage } from "./type";
@@ -15,6 +15,38 @@ export const HorizontalGalleryStrip = ({
     selectedImageIndex,
 }: Props) => {
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [showButtons, setShowButtons] = useState(false);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
+
+    const checkScroll = () => {
+        const el = scrollRef.current;
+        if (!el) return;
+
+        const hasOverflow = el.scrollWidth > el.clientWidth + 5;
+        setShowButtons(hasOverflow);
+
+        setCanScrollLeft(el.scrollLeft > 5);
+        setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
+    };
+
+    useEffect(() => {
+        checkScroll();
+
+        const el = scrollRef.current;
+        if (!el) return;
+
+        el.addEventListener("scroll", checkScroll);
+        window.addEventListener("resize", checkScroll);
+
+        const timer = setTimeout(checkScroll, 100);
+
+        return () => {
+            el.removeEventListener("scroll", checkScroll);
+            window.removeEventListener("resize", checkScroll);
+            clearTimeout(timer);
+        };
+    }, [images]);
 
     const scrollByDir = (dir: "left" | "right") => {
         if (!scrollRef.current) return;
@@ -26,15 +58,17 @@ export const HorizontalGalleryStrip = ({
     };
 
     return (
-        <div className="relative mt-4 md:block xl:hidden">
-            <button
-                type="button"
-                onClick={() => scrollByDir("left")}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-white transition cursor-pointer"
-                aria-label="Scroll left"
-            >
-                <ChevronLeft className="size-4" />
-            </button>
+        <div className="relative mt-4 md:block">
+            {showButtons && canScrollLeft && (
+                <button
+                    type="button"
+                    onClick={() => scrollByDir("left")}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-white transition cursor-pointer"
+                    aria-label="Scroll left"
+                >
+                    <ChevronLeft className="size-4" />
+                </button>
+            )}
 
             <div
                 ref={scrollRef}
@@ -59,14 +93,16 @@ export const HorizontalGalleryStrip = ({
                 ))}
             </div>
 
-            <button
-                type="button"
-                onClick={() => scrollByDir("right")}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-white transition cursor-pointer"
-                aria-label="Scroll right"
-            >
-                <ChevronRight className="size-4" />
-            </button>
+            {showButtons && canScrollRight && (
+                <button
+                    type="button"
+                    onClick={() => scrollByDir("right")}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-white transition cursor-pointer"
+                    aria-label="Scroll right"
+                >
+                    <ChevronRight className="size-4" />
+                </button>
+            )}
         </div>
     );
 };

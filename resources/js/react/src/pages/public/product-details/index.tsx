@@ -106,9 +106,9 @@ export const ProductDetailPage = () => {
                         <>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 mb-6">
                                 {/* Left - Sticky Main Image Desktop */}
-                                <div className="hidden md:block md:col-span-1 lg:col-span-7 xl:col-span-5 md:sticky md:top-28 lg:sticky lg:top-28 h-fit">
+                                <div className="hidden md:block md:col-span-1 lg:col-span-6 md:sticky md:top-28 lg:sticky lg:top-28 h-fit">
                                     <div
-                                        className="relative aspect-square md:aspect-[16/17] xl:aspect-[3/3.7] 2xl:aspect-[3/3] bg-white border rounded-3xl overflow-hidden cursor-zoom-in"
+                                        className="relative aspect-square md:aspect-[16/17] xl:aspect-[3/3] 2xl:aspect-[3/2.5] bg-white border rounded-3xl overflow-hidden cursor-zoom-in"
                                         onClick={() =>
                                             openModal(selectedImageIndex)
                                         }
@@ -126,25 +126,6 @@ export const ProductDetailPage = () => {
                                         onOpenModal={openModal}
                                         selectedImageIndex={selectedImageIndex}
                                     />
-                                </div>
-
-                                {/* Middle - Scrollable Gallery (only on xl) */}
-                                <div className="hidden xl:block xl:col-span-3">
-                                    <div className="space-y-6 overflow-y-auto">
-                                        {allImages?.map((img, idx) => (
-                                            <button
-                                                key={img.id}
-                                                onClick={() => openModal(idx)}
-                                                className={`w-full aspect-[3/2.5] rounded-3xl overflow-hidden bg-gray-50 border cursor-zoom-in`}
-                                            >
-                                                <OptimizedImage
-                                                    src={img.src}
-                                                    alt={img.alt}
-                                                    className="w-full h-full object-cover hover:scale-105 duration-300 transition-all"
-                                                />
-                                            </button>
-                                        ))}
-                                    </div>
                                 </div>
 
                                 {/* Main image Gallery for mobile */}

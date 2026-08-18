@@ -116,13 +116,4 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('/{slug}', [\App\Http\Controllers\Api\ApiLandingPageController::class, 'landingpage']);
     });
 
-
-    Route::prefix('dropshippers/')->group(function () {
-        Route::post('create', [\App\Http\Controllers\Api\ApiDropshipperController::class, 'create']);
-        Route::get('products', [\App\Http\Controllers\Api\ApiDropshipperController::class, 'products']);
-        Route::get('secret/products/free-api', [\App\Http\Controllers\Api\ApiDropshipperController::class, 'productsFree']);
-        Route::get('products/{identifier}', [\App\Http\Controllers\Api\ApiDropshipperController::class, 'productDetails']);
-        Route::get('secret/products/free-api/{identifier}', [\App\Http\Controllers\Api\ApiDropshipperController::class, 'productDetailsFree']);
-        Route::post('place-order', [\App\Http\Controllers\Api\ApiDropshipperController::class, 'dropshipperPlaceOrder']);
-    });
 });

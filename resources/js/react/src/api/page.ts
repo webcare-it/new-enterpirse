@@ -2,16 +2,20 @@ import { apiClient } from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 
-export const useGetPage = () => {
+export const useGetPage = (s?: string) => {
     const { slug } = useParams();
     const navigate = useNavigate();
 
     const { data, isLoading, error } = useQuery({
-        queryKey: ["get_page", slug],
+        queryKey: ["get_page", slug || s],
         queryFn: async () => {
             if (!slug && slug?.trim()) navigate("/");
             const params = new URLSearchParams();
-            params.set("type", String(slug));
+            if (s) {
+                params.set("type", String(s));
+            } else {
+                params.set("type", String(slug));
+            }
             const response = await apiClient.get("/pages", { params });
 
             return response.data;
