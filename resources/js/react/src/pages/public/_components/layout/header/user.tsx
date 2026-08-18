@@ -59,9 +59,6 @@ export function UserComponent({ type }: { type: string }) {
                 to="/signin"
                 className="flex items-center gap-2 text-sm text-gray-900 cursor-pointer hover:text-primary transition"
             >
-                <span className="text-sm font-medium hidden md:block">
-                    Sign in
-                </span>
                 <CustomUserIcon strokeWidth="1.8" />
             </Link>
         );

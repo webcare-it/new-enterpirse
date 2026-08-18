@@ -8,12 +8,12 @@ export const BlogCard = ({ blog }: { blog: IBlog }) => {
         <Link to={`/blogs/${blog?.slug}`} key={blog.id}>
             <article
                 key={blog?.id}
-                className="rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300 flex flex-col"
+                className="rounded-3xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300 flex flex-col"
             >
                 <OptimizedImage
                     src={blog?.thumbnail}
                     alt={blog?.title}
-                    className="w-full h-60 object-cover"
+                    className="w-full h-72 object-cover"
                 />
 
                 <div className="p-6 flex-1 flex flex-col">

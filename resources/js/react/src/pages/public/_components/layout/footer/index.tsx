@@ -33,7 +33,7 @@ const linkData = {
 export function Footer() {
     const config = useConfig();
     return (
-        <footer className="bg-gray-800 text-white relative mt-24">
+        <footer className="bg-gray-800 text-white relative">
             <LayoutContainer>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-8 mb-4 pt-8 md:pt-12">
                     <div className="col-span-2 md:col-span-3 lg:col-span-2">
@@ -47,7 +47,7 @@ export function Footer() {
                     {/* Link Columns */}
                     <LinkColumn title="Help" links={linkData.help} />
                     <LinkColumn title="Legal" links={linkData.legal} />
-                    <Newsletter />
+
                     <div>
                         <h2 className="text-xs font-semibold text-white uppercase tracking-[0.15em] mb-5 relative inline-block">
                             Contact
@@ -121,6 +121,7 @@ export function Footer() {
                             ))}
                         </div>
                     </div>
+                    <Newsletter />
                 </div>
 
                 {/* Bottom Bar */}
@@ -130,7 +131,7 @@ export function Footer() {
                             (config?.payment_method_images as string) ||
                             "https://enterprise.droploo.com/uploads/all/YdpGVlKYYie2IvjFc3wGHX6eSsvlmpvYxIgWkS3k.png"
                         }
-                        className="h-fit w-fit"
+                        className="h-20 w-fit"
                     />
                 </div>
                 <div className="border-t border-gray-200 pt-6 pb-8 flex justify-center items-center flex-wrap gap-4">

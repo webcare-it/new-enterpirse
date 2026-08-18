@@ -44,38 +44,40 @@ export const BlogDetailsPage = () => {
                 tags={blogInfo?.tags?.join(", ")}
             />
             <BaseLayout>
-                <LayoutContainer className=" pt-10">
+                <LayoutContainer className="pt-4">
                     {isLoading ? (
                         <BlogDetailsSkeleton />
                     ) : (
                         <BlogDetails blog={blogInfo} />
                     )}
 
-                    <BlogLayout className="pb-16 md:pb-20">
-                        {relatedBlogs?.map((blog, i: number) => (
-                            <AnimationWrapper
-                                key={blog?.id}
-                                initial={{
-                                    opacity: 0,
-                                    y: 40,
-                                }}
-                                whileInView={{
-                                    opacity: 1,
-                                    y: 0,
-                                }}
-                                viewport={{
-                                    once: true,
-                                    amount: 0.2,
-                                }}
-                                transition={{
-                                    duration: 0.6,
-                                    delay: i * 0.05,
-                                }}
-                            >
-                                <BlogCard blog={blog} />
-                            </AnimationWrapper>
-                        ))}
-                    </BlogLayout>
+                    {relatedBlogs?.length > 0 && (
+                        <BlogLayout className="pb-16 md:pb-20">
+                            {relatedBlogs?.map((blog, i: number) => (
+                                <AnimationWrapper
+                                    key={blog?.id}
+                                    initial={{
+                                        opacity: 0,
+                                        y: 40,
+                                    }}
+                                    whileInView={{
+                                        opacity: 1,
+                                        y: 0,
+                                    }}
+                                    viewport={{
+                                        once: true,
+                                        amount: 0.2,
+                                    }}
+                                    transition={{
+                                        duration: 0.6,
+                                        delay: i * 0.05,
+                                    }}
+                                >
+                                    <BlogCard blog={blog} />
+                                </AnimationWrapper>
+                            ))}
+                        </BlogLayout>
+                    )}
                 </LayoutContainer>
             </BaseLayout>
         </>
@@ -85,7 +87,7 @@ export const BlogDetailsPage = () => {
 const BlogDetails = ({ blog }: { blog: IBlogDetails }) => {
     return (
         <section className="pb-16 md:pb-24">
-            <div className="aspect-[16/10] md:aspect-[16/5] relative overflow-hidden rounded shadow">
+            <div className="aspect-[16/10] md:aspect-[16/5] relative overflow-hidden rounded-2xl md:rounded-3xl shadow">
                 <OptimizedImage
                     src={blog?.main_image}
                     alt={"Blog Image"}
@@ -93,7 +95,7 @@ const BlogDetails = ({ blog }: { blog: IBlogDetails }) => {
                 />
             </div>
             <div className="mx-auto py-8 max-w-5xl">
-                <article className="bg-white rounded-0 shadow-none sm:rounded sm:shadow-lg -mt-0 sm:-mt-20 relative z-10">
+                <article className="bg-white rounded-2xl md:rounded-3xl sm:shadow-lg shadow-none -mt-0 sm:-mt-20 relative z-10">
                     <div className="p-2 md:p-8">
                         <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
                             {blog?.title}

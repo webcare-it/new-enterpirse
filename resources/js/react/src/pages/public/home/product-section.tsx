@@ -197,9 +197,12 @@ export const ProductsSection = ({
                 {href && (
                     <div className="flex justify-center mt-2 md:mt-4">
                         <Link to={href}>
-                            <Button>
+                            <Button
+                                variant="outline"
+                                className="group/view-all"
+                            >
                                 View all
-                                <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/view-all:translate-x-1" />{" "}
+                                <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/view-all:translate-x-1" />
                             </Button>
                         </Link>
                     </div>
