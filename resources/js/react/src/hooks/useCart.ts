@@ -32,7 +32,7 @@ export interface CartContextType {
     items: ICartItem[];
     summary: ICartSummary;
     drawerOpen: boolean;
-    isAdding: boolean;
+    addingProductId: number | null;
     isRemoving: boolean;
     isUpdating: boolean;
 }

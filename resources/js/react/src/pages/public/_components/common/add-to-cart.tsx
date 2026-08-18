@@ -16,8 +16,9 @@ export const AddToCart = ({
     trackerData: IItemTracker;
     type?: string;
 }) => {
-    const { addItem, isAdding } = useCart();
+    const { addItem, addingProductId } = useCart();
     const { addToCartTracker } = useGtmTracker();
+    const isAdding = addingProductId === p.product_id;
 
     const handleAddToCart = () => {
         addToCartTracker(trackerData);
@@ -46,7 +47,10 @@ export const AddToCart = ({
 
     if (type === "CARD")
         return (
-            <div className="flex justify-between items-center gap-2 mt-1">
+            <div
+                key={p?.product_id}
+                className="flex justify-between items-center gap-2 mt-1"
+            >
                 <button
                     type="button"
                     onClick={handleAddToCart}
@@ -72,6 +76,8 @@ export const AddToCart = ({
     if (type === "DETAILS") {
         return (
             <button
+                type="button"
+                key={p?.product_id}
                 onClick={handleAddToCart}
                 disabled={isAdding}
                 className={`rounded-3xl w-full transition-all duration-300 cursor-pointer py-3 px-4 flex items-center justify-center bg-primary/90 hover:bg-primary-foreground hover:text-primary text-primary-foreground border border-primary gap-2`}
@@ -103,7 +109,8 @@ export const AddToCartLink = ({ slug }: { slug: string }) => {
 };
 
 export const BuyItNow = ({ p }: { p: ICartAddToCart }) => {
-    const { addItem, isAdding } = useCart();
+    const { addItem, addingProductId } = useCart();
+    const isAdding = addingProductId === p.product_id;
     const handleAddToCart = () => {
         const data: ICartAddToCart = {
             ...p,

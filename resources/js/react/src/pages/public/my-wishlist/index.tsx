@@ -157,7 +157,8 @@ export const MyWishlistPage = () => {
 };
 
 const AddToCartWhishList = ({ p }: { p: IProduct }) => {
-    const { addItem, isAdding } = useCart();
+    const { addItem, addingProductId } = useCart();
+    const isAdding = addingProductId === p.id;
 
     const handleAddToCart = (product_id: number) => {
         const data: ICartAddToCart = {

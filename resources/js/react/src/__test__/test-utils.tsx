@@ -43,7 +43,7 @@ const defaultCart: CartContextType = {
     updateQuantity: vi.fn(),
     setDrawerOpen: vi.fn(),
     drawerOpen: false,
-    isAdding: false,
+    addingProductId: null,
     isRemoving: false,
     isUpdating: false,
 };

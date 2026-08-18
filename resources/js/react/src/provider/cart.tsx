@@ -28,9 +28,11 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     const addToCartMutation = useAddToCartMutation();
     const removeCartMutation = useRemoveCartMutation();
     const updateCartMutation = useUpdateCartMutation();
+    const [addingProductId, setAddingProductId] = useState<number | null>(null);
 
     const addItem = useCallback(
         (p: ICartAddToCart, type?: string) => {
+            setAddingProductId(p.product_id);
             addToCartMutation.mutate(p, {
                 onSuccess: () => {
                     if (type && type === "CHECKOUT") {
@@ -38,6 +40,9 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
                     } else {
                         setDrawerOpen(true);
                     }
+                },
+                onSettled: () => {
+                    setAddingProductId(null);
                 },
             });
         },
@@ -69,7 +74,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
                 setDrawerOpen,
                 items,
                 summary,
-                isAdding: addToCartMutation.isPending,
+                addingProductId,
                 isRemoving: removeCartMutation.isPending,
                 isUpdating: updateCartMutation.isPending,
             }}
