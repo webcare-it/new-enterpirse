@@ -103,9 +103,9 @@ export const Filters = ({
     clearAllFilters,
 }: Props) => {
     const config = useConfig();
+    const { getPriceWithCurrency } = usePrice();
     const brands = (config?.brands as IBrand[]) || [];
 
-    const { getPriceWithCurrency } = usePrice();
     return (
         <>
             <div className="flex items-center justify-between pb-2 border-b">
