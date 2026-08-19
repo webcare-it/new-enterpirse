@@ -53,14 +53,14 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
                         <div className="flex items-center justify-between gap-2">
                             <div
                                 aria-label={`Rating: ${p?.rating} out of 5`}
-                                className="flex items-center gap-0.5 md:gap-1.5 px-2 rounded bg-gray-100 text-xs font-medium"
+                                className="flex items-center gap-0.5 md:gap-1.5 px-2 rounded-full bg-gray-100 text-xs font-medium"
                             >
                                 <span className="font-semibold text-base  text-yellow-500">
                                     ★
                                 </span>
                                 <span className="text-sm">{p?.rating}</span>
                             </div>
-                            <div className="flex items-center gap-0.5 md:gap-1.5 px-2 py-1 rounded bg-primary/10 text-xs font-medium text-primary">
+                            <div className="flex items-center gap-0.5 md:gap-1.5 px-2 py-1 rounded-full bg-primary/10 text-xs font-medium text-primary">
                                 <ChartNoAxesCombined className="size-2.5 md:size-3.5" />
                                 <span className="font-semibold">{p?.sold}</span>
                                 sold

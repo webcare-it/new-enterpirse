@@ -22,13 +22,13 @@ export const CartQuantity = ({ item }: { item: ICartItem }) => {
     };
 
     return (
-        <div className="flex items-center rounded-xl bg-gray-100 px-3 py-2 gap-2">
+        <div className="flex items-center gap-.5 rounded-full bg-gray-100">
             <button
                 type="button"
                 title="Decrease Quantity"
                 disabled={isUpdating || quantity <= 1}
                 onClick={() => handleUpdate(quantity - 1)}
-                className="flex size-5 cursor-pointer items-center justify-center text-gray-900 transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex size-8 cursor-pointer items-center justify-center rounded-l-full bg-gray-300 text-gray-900 transition-all duration-100 hover:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
                 <Minus className="size-4" />
             </button>
@@ -40,7 +40,7 @@ export const CartQuantity = ({ item }: { item: ICartItem }) => {
                 value={quantity}
                 onChange={handleQuantity}
                 disabled={isUpdating}
-                className="w-8 bg-transparent p-0 text-center outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="w-6 bg-transparent p-0 text-center font-medium outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
 
             <button
@@ -48,7 +48,7 @@ export const CartQuantity = ({ item }: { item: ICartItem }) => {
                 title="Increase Quantity"
                 disabled={isUpdating}
                 onClick={() => handleUpdate(quantity + 1)}
-                className="flex size-5 cursor-pointer items-center justify-center text-gray-900 transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex size-8 cursor-pointer items-center justify-center rounded-r-full bg-gray-300 text-gray-900 transition-all duration-100 hover:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
                 <Plus className="size-4" />
             </button>

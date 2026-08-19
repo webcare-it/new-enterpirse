@@ -37,9 +37,9 @@ export const BlogSection = ({ blogs }: { blogs: IBlog[] }) => {
 
             <div className="flex justify-center mt-4">
                 <Link to="/blogs">
-                    <Button>
+                    <Button variant="secondary" className="group/view-all">
                         View all
-                        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/view-all:translate-x-1" />{" "}
+                        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/view-all:translate-x-1" />
                     </Button>
                 </Link>
             </div>

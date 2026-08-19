@@ -7,7 +7,7 @@ import type { ICampaign, IProduct } from "@/type";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
 import { Loading } from "../_components/common/loading";
 import { NoDataFound } from "@/components/common/no-data-found";
-import { CampaignCountdown } from "./countdown";
+import { CampaignTimer } from "./countdown";
 import { OptimizedImage } from "@/components/common/optimized-image";
 
 export const CampaignPage = () => {
@@ -25,7 +25,7 @@ export const CampaignPage = () => {
             />
             <BaseLayout>
                 <LayoutContainer className="pb-24 md:pb-32">
-                    <div className="aspect-[4/1.5] sm:aspect-[16/5] md:aspect-[16/2.5] overflow-hidden rounded-xl md:rounded-3xl md:rounded-t-none mt-2 md:mt-0">
+                    <div className="aspect-[4/1.5] sm:aspect-[16/5] md:aspect-[16/2.5] overflow-hidden rounded-xl md:rounded-3xl mt-2">
                         {isLoading ? (
                             "..."
                         ) : (
@@ -33,7 +33,6 @@ export const CampaignPage = () => {
                                 src={campaign?.image}
                                 alt={campaign?.name}
                                 className="w-full h-full object-cover"
-                                priority={true}
                             />
                         )}
                     </div>
@@ -45,7 +44,7 @@ export const CampaignPage = () => {
                             </div>
                         ) : products?.length > 0 ? (
                             <>
-                                <CampaignCountdown campaign={campaign} />
+                                <CampaignTimer endDate={campaign?.end_date} />
                                 <ProductLayout>
                                     {products?.map((p, i) => (
                                         <AnimationWrapper

@@ -198,7 +198,7 @@ export const ProductsSection = ({
                     <div className="flex justify-center mt-2 md:mt-4">
                         <Link to={href}>
                             <Button
-                                variant="outline"
+                                variant="secondary"
                                 className="group/view-all"
                             >
                                 View all

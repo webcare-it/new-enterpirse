@@ -20,7 +20,7 @@ export const AddToCart = ({
     const { addToCartTracker } = useGtmTracker();
     const isAdding = addingProductId === p.product_id;
 
-    const handleAddToCart = () => {
+    const handleAddToCart = (type?: string) => {
         addToCartTracker(trackerData);
         const data: ICartAddToCart = {
             ...p,
@@ -41,8 +41,11 @@ export const AddToCart = ({
 
             data.temp_user_id = tempId;
         }
-
-        addItem(data);
+        if (type) {
+            addItem(data, "CHECKOUT");
+        } else {
+            addItem(data);
+        }
     };
 
     if (type === "CARD")
@@ -53,7 +56,7 @@ export const AddToCart = ({
             >
                 <button
                     type="button"
-                    onClick={handleAddToCart}
+                    onClick={() => handleAddToCart("CHECKOUT")}
                     disabled={isAdding}
                     aria-label={`Add ${p?.product_id ?? "product"} to cart`}
                     className="flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-10 md:h-12 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border text-sm md:text-base border-primary gap-1 md:gap-2"
@@ -63,7 +66,7 @@ export const AddToCart = ({
                 </button>
 
                 <button
-                    onClick={handleAddToCart}
+                    onClick={() => handleAddToCart()}
                     disabled={isAdding}
                     aria-label={`Add ${p?.product_id ?? "product"} to cart`}
                     className={`size-10 md:size-12 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center border border-primary bg-primary/80 text-primary-foreground hover:bg-primary`}
@@ -78,7 +81,7 @@ export const AddToCart = ({
             <button
                 type="button"
                 key={p?.product_id}
-                onClick={handleAddToCart}
+                onClick={() => handleAddToCart()}
                 disabled={isAdding}
                 className={`rounded-3xl w-full transition-all duration-300 cursor-pointer py-3 px-4 flex items-center justify-center bg-primary/90 hover:bg-primary-foreground hover:text-primary text-primary-foreground border border-primary gap-2`}
             >
@@ -142,7 +145,7 @@ export const BuyItNow = ({ p }: { p: ICartAddToCart }) => {
             className={`rounded-3xl w-full transition-all duration-300 cursor-pointer py-3 px-4 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border border-primary gap-2`}
         >
             <LockIcon className="size-4 md:size-5" />{" "}
-            {isAdding ? "loading..." : "Buy it now"}
+            {isAdding ? "loading..." : "Order now"}
         </button>
     );
 };
