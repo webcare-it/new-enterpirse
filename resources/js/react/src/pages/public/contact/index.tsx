@@ -15,6 +15,17 @@ export const ContactPage = () => {
     const phone = config?.contact_phone as string;
     const email = config?.contact_email as string;
     const address = config?.contact_address as string;
+    const desc =
+        (config?.contact_desc as string) ||
+        ` Have questions or want to learn more about
+                                    our services? We'd love to hear from you.
+                                    Reach out to us and we'll respond as soon as
+                                    possible.`;
+    const businessOpeningHour =
+        (config?.b_opening_hour as string) ||
+        `Saturday - Thursday: 10:00 AM - 8:00 PM`;
+    const businessClosingHour =
+        (config?.b_closing_hour as string) || `Friday: Closed`;
 
     const { mutate, isPending } = useContactStoreMutation();
 
@@ -30,7 +41,7 @@ export const ContactPage = () => {
         <>
             <SeoWrapper title="Contact Us" description="Get in touch with us" />
             <BaseLayout>
-                <section className="py-16 md:py-24">
+                <section className="pb-16 mt-6 md:pb-24">
                     <LayoutContainer>
                         <div className="max-w-6xl mx-auto">
                             <motion.div
@@ -44,10 +55,7 @@ export const ContactPage = () => {
                                     Get In Touch
                                 </h2>
                                 <p className="text-gray-500 max-w-2xl mx-auto">
-                                    Have questions or want to learn more about
-                                    our services? We'd love to hear from you.
-                                    Reach out to us and we'll respond as soon as
-                                    possible.
+                                    {desc}
                                 </p>
                             </motion.div>
 
@@ -115,11 +123,8 @@ export const ContactPage = () => {
                                                 Business Hours
                                             </h4>
                                             <div className="text-sm text-gray-500 space-y-1">
-                                                <p>
-                                                    Saturday - Thursday: 10:00
-                                                    AM - 8:00 PM
-                                                </p>
-                                                <p>Friday: Closed</p>
+                                                <p>{businessOpeningHour}</p>
+                                                <p>{businessClosingHour}</p>
                                             </div>
                                         </div>
                                     </div>

@@ -335,7 +335,7 @@ class ApiHomeController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'This email is already subscribed.'
-            ], 409);
+            ], 404);
         }
 
         try {

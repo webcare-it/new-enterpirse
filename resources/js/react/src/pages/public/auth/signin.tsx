@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-    Eye,
-    EyeOff,
-    Lock,
-    LogIn,
-    Loader2,
-    Phone,
-    ArrowLeft,
-} from "lucide-react";
+import { Eye, EyeOff, Lock, LogIn, Loader2, Phone } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -19,37 +11,17 @@ import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 import { SocialLogin } from "./social";
 import { HeaderLogo } from "@/components/common/logo";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
+import { BaseLayout, LayoutContainer } from "../_components/layout/base-layout";
 
 export const SignInPage = () => {
     return (
         <>
             <SeoWrapper title="Sign In" description="Sign in to your account" />
-            <div className="flex min-h-screen">
-                {/* Left - Illustration */}
-                <div className="hidden md:block md:w-1/2 relative overflow-hidden min-h-screen">
-                    <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{
-                            backgroundImage:
-                                "url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&q=80')",
-                        }}
-                    />
-
-                    <div className="relative z-10 p-4 flex justify-start items-center gap-2">
-                        <Link to="/">
-                            <Button size="icon-lg">
-                                <ArrowLeft className="w-6 h-6 text-white" />
-                            </Button>
-                        </Link>{" "}
-                        <HeaderLogo />
-                    </div>
-                </div>
-
-                {/* Right - Form */}
-                <div className="w-full md:w-1/2 flex justify-center items-center">
+            <BaseLayout>
+                <LayoutContainer className="mt-4 mb-10">
                     <Form />
-                </div>
-            </div>
+                </LayoutContainer>
+            </BaseLayout>
         </>
     );
 };

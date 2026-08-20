@@ -1,3 +1,4 @@
+import { SocialMessage } from "../common/social-contact";
 import { Footer } from "./footer";
 import { Header } from "./header";
 import { TopBar } from "./header/top-bar";
@@ -13,6 +14,7 @@ export const BaseLayout = ({ children }: Props) => {
             <Header />
             {children}
             <Footer />
+            <SocialMessage />
         </section>
     );
 };

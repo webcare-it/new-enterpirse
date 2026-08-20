@@ -87,7 +87,7 @@ export function TrackOrderPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                                 transition={{ duration: 0.3 }}
-                                className="flex flex-col items-center justify-center min-h-[40vh] px-4"
+                                className="flex flex-col items-center justify-center min-h-[50vh] px-4"
                             >
                                 <div className="w-full max-w-md text-center space-y-6">
                                     <div className="space-y-2">
@@ -95,36 +95,87 @@ export function TrackOrderPage() {
                                             Track Your Order
                                         </h1>
                                         <p className="text-sm text-muted-foreground">
-                                            Enter your order ID to track its
-                                            status and details.
+                                            Enter your order ID to check the
+                                            latest status and delivery updates.
                                         </p>
                                     </div>
 
                                     <form
                                         onSubmit={handleSubmit}
-                                        className="flex gap-2"
+                                        className="w-full"
                                     >
-                                        <Input
-                                            placeholder="Enter your Order ID"
-                                            name="order"
-                                            id="order"
-                                            type="text"
-                                            className="h-11 rounded-xl px-4"
-                                            value={orderId}
-                                            onChange={(e) =>
-                                                setOrderId(e.target.value)
-                                            }
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={isPending}
-                                            className="h-11 px-5 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 transition flex items-center justify-center font-medium text-sm cursor-pointer shrink-0"
-                                        >
-                                            <Search className="mr-2 size-4" />{" "}
-                                            {isPending
-                                                ? "Loading..."
-                                                : "Search"}
-                                        </button>
+                                        <div className="flex h-11 w-full overflow-hidden rounded-xl border bg-background focus-within:ring-1 focus-within:ring-ring">
+                                            {/* Input + Clear button */}
+                                            <div className="relative flex min-w-0 flex-1 items-center">
+                                                <Input
+                                                    placeholder="Enter your Order ID"
+                                                    name="order"
+                                                    id="order"
+                                                    type="text"
+                                                    value={orderId}
+                                                    onChange={(e) =>
+                                                        setOrderId(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="h-full w-full rounded-none border-0 px-4 pr-10 shadow-none focus-visible:ring-0"
+                                                />
+
+                                                {/* Cross button */}
+                                                <AnimatePresence>
+                                                    {orderId && (
+                                                        <motion.button
+                                                            type="button"
+                                                            initial={{
+                                                                opacity: 0,
+                                                                scale: 0.8,
+                                                            }}
+                                                            animate={{
+                                                                opacity: 1,
+                                                                scale: 1,
+                                                            }}
+                                                            exit={{
+                                                                opacity: 0,
+                                                                scale: 0.8,
+                                                            }}
+                                                            transition={{
+                                                                duration: 0.15,
+                                                            }}
+                                                            onClick={() => {
+                                                                setOrderId("");
+                                                                reset();
+                                                                setSearchParams(
+                                                                    {},
+                                                                );
+                                                            }}
+                                                            className="absolute right-2 flex size-7 items-center justify-center rounded-full text-red-600 transition hover:bg-muted"
+                                                            aria-label="Clear order ID"
+                                                        >
+                                                            <span className="text-lg leading-none">
+                                                                ×
+                                                            </span>
+                                                        </motion.button>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+
+                                            {/* Search button */}
+                                            <button
+                                                type="submit"
+                                                disabled={
+                                                    isPending || !orderId.trim()
+                                                }
+                                                className="flex h-full shrink-0 items-center justify-center gap-2 border-l bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <Search className="size-4" />
+
+                                                <span>
+                                                    {isPending
+                                                        ? "Loading..."
+                                                        : "Search"}
+                                                </span>
+                                            </button>
+                                        </div>
                                     </form>
 
                                     {error && (

@@ -12,6 +12,57 @@
         <div class="col-lg-9 mx-auto">
             <div class="card">
                 <div class="card-header">
+                    <h6 class="mb-0">{{ translate('Appearance') }}</h6>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('business_settings.update') }}" method="POST">
+                        @csrf
+                        <div class="form-group row">
+                            <label class="col-md-3 col-from-label">{{ translate('Website Base Color') }}</label>
+                            <div class="col-md-9 d-flex align-items-center gap-2">
+                                <input type="hidden" name="types[]" value="base_color">
+                                <input type="color" id="base_color_picker" class="form-control form-control-color"
+                                    value="{{ get_setting('base_color') ?? '#f04d6e' }}" title="Choose color">
+                                <input type="text" name="base_color" id="base_color_input" class="form-control"
+                                    placeholder="#f04d6e" value="{{ get_setting('base_color') ?? '#f04d6e' }}">
+                            </div>
+                            <small class="text-muted offset-md-3 col-md-9">{{ translate('Hex Color Code') }}</small>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-md-3 col-from-label">{{ translate('Website Base Font Color') }}</label>
+                            <div class="col-md-9 d-flex align-items-center gap-2">
+                                <input type="hidden" name="types[]" value="base_hov_color">
+                                <input type="color" id="base_hov_color_picker" class="form-control form-control-color"
+                                    value="{{ get_setting('base_hov_color') ?? '#f04d6e' }}" title="Choose color">
+                                <input type="text" name="base_hov_color" id="base_hov_color_input" class="form-control"
+                                    placeholder="#f04d6e" value="{{ get_setting('base_hov_color') ?? '#f04d6e' }}">
+                            </div>
+                            <small class="text-muted offset-md-3 col-md-9">{{ translate('Hex Color Code') }}</small>
+                        </div>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                // Base color sync
+                                const basePicker = document.getElementById('base_color_picker');
+                                const baseInput = document.getElementById('base_color_input');
+                                basePicker.addEventListener('input', () => baseInput.value = basePicker.value);
+                                baseInput.addEventListener('input', () => basePicker.value = baseInput.value);
+
+                                // Hover color sync
+                                const hovPicker = document.getElementById('base_hov_color_picker');
+                                const hovInput = document.getElementById('base_hov_color_input');
+                                hovPicker.addEventListener('input', () => hovInput.value = hovPicker.value);
+                                hovInput.addEventListener('input', () => hovPicker.value = hovInput.value);
+                            });
+                        </script>
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-primary">{{ translate('Submit') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
                     <h6 class="fw-600 mb-0">{{ translate('General') }}</h6>
                 </div>
                 <div class="card-body">
@@ -167,6 +218,8 @@
                     </form>
                 </div>
             </div>
+
+
         </div>
     </div>
 @endsection

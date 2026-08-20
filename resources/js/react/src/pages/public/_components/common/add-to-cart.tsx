@@ -9,12 +9,14 @@ import { useGtmTracker, type IItemTracker } from "@/hooks/useGtmTracker";
 
 export const AddToCart = ({
     p,
-    type = "CARD",
+    isInStock,
     trackerData,
+    type = "CARD",
 }: {
+    type?: string;
+    isInStock?: boolean;
     p: ICartAddToCart;
     trackerData: IItemTracker;
-    type?: string;
 }) => {
     const { addItem, addingProductId } = useCart();
     const { addToCartTracker } = useGtmTracker();
@@ -57,9 +59,9 @@ export const AddToCart = ({
                 <button
                     type="button"
                     onClick={() => handleAddToCart("CHECKOUT")}
-                    disabled={isAdding}
+                    disabled={isAdding || !isInStock}
                     aria-label={`Add ${p?.product_id ?? "product"} to cart`}
-                    className="flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-10 md:h-12 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border text-sm md:text-base border-primary gap-1 md:gap-2"
+                    className={`flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-10 md:h-12 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border text-sm md:text-base border-primary gap-1 md:gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
                 >
                     <LockIcon className="size-4" />
                     {isAdding ? "loading..." : " Order now"}
@@ -67,9 +69,9 @@ export const AddToCart = ({
 
                 <button
                     onClick={() => handleAddToCart()}
-                    disabled={isAdding}
+                    disabled={isAdding || !isInStock}
                     aria-label={`Add ${p?.product_id ?? "product"} to cart`}
-                    className={`size-10 md:size-12 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center border border-primary bg-primary/80 text-primary-foreground hover:bg-primary`}
+                    className={`size-10 md:size-12 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center border border-primary bg-primary/80 text-primary-foreground hover:bg-primary ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
                 >
                     {isAdding ? <Spinner /> : <CartIcon />}
                 </button>
@@ -82,8 +84,8 @@ export const AddToCart = ({
                 type="button"
                 key={p?.product_id}
                 onClick={() => handleAddToCart()}
-                disabled={isAdding}
-                className={`rounded-3xl w-full transition-all duration-300 cursor-pointer py-3 px-4 flex items-center justify-center bg-primary/90 hover:bg-primary-foreground hover:text-primary text-primary-foreground border border-primary gap-2`}
+                disabled={isAdding || !isInStock}
+                className={`rounded-3xl w-full transition-all duration-300 py-3 px-4 flex items-center justify-center bg-primary/90 hover:bg-primary-foreground hover:text-primary text-primary-foreground border border-primary gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
             >
                 <CartIcon /> {isAdding ? "loading..." : "Add to cart"}
             </button>

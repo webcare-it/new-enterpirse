@@ -13,6 +13,15 @@ export const ProgressBar = ({
 
     const percentage = total > 0 ? (sold / total) * 100 : 0;
 
+    if (stock === 0) {
+        return (
+            <div className="flex items-center gap-2 my-4 md:my-5 text-red-600">
+                <span className="size-4 bg-red-600 rounded-full" />
+                Out of stock
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-3">
             {/* Progress */}

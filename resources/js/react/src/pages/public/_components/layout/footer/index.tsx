@@ -111,7 +111,7 @@ export function Footer() {
                                     key={color}
                                     to={link}
                                     aria-label={label}
-                                    className={`size-9 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center ${color} transition-all duration-500 hover:scale-110 hover:-translate-y-0.5`}
+                                    className={`size-9 rounded-full bg-gray-700 hover:bg-gray-700 flex items-center justify-center ${color} transition-all duration-500 hover:scale-110 hover:-translate-y-0.5`}
                                     style={{
                                         transitionDelay: `${idx * 50}ms`,
                                     }}

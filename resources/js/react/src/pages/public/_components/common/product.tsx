@@ -34,7 +34,7 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
                     <Link to={link} className="absolute z-0 inset-0">
                         <OptimizedImage
                             src={p?.image || ""}
-                            className="absolute w-full h-full transition duration-700 ease-out z-0"
+                            className="absolute w-full h-full transition-transform duration-500 ease-out hover:scale-110 z-0"
                             alt="Product Image"
                         />
                     </Link>
@@ -53,15 +53,24 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
                         <div className="flex items-center justify-between gap-2">
                             <div
                                 aria-label={`Rating: ${p?.rating} out of 5`}
-                                className="flex items-center gap-0.5 md:gap-1.5 px-2 rounded-full bg-gray-100 text-xs font-medium"
+                                className="flex items-center gap-0.5 md:gap-1.5 py-1 px-2 rounded-full bg-gray-100 text-xs font-medium text-yellow-400"
                             >
-                                <span className="font-semibold text-base  text-yellow-500">
-                                    ★
+                                <svg
+                                    className="size-3 md:size-4"
+                                    viewBox="0 0 16 16"
+                                    stroke="none"
+                                    fill="currentColor"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    role="presentation"
+                                >
+                                    <path d="M8 0L9.88914 5.81283H16L11.056 9.40604L12.9452 15.2177L8 11.6245L3.05603 15.2177L4.94397 9.40484L0 5.81163H6.11086L8 0Z" />
+                                </svg>
+                                <span className="text-sm text-gray-900">
+                                    {p?.rating}
                                 </span>
-                                <span className="text-sm">{p?.rating}</span>
                             </div>
                             <div className="flex items-center gap-0.5 md:gap-1.5 px-2 py-1 rounded-full bg-primary/10 text-xs font-medium text-primary">
-                                <ChartNoAxesCombined className="size-2.5 md:size-3.5" />
+                                <ChartNoAxesCombined className="size-3 md:size-4" />
                                 <span className="font-semibold">{p?.sold}</span>
                                 sold
                             </div>
@@ -75,7 +84,9 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
 
                     <RegularPrice p={p} />
 
-                    {p?.has_variants ? (
+                    {!p?.in_stock ? (
+                        <OutOfStock />
+                    ) : p?.has_variants ? (
                         <AddToCartLink slug={link} />
                     ) : (
                         <AddToCart
@@ -84,6 +95,7 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
                                 quantity: 1,
                                 campaign_id: campaign?.id,
                             }}
+                            isInStock={p?.in_stock}
                             trackerData={trackerData}
                         />
                     )}
@@ -155,3 +167,28 @@ const DiscountLabel = ({ children }: { children: string }) => {
         </div>
     );
 };
+
+const OutOfStock = () => (
+    <button className="rounded-3xl w-full transition-all duration-300 cursor-not-allowed h-10 md:h-12 flex items-center justify-center bg-red-100 text-red-600 hover:text-red-600 border text-sm md:text-base border-red-600 gap-1 md:gap-2">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="shrink-0"
+        >
+            {/* Box */}
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+            <path d="m3.3 7 8.7 5 8.7-5" />
+            <path d="M12 22V12" />
+            {/* Diagonal slash */}
+            <line x1="4" y1="4" x2="20" y2="20" strokeWidth="2.5" />
+        </svg>
+        Out of stock
+    </button>
+);

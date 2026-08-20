@@ -1,8 +1,14 @@
 import { useNewsletterMutation } from "@/api/newsletter";
+import { Input } from "@/components/ui/input";
 import { isValidEmail } from "@/helper";
+import { useConfig } from "@/hooks/useConfig";
 import toast from "react-hot-toast";
 
 export const Newsletter = () => {
+    const config = useConfig();
+    const sub_title =
+        (config?.n_sub_title as string) || "Get the latest news and updates";
+
     const { mutate, isPending } = useNewsletterMutation();
 
     const handleNewsletter = (e: React.FormEvent<HTMLFormElement>) => {
@@ -34,25 +40,27 @@ export const Newsletter = () => {
                     our Newsletter
                 </h2>
                 <p className="text-sm md:text-base text-primary-foreground font-medium">
-                    Get the latest news and updates
+                    {sub_title}
                 </p>
             </div>
 
             <form className="w-full lg:max-w-md" onSubmit={handleNewsletter}>
-                <div className="flex items-center w-full bg-white rounded-2xl overflow-hidden border border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition p-0.5">
-                    <input
-                        type="email"
-                        name="email"
-                        disabled={isPending}
-                        id="email"
-                        placeholder="Enter your email address"
-                        className="flex-1 h-10 md:h-11 px-3 bg-transparent text-gray-950 placeholder-gray-400 outline-none text-sm min-w-0"
-                        required
-                    />
+                <div className="flex h-11 w-full overflow-hidden rounded-xl border bg-background focus-within:ring-1 focus-within:ring-ring">
+                    <div className="relative flex min-w-0 flex-1 items-center">
+                        <Input
+                            placeholder="Enter your email"
+                            type="email"
+                            name="email"
+                            id="email"
+                            required
+                            className="h-full w-full rounded-none border-0 px-4 pr-10 shadow-none focus-visible:ring-0 text-gray-900"
+                        />
+                    </div>
+
                     <button
                         type="submit"
                         disabled={isPending}
-                        className="h-10 md:h-11 px-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition flex items-center justify-center font-medium text-sm cursor-pointer shrink-0"
+                        className="flex h-full shrink-0 items-center justify-center gap-2 border-l bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {isPending ? "Loading..." : "Submit"}
                     </button>

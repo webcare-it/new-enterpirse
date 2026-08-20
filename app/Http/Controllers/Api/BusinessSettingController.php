@@ -142,6 +142,9 @@ class BusinessSettingController extends Controller
             'base_color',
             'base_hov_color',
             'top_bar_offer',
+            'b_opening_hour',
+            'b_closing_hour',
+            'n_sub_title'
         ];
 
         // Keys that store image IDs (will be converted to URLs)

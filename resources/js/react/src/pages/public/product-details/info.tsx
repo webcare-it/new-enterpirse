@@ -15,6 +15,7 @@ import { useGtmTracker, type IItemTracker } from "@/hooks/useGtmTracker";
 import { WishlistToggle } from "../_components/common/wishlist-toggle";
 import { useSearchParams } from "react-router-dom";
 import { renderStars } from "@/helper";
+import { SocialMessage } from "../_components/common/social-contact";
 
 interface Props {
     product: IProductDetails;
@@ -260,6 +261,10 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
                                 ? { sku: currentVariant?.sku }
                                 : undefined,
                         }}
+                        isInStock={
+                            (currentVariant && currentVariant?.stock > 0) ||
+                            product?.inventory?.stock > 0
+                        }
                         type="DETAILS"
                         trackerData={{
                             item_id: product?.id.toString() || "",
@@ -286,6 +291,7 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
                         }}
                     />
                 </div>
+                <SocialMessage type="details" />
             </div>
 
             <div className="grid grid-cols-3 gap-2">

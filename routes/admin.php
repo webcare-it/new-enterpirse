@@ -47,6 +47,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::group(['prefix' => 'website'], function () {
         Route::get('/footer', 'WebsiteController@footer')->name('website.footer');
         Route::get('/appearance', 'WebsiteController@appearance')->name('website.appearance');
+        Route::get('/utilities', 'WebsiteController@utilities')->name('website.utilities');
         Route::get('/header', 'WebsiteController@header')->name('website.header');
         Route::get('/pages', 'WebsiteController@pages')->name('website.pages');
         Route::get('/price-fix', 'WebsiteController@priceFix')->name('website.price.fix');

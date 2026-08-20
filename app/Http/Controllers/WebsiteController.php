@@ -60,6 +60,10 @@ class WebsiteController extends Controller
 	{
 		return view('backend.website_settings.appearance');
 	}
+	public function utilities(Request $request)
+	{
+		return view('backend.website_settings.utilities');
+	}
 
 	public function sort(Request $request)
 	{

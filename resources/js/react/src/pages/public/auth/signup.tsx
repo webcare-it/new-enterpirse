@@ -8,7 +8,6 @@ import {
     UserPlus,
     Phone,
     Loader2,
-    ArrowLeft,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
@@ -19,38 +18,18 @@ import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 import { SocialLogin } from "./social";
 import { HeaderLogo } from "@/components/common/logo";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
+import { BaseLayout, LayoutContainer } from "../_components/layout/base-layout";
 
 export const SignUpPage = () => {
     return (
         <>
             <SeoWrapper title="Sign Up" description="Create a new account" />
 
-            <div className="flex min-h-screen">
-                {/* Left - Illustration */}
-                <div className="hidden md:block md:w-1/2 relative overflow-hidden min-h-screen">
-                    <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{
-                            backgroundImage:
-                                "url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&q=80')",
-                        }}
-                    />
-
-                    <div className="relative z-10 p-4 flex justify-start items-center gap-2">
-                        <Link to="/">
-                            <Button size="icon-lg">
-                                <ArrowLeft className="w-6 h-6 text-white" />
-                            </Button>
-                        </Link>
-                        <HeaderLogo />
-                    </div>
-                </div>
-
-                {/* Right - Form */}
-                <div className="w-full md:w-1/2 flex justify-center items-center">
+            <BaseLayout>
+                <LayoutContainer className="mt-4 mb-10">
                     <Form />
-                </div>
-            </div>
+                </LayoutContainer>
+            </BaseLayout>
         </>
     );
 };
@@ -72,15 +51,17 @@ const Form = () => {
     } = usePhoneValidation();
     const { mutate, isPending: registerPending } = useRegisterMutation();
 
-    const passwordError = form.password.length > 0 && form.password.length < 6
-        ? "Password must be at least 6 characters"
-        : "";
+    const passwordError =
+        form.password.length > 0 && form.password.length < 6
+            ? "Password must be at least 6 characters"
+            : "";
 
-    const confirmError = form.password_confirmation.length > 0
-        ? form.password !== form.password_confirmation
-            ? "Passwords do not match"
-            : "Passwords match"
-        : "";
+    const confirmError =
+        form.password_confirmation.length > 0
+            ? form.password !== form.password_confirmation
+                ? "Passwords do not match"
+                : "Passwords match"
+            : "";
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -233,7 +214,9 @@ const Form = () => {
                             </button>
                         </div>
                         {confirmError && (
-                            <p className={`text-xs px-1 ${confirmError === "Passwords match" ? "text-green-600" : "text-destructive"}`}>
+                            <p
+                                className={`text-xs px-1 ${confirmError === "Passwords match" ? "text-green-600" : "text-destructive"}`}
+                            >
                                 {confirmError}
                             </p>
                         )}

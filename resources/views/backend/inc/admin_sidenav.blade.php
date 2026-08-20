@@ -741,7 +741,7 @@
                                 </a>
                             </li>
                             <li class="aiz-side-nav-item">
-                                <a href="{{ route('website.footer', ['lang' => App::getLocale()]) }}"
+                                <a href="{{ route('website.footer') }}"
                                     class="aiz-side-nav-link {{ areActiveRoutes(['website.footer']) }}">
                                     <span class="aiz-side-nav-text">{{ translate('Footer') }}</span>
                                 </a>
@@ -750,6 +750,12 @@
                                 <a href="{{ route('website.appearance') }}"
                                     class="aiz-side-nav-link {{ areActiveRoutes(['website.appearance']) }}">
                                     <span class="aiz-side-nav-text">{{ translate('Appearance') }}</span>
+                                </a>
+                            </li>
+                            <li class="aiz-side-nav-item">
+                                <a href="{{ route('website.utilities') }}"
+                                    class="aiz-side-nav-link {{ areActiveRoutes(['website.utilities']) }}">
+                                    <span class="aiz-side-nav-text">{{ translate('Utilities') }}</span>
                                 </a>
                             </li>
                             <li class="aiz-side-nav-item">
