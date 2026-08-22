@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\IncompleteOrderController;
 use App\Http\Controllers\Admin\LandingpageController;
 use App\Http\Controllers\Admin\ManualOrderController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\CourierController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -218,7 +219,7 @@ Route::prefix('campaigns')->name('campaigns.')->group(function () {
 });
 
 
-// Manual Order 
+// Manual Order
 Route::prefix('manual-orders')->name('manual_orders.')->group(function () {
     Route::get('/create-manual-order', [ManualOrderController::class, 'create_manual_order'])->name('index');
     Route::post('/get-products', [ManualOrderController::class, 'getProducts'])->name('get-products');
@@ -277,6 +278,11 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::post('/bulk-delete', [OrderController::class, 'bulkDelete'])->name('bulk-delete');
     // Export route
     Route::get('/export', [OrderController::class, 'export'])->name('export');
+
+    Route::get('/pathao/stores', [CourierController::class, 'pathao_stores'])->name('pathao.stores');
+    Route::post('/{id}/send-to-pathao', [CourierController::class, 'send_to_pathao'])->name('send_to_pathao');
+    Route::post('/{id}/send-to-steadfast', [CourierController::class, 'send_to_steadfast'])->name('send_to_steadfast');
+    Route::post('/{id}/reset-courier', [CourierController::class, 'reset_courier'])->name('reset_courier');
 
     Route::get('/csv/import', [\App\Http\Controllers\Admin\OrderCsvController::class, 'showImportForm'])->name('import.form');
     Route::post('/csv/import', [\App\Http\Controllers\Admin\OrderCsvController::class, 'import'])->name('import');

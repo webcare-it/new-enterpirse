@@ -27,7 +27,10 @@ class ApiCartController extends Controller
         $user = User::where('id', $requestedUserId)->first();
 
         if ($user) {
-            $cartItems = Cart::where('user_id', $user->id)->get();
+            $cartItems = Cart::where(function ($query) use ($user, $requestedUserId) {
+                $query->where('user_id', $user->id)
+                    ->orWhere('temp_user_id', $requestedUserId);
+            })->get();
         } else {
             $cartItems = Cart::where('temp_user_id', $requestedUserId)->get();
         }
@@ -94,6 +97,7 @@ class ApiCartController extends Controller
 
         return response()->json([
             'success' => true,
+            'id' => $requestedUserId,
             'data' => [
                 'items' => $formatted,
                 'summary' => [
@@ -252,7 +256,7 @@ class ApiCartController extends Controller
 
         $userId = null;
         $tempUserId = null;
-        $requestedUserId = $request->user_id;
+        $requestedUserId = $request->header('User-Id') ?? $request->input('user_id');
 
         if ($requestedUserId && \App\Models\User::where('id', $requestedUserId)->exists()) {
             $userId = $requestedUserId;

@@ -40,6 +40,10 @@ class CreateOrdersTable extends Migration
             $table->text('notes')->nullable();
             $table->bigInteger('date')->nullable();
 
+            $table->string('courier_name')->nullable();
+            $table->string('consignment_id')->nullable();
+            $table->string('courier_tracking_code')->nullable();
+
             $table->boolean('viewed')->default(false);
             $table->boolean('delivery_viewed')->default(false);
             $table->boolean('payment_status_viewed')->default(false);

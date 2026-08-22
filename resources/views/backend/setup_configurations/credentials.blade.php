@@ -11,9 +11,9 @@
                             <i class="las la-cog font-medium-3"></i>
                         </div>
                         <div>
-                            <h5 class="mb-0 h5 text-dark font-weight-bold">{{ translate('General Settings') }}</h5>
+                            <h5 class="mb-0 h5 text-dark font-weight-bold">{{ translate('Droploo API Credentials') }}</h5>
                             <p class="text-muted mb-0 small">
-                                {{ translate('Manage external integration keys and API configurations') }}</p>
+                                {{ translate('Configure your Droploo API connection settings') }}</p>
                         </div>
                     </div>
                 </div>
@@ -22,11 +22,6 @@
                     <form action="{{ route('business_settings.update') }}" method="POST" enctype="multipart/form-data"
                         class="mb-5">
                         @csrf
-                        <div class="mb-3">
-                            <h6 class="text-primary font-weight-bold mb-1">{{ translate('Droploo API Credentials') }}</h6>
-                            <p class="text-muted small mb-3">
-                                {{ translate('Configure your Droploo API connection settings') }}</p>
-                        </div>
 
                         <div class="form-group row align-items-center">
                             <label
@@ -87,17 +82,31 @@
                         </div>
                     </form>
 
-                    <hr class="my-4" style="border-top: 1px solid #edf2f9;">
-
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-lg-9 mx-auto">
+            <div class="card shadow-sm border-0 rounded-lg">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-shape bg-soft-primary text-primary mr-3 rounded-circle p-2"
+                            style="background: rgba(0,123,255,0.1);">
+                            <i class="las la-truck font-medium-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 h5 text-dark font-weight-bold">{{ translate('Steadfast Courier Credentials') }}
+                            </h5>
+                            <p class="text-muted mb-0 small">
+                                {{ translate('Configure your Steadfast Courier API connection settings') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body px-4 pb-4">
                     <form action="{{ route('business_settings.update') }}" method="POST" enctype="multipart/form-data"
                         class="mb-5">
                         @csrf
-                        <div class="mb-3">
-                            <h6 class="text-primary font-weight-bold mb-1">
-                                {{ translate('Steadfast Courier API Credentials') }}</h6>
-                            <p class="text-muted small mb-3">
-                                {{ translate('Configure your Steadfast Courier API connection settings') }}</p>
-                        </div>
 
                         <div class="form-group row align-items-center">
                             <label
@@ -117,7 +126,8 @@
                             <div class="col-md-9">
                                 <input type="hidden" name="types[]" value="steadfast_secret_key">
                                 <div class="input-group">
-                                    <input type="password" name="steadfast_secret_key" class="form-control border-right-0"
+                                    <input type="password" name="steadfast_secret_key"
+                                        class="form-control border-right-0"
                                         value="{{ get_setting('steadfast_secret_key') }}"
                                         placeholder="Enter Steadfast Secret Key" id="steadfast_secret_key">
                                     <div class="input-group-append">
@@ -139,33 +149,34 @@
                         </div>
                     </form>
 
-                    <hr class="my-4" style="border-top: 1px solid #edf2f9;">
-
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-lg-9 mx-auto">
+            <div class="card shadow-sm border-0 rounded-lg">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-shape bg-soft-danger text-danger mr-3 rounded-circle p-2"
+                            style="background: rgba(220,53,69,0.1);">
+                            <i class="las la-shield-alt font-medium-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 h5 text-dark font-weight-bold">{{ translate('Fraud Checker Credentials') }}
+                            </h5>
+                            <p class="text-muted mb-0 small">
+                                {{ translate('Protect orders with automated fraud detection and courier validation') }}</p>
+                        </div>
+                    </div>
+                    <a href="https://fraudbd.com/" target="_blank" class="btn btn-light btn-sm shadow-sm">
+                        <i class="las la-external-link-alt mr-1"></i>
+                        {{ translate('View Pricing') }}
+                    </a>
+                </div>
+                <div class="card-body px-4 pb-4">
                     <form action="{{ route('business_settings.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center mr-3"
-                                    style="width: 55px; height: 55px;">
-                                    <i class="las la-shield-alt text-danger" style="font-size: 28px;"></i>
-                                </div>
-
-                                <div>
-                                    <h5 class="mb-1 font-weight-bold">
-                                        {{ translate('Fraud Checker API Credentials') }}
-                                    </h5>
-                                    <p class="mb-0">
-                                        {{ translate('Protect orders with automated fraud detection and courier validation') }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <a href="https://fraudbd.com/" target="_blank" class="btn btn-light btn-sm shadow-sm">
-                                <i class="las la-external-link-alt mr-1"></i>
-                                {{ translate('View Pricing') }}
-                            </a>
-                        </div>
-
                         <div class="form-group row align-items-center">
                             <label
                                 class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('Fraud Checker URL') }}</label>
@@ -204,6 +215,118 @@
                         </div>
                     </form>
 
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-lg-9 mx-auto">
+            <div class="card shadow-sm border-0 rounded-lg">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-shape bg-soft-primary text-primary mr-3 rounded-circle p-2"
+                            style="background: rgba(0,123,255,0.1);">
+                            <i class="las la-shipping-fast font-medium-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 h5 text-dark font-weight-bold">{{ translate('Pathao Courier Credentials') }}
+                            </h5>
+                            <p class="text-muted mb-0 small">
+                                {{ translate('Manage your Pathao Courier API connection settings') }}</p>
+                        </div>
+                    </div>
+                    <a href="https://merchant.pathao.com/login" target="_blank" class="btn btn-light btn-sm shadow-sm">
+                        <i class="las la-external-link-alt mr-1"></i>
+                        {{ translate('View Dashboard') }}
+                    </a>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <form class="form-horizontal" action="{{ route('business_settings.update') }}" method="POST"
+                        enctype="multipart/form-data">
+                        @csrf
+
+
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">{{ translate('Pathao Client ID') }}</label>
+                            <div class="col-sm-9">
+                                <input type="hidden" name="types[]" value="pathao_client_id">
+                                <input type="text" name="pathao_client_id" class="form-control"
+                                    value="{{ get_setting('pathao_client_id') }}" placeholder="Enter Pathao Client ID">
+                                <small
+                                    class="form-text text-muted">{{ translate('Client ID provided by Pathao Courier Ltd.') }}</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">{{ translate('Pathao Client Secret') }}</label>
+                            <div class="col-sm-9">
+                                <input type="hidden" name="types[]" value="pathao_client_secret">
+                                <div class="input-group">
+                                    <input type="password" name="pathao_client_secret" class="form-control"
+                                        value="{{ get_setting('pathao_client_secret') }}"
+                                        placeholder="Enter Pathao Client Secret" id="pathao_client_secret">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                            onclick="togglePasswordVisibility('pathao_client_secret', 'toggleIconPathao')">
+                                            <i class="lar la-eye" id="toggleIconPathao"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <small
+                                    class="form-text text-muted">{{ translate('Secret Key provided by Pathao Courier Ltd.') }}</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">{{ translate('Pathao Username') }}</label>
+                            <div class="col-sm-9">
+                                <input type="hidden" name="types[]" value="pathao_username">
+                                <input type="email" name="pathao_username" class="form-control"
+                                    value="{{ get_setting('pathao_username') }}"
+                                    placeholder="Enter Pathao dashboard email">
+                                <small
+                                    class="form-text text-muted">{{ translate('Email used for Pathao Courier authentication.') }}</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">{{ translate('Pathao Password') }}</label>
+                            <div class="col-sm-9">
+                                <input type="hidden" name="types[]" value="pathao_password">
+                                <div class="input-group">
+                                    <input type="password" name="pathao_password" class="form-control"
+                                        value="{{ get_setting('pathao_password') }}"
+                                        placeholder="Enter Pathao dashboard password" id="pathao_password">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                            onclick="togglePasswordVisibility('pathao_password', 'toggleIconPathaoPassword')">
+                                            <i class="lar la-eye" id="toggleIconPathaoPassword"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <small
+                                    class="form-text text-muted">{{ translate('Password used for Pathao Courier authentication.') }}</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">{{ translate('Pathao API Base URL') }}</label>
+                            <div class="col-sm-9">
+                                <input type="hidden" name="types[]" value="pathao_base_url">
+                                <input type="text" name="pathao_base_url" class="form-control"
+                                    value="{{ get_setting('pathao_base_url', 'https://api-hermes.pathao.com') }}"
+                                    placeholder="https://api-hermes.pathao.com">
+                                <small
+                                    class="form-text text-muted">{{ translate('Use https://api-hermes.pathao.com for live and https://courier-api-sandbox.pathao.com for sandbox.') }}</small>
+                            </div>
+                        </div>
+
+
+
+                        <div class="text-right mt-3">
+                            <button type="submit" class="btn btn-primary">{{ translate('Update') }}</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
