@@ -16,109 +16,11 @@ use App\Models\Upload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Session;
 
 
 class BusinessSettingController extends Controller
 {
-    // public function businessSettings(Request $request): JsonResponse
-    public function businessSettings1(Request $request)
-    {
-        $allowed = [
-            'website_name',
-            'facebook_link',
-            'twitter_link',
-            'youtube_link',
-            'instagram_link',
-            'linkedin_link',
-            'maintenance_mode',
-            'header_logo',
-            'footer_logo',
-            'site_icon',
-            'helpline_number',
-            'payment_method_images',
-            'frontend_copyright_text',
-            'contact_email',
-            'contact_phone',
-            'contact_address',
-        ];
-        $imageKeys = [
-            'header_logo',
-            'footer_logo',
-            'site_icon',
-            'payment_method_images'
-        ];
-
-
-        $shippings = ShippingCost::select([
-            'id',
-            'name',
-            'amount',
-        ])
-            ->where('status', 1)
-            ->latest('id')
-            ->get();
-
-        $payments = PaymentSystem::all()->map(function ($ps) {
-            return [
-                'id'         => $ps->id,
-                'title'      => $ps->title,
-                'type'       => $ps->type,
-                'image'      => $ps->image ? uploaded_asset($ps->image) : null,
-                'is_default' => (bool) $ps->is_default,
-            ];
-        });
-
-
-        $section_config = SectionConfig::select('key', 'order', 'isActive')->oldest('order')->get();
-
-        $settings = BusinessSetting::all()
-            ->pluck('value', 'type')
-            ->only($allowed)
-            ->toArray();
-
-
-
-        foreach ($imageKeys as $key) {
-            if (!empty($settings[$key]) && is_numeric($settings[$key])) {
-                $settings[$key] = uploaded_asset($settings[$key]);
-            }
-        }
-
-        $categories = Category::select(['id', 'slug', 'category_name', 'category_image'])
-            ->oldest('position')
-            ->get()
-            ->map(function ($category) {
-                return [
-                    'id'    => $category->id,
-                    'slug'  => $category->slug,
-                    'name'  => $category->category_name,
-                    'image' => $category->category_image,
-                ];
-            });
-
-
-
-        $currency = BusinessSetting::where('type', 'currency_setting')
-            ->first();
-
-        $currency_setting = json_decode($currency->value, true);
-
-        $data = is_array($settings) ? $settings : $settings->toArray();
-        $data['sections'] = $section_config;
-        $data['categories'] = $categories;
-        $data['shippings'] = $shippings;
-        $data['payments'] = $payments;
-        $data['currency_setting'] = $currency_setting;
-        $data['brands'] = BrandResource::collection(Brand::all())->resolve();
-
-        return response()->json([
-            'success' => true,
-            'data' => $data,
-
-        ]);
-    }
-
-
     public function businessSettings(Request $request)
     {
         // Allowed setting keys (non-image)
@@ -204,8 +106,6 @@ class BusinessSettingController extends Controller
             });
 
         // ─── Currency settings ───
-        // FIX: pluck() returns a Collection, not a single model.
-        // Use ->toArray() to get key-value pairs.
         $currency = BusinessSetting::whereIn('type', [
             'currency',
             'currency_symbol',
@@ -237,15 +137,27 @@ class BusinessSettingController extends Controller
             $layoutConfig = $defaultLayout;
         }
 
+        $customer_ip = request()->ip();
+        $session = Session::getId();
+
+        Session::put('session_id', $session);
+
+        if (Session::get('session_id'))
+        {
+            $session_id = Session::get('session_id');
+        }
+
         // ─── Assemble final data array ───
-        $data = $settings;  // base settings
+        $data = $settings;
         $data['sections']           = $section_config;
         $data['categories']         = $categories;
         $data['shippings']          = $shippings;
         $data['payments']           = $payments;
         $data['currency_setting']   = $currency_setting;
         $data['brands']             = BrandResource::collection(Brand::all())->resolve();
-        $data['layout_breakpoints'] = $layoutConfig;  // ✅ included
+        $data['layout_breakpoints'] = $layoutConfig;
+        $data['customer_ip']        = $customer_ip;
+        $data['session_id']         = $session_id;
 
         return response()->json([
             'success' => true,

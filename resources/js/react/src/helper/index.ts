@@ -146,6 +146,25 @@ export const renderStars = (rating: number) => {
     );
 };
 
+export const getSplitName = (name: string) => {
+    const words = name.split(" ");
+
+    return {
+        firstName: words?.[0],
+        lastName: words?.slice(1)?.join(" "),
+    };
+};
+
+export async function sha256(value: string): Promise<string> {
+    const data = new TextEncoder().encode(value);
+
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+
+    return Array.from(new Uint8Array(hashBuffer))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
+}
+
 export const slugifyToTitle = (slug: string): string => {
     const isBangla = (text: string): boolean => {
         const banglaRegex = /[\u0980-\u09FF]/;

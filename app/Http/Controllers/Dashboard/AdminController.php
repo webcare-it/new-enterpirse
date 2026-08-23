@@ -21,7 +21,6 @@ class AdminController extends Controller
 
     public function admin_dashboard(Request $request)
     {
-        $product = Product::find(1310);
         $totalSales = Order::where('payment_status', 'paid')
             ->sum(DB::raw('grand_total - shipping_cost'));
         $totalOrders = Order::count();

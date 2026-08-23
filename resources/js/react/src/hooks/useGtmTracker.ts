@@ -1,3 +1,5 @@
+import { getSplitName, sha256 } from "@/helper";
+import { useConfig } from "./useConfig";
 import { usePrice } from "./usePrice";
 
 export interface IItemTracker {
@@ -35,7 +37,35 @@ export interface IViewCartTrackerType {
 }
 
 export const useGtmTracker = () => {
+    const config = useConfig();
     const { getCurrencyExtension } = usePrice();
+    const name = (config?.website_name as string) || "App";
+    const session_id = (config?.session_id as string) || crypto.randomUUID();
+    const customer_ip =
+        (config?.customer_ip as string) || window.navigator.userAgent;
+    const viewItemTracker = (data: IItemTracker, slug: string) => {
+        if (window.dataLayer) {
+            window.dataLayer.push({
+                event: "view_item",
+                ecommerce: {
+                    currency: getCurrencyExtension(),
+                    value: data?.item_price * data?.item_quantity,
+                    items: [{ ...data }],
+                    page_data: [
+                        {
+                            page_title: "Product Details",
+                            page_url: `${window.location.origin}/products/${slug}`,
+                            page_path: `/products/${slug}`,
+                            referrer: document.referrer,
+                            user_agent: window.navigator.userAgent,
+                            session_id: session_id,
+                            visitor_ip: customer_ip,
+                        },
+                    ],
+                },
+            });
+        }
+    };
 
     const addToCartTracker = (data: IItemTracker) => {
         if (window.dataLayer) {
@@ -60,6 +90,29 @@ export const useGtmTracker = () => {
             });
         }
     };
+    const viewCartTracker = (data: IViewCartTrackerType) => {
+        if (window.dataLayer) {
+            window.dataLayer.push({
+                event: "view_cart",
+                ecommerce: {
+                    currency: getCurrencyExtension(),
+                    value: data?.value,
+                    items: data?.items,
+                    page_data: [
+                        {
+                            page_title: "My Cart",
+                            page_url: `${window.location.origin}/my-cart`,
+                            page_path: `/my-cart`,
+                            referrer: document.referrer,
+                            user_agent: window.navigator.userAgent,
+                            session_id: session_id,
+                            visitor_ip: customer_ip,
+                        },
+                    ],
+                },
+            });
+        }
+    };
 
     const beginCheckoutTracker = (data: IPurchaseTracker) => {
         if (window.dataLayer) {
@@ -70,16 +123,43 @@ export const useGtmTracker = () => {
                     value: data?.value,
                     coupon: data?.coupon,
                     items: data?.items,
+                    customer_data: [
+                        {
+                            page_post_author: name,
+                            customer_first_name: null,
+                            customer_last_name: null,
+                            customer_billing_first_name: null,
+                            customer_billing_last_name: null,
+                            customer_billing_address: null,
+                            customer_billing_city: null,
+                            customer_billing_email: null,
+                            customer_billing_phone: null,
+                            customer_billing_country: "Bangladesh",
+                        },
+                    ],
+                    page_data: [
+                        {
+                            page_title: "Checkout",
+                            page_url: `${window.location.origin}/checkout`,
+                            page_path: "/checkout",
+                            referrer: document.referrer,
+                            user_agent: window.navigator.userAgent,
+                            session_id: session_id,
+                            visitor_ip: customer_ip,
+                        },
+                    ],
                 },
             });
         }
     };
 
-    const purchaseTracker = (
+    const purchaseTracker = async (
         data: IPurchaseTracker,
         info: IPersonalInfoTracker,
+        code: string,
     ) => {
         if (window.dataLayer) {
+            const customer = getSplitName(info?.name);
             window.dataLayer.push({
                 event: "purchase",
                 ecommerce: {
@@ -91,33 +171,48 @@ export const useGtmTracker = () => {
                     transaction_id: data?.transaction_id,
                     items: data?.items,
                 },
-                personal_data: info,
-            });
-        }
-    };
+                customer_data: [
+                    {
+                        page_post_author: name,
+                        customer_first_name: customer?.firstName,
+                        customer_last_name: customer?.lastName,
+                        customer_billing_first_name: customer?.firstName,
+                        customer_billing_last_name: customer?.lastName,
+                        customer_billing_address: info?.address,
+                        customer_billing_city: null,
+                        customer_billing_email: info?.email,
+                        customer_billing_phone: info?.phone,
+                        customer_billing_country: "Bangladesh",
+                    },
+                ],
+                page_data: [
+                    {
+                        page_title: "TrackOrder",
+                        page_url: `${window.location.origin}/orders/${code}`,
+                        page_path: `/orders/${code}`,
+                        referrer: document.referrer,
+                        user_agent: window.navigator.userAgent,
+                        session_id: session_id,
+                        visitor_ip: customer_ip,
+                    },
+                ],
+                fbq: [
+                    {
+                        first_name: customer?.firstName,
+                        first_name_hash: await sha256(
+                            customer?.firstName ?? "",
+                        ),
 
-    const viewCartTracker = (data: IViewCartTrackerType) => {
-        if (window.dataLayer) {
-            window.dataLayer.push({
-                event: "view_cart",
-                ecommerce: {
-                    currency: getCurrencyExtension(),
-                    value: data?.value,
-                    items: data?.items,
-                },
-            });
-        }
-    };
+                        last_name: customer?.lastName,
+                        last_name_hash: await sha256(customer?.lastName ?? ""),
 
-    const viewItemTracker = (data: IItemTracker) => {
-        if (window.dataLayer) {
-            window.dataLayer.push({
-                event: "view_item",
-                ecommerce: {
-                    currency: getCurrencyExtension(),
-                    value: data?.item_price * data?.item_quantity,
-                    items: [{ ...data }],
-                },
+                        email: info?.email,
+                        email_hash: await sha256(info?.email ?? ""),
+
+                        phone: info?.phone,
+                        phone_hash: await sha256(info?.phone ?? ""),
+                    },
+                ],
             });
         }
     };

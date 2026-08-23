@@ -1,8 +1,4 @@
-import {
-    CHECKOUT_DRAFT_KEY,
-    TEMP_USER_ID,
-    USER_ID,
-} from "@/constant";
+import { CHECKOUT_DRAFT_KEY, TEMP_USER_ID, USER_ID } from "@/constant";
 import {
     getAuthUserId,
     getTempUserId,

@@ -116,7 +116,7 @@ export function SuccessPage() {
         }
 
         firedRef.current = true;
-        purchaseTracker(t, c);
+        void purchaseTracker(t, c, o?.code);
         try {
             setLocalStorage(GTM_PURCHASE_TRACKED, o?.code);
         } catch {
@@ -186,7 +186,7 @@ export function SuccessPage() {
                         animate="visible"
                         variants={fadeUp}
                         transition={{ delay: 0.25, duration: 0.4 }}
-                        className="bg-white rounded-2xl border border-gray-200 p-5 md:p-8 mb-8"
+                        className="bg-white rounded-2xl md:rounded-3xl border border-gray-200 p-4 md:p-8 mb-8"
                     >
                         {/* Order Number & Date */}
                         <div className="grid grid-cols-1 gap-4 mb-4">
@@ -202,7 +202,7 @@ export function SuccessPage() {
                                 <p className="text-sm font-medium text-gray-500">
                                     Order Date
                                 </p>
-                                <p className="text-2xl sm:text-3xl font-bold text-gray-900">
+                                <p className="text-xl font-bold text-gray-900">
                                     {formatDate(o?.date as string)}
                                 </p>
                             </div>
@@ -295,7 +295,7 @@ export function SuccessPage() {
                         <p className="text-sm text-gray-600 pb-4">
                             Questions? Contact our{" "}
                             <Link
-                                to="/contact"
+                                to="/contact-us"
                                 className="text-green-600 hover:text-green-700 font-semibold"
                             >
                                 customer support

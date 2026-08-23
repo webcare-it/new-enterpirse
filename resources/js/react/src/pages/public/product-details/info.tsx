@@ -139,7 +139,7 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
     };
 
     useEffect(() => {
-        if (!product?.id) return;
+        if (!product?.id || !product?.slug) return;
         if (firedRef.current === product.id?.toString()) return;
         firedRef.current = product?.id?.toString();
         const trackerData: IItemTracker = {
@@ -151,7 +151,7 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
             item_category: product?.category?.name || "",
             item_variant: Object.values(select)?.join(" - ") || "",
         };
-        viewItemTracker(trackerData);
+        viewItemTracker(trackerData, product?.slug);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [product?.id]);
 
