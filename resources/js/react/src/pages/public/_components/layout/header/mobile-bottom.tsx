@@ -33,7 +33,7 @@ export const MobileBottom = () => {
     return (
         <>
             <nav
-                className={`md:hidden fixed bottom-0 left-0 right-0 z-25 bg-white text-gray-900 border-t border-border flex transition-transform duration-300 ${
+                className={`md:hidden fixed bottom-0 left-0 right-0 z-25 bg-white text-gray-900 border-t border-border flex transition-transform duration-300 pb-2.5 pt-1.5 px-1 ${
                     hidden ? "translate-y-full" : "translate-y-0"
                 }`}
             >

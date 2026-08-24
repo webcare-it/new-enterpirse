@@ -258,3 +258,35 @@ const DrawerContent = ({
         </>
     );
 };
+
+export const FloatingCart = () => {
+    const { getPriceWithCurrency } = usePrice();
+    const { items, drawerOpen, setDrawerOpen, summary } = useCart();
+
+    return (
+        <div
+            onClick={() => setDrawerOpen(!drawerOpen)}
+            className="fixed right-0 top-1/2 -translate-y-1/2 z-50 px-3 md:px-4 py-3 rounded-l-2xl bg-primary/95 text-primary-foreground shadow-lg flex flex-col items-center justify-center hover:bg-primary transition-all duration-200 cursor-pointer"
+        >
+            <div className="relative">
+                <CartIcon className="size-6" />
+
+                <span
+                    className="
+                            absolute -top-2 -right-2
+                            min-w-4 h-4 px-1
+                            rounded-full
+                            bg-red-600
+                            text-[10px] font-semibold
+                            flex items-center justify-center
+                        "
+                >
+                    {items?.length}
+                </span>
+            </div>
+            <span className="text-xs md:text-sm font-semibold">
+                {getPriceWithCurrency(summary.subtotal || 0)}
+            </span>
+        </div>
+    );
+};

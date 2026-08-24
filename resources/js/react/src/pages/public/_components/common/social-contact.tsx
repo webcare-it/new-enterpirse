@@ -1,15 +1,21 @@
 import { useConfig } from "@/hooks/useConfig";
 
-export const SocialMessage = ({ type = "layout" }: { type?: string }) => {
+export const SocialMessage = ({
+    type = "layout",
+    link,
+}: {
+    type?: string;
+    link?: string;
+}) => {
     const config = useConfig();
-    const whatsappNumber = "342423432434";
+    const whatsappNumber = config?.whatsapp_number as string;
     const messengerLink = config?.fb_page_username as string;
 
     if (type === "details") {
         return (
             <div className="flex flex-col gap-4">
                 <a
-                    href={`https://m.me/${messengerLink}`}
+                    href={`https://m.me/${messengerLink}?text=${link}`}
                     title="Message us on Facebook"
                     target="_blank"
                     rel="noreferrer"
@@ -29,7 +35,7 @@ export const SocialMessage = ({ type = "layout" }: { type?: string }) => {
                 </a>
 
                 <a
-                    href={`https://api.whatsapp.com/send?phone=${whatsappNumber}`}
+                    href={`https://api.whatsapp.com/send?phone=${whatsappNumber}?text=${link}`}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full"
@@ -76,7 +82,7 @@ export const SocialMessage = ({ type = "layout" }: { type?: string }) => {
                     </div>
                 </a>
                 <a
-                    href={`https://api.whatsapp.com/send?phone=${whatsappNumber}`}
+                    href={`https://api.whatsapp.com/send?phone=${whatsappNumber}?text=${window.location.href}`}
                     target="_blank"
                     className="fixed right-2 md:right-4 bottom-16 md:bottom-6 z-50"
                 >

@@ -16,6 +16,7 @@ import { WishlistToggle } from "../_components/common/wishlist-toggle";
 import { useSearchParams } from "react-router-dom";
 import { renderStars } from "@/helper";
 import { SocialMessage } from "../_components/common/social-contact";
+import { DiscountIcon } from "../_components/common/icon";
 
 interface Props {
     product: IProductDetails;
@@ -291,7 +292,10 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
                         }}
                     />
                 </div>
-                <SocialMessage type="details" />
+                <SocialMessage
+                    type="details"
+                    link={`${window.location.href}/products/${product?.slug}`}
+                />
             </div>
 
             <div className="grid grid-cols-3 gap-2">
@@ -337,7 +341,10 @@ const Discount = ({ product }: { product: IProductDetails }) => {
 
     return (
         <div className="flex items-center gap-2">
-            You save{" "}
+            You save
+            <div className="text-primary">
+                <DiscountIcon />
+            </div>
             {product?.price?.discount_type === "percent" ? (
                 <div className="text-lg md:text-xl font-semibold text-primary">
                     {product?.price?.discount}%

@@ -46,7 +46,9 @@ class BusinessSettingController extends Controller
             'top_bar_offer',
             'b_opening_hour',
             'b_closing_hour',
-            'n_sub_title'
+            'n_sub_title',
+            'fb_page_username',
+            'whatsapp_number'
         ];
 
         // Keys that store image IDs (will be converted to URLs)

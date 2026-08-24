@@ -1,3 +1,4 @@
+import { FloatingCart } from "../common/cart-drawer";
 import { SocialMessage } from "../common/social-contact";
 import { Footer } from "./footer";
 import { Header } from "./header";
@@ -15,6 +16,7 @@ export const BaseLayout = ({ children }: Props) => {
             {children}
             <Footer />
             <SocialMessage />
+            <FloatingCart />
         </section>
     );
 };

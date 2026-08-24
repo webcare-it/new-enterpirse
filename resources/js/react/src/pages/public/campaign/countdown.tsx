@@ -44,7 +44,7 @@ export const CampaignTimer = ({ endDate }: { endDate: string }) => {
     const formatNumber = (num: number) => String(num).padStart(2, "0");
 
     return (
-        <div className="w-full -mt-8 sm:-mt-10 md:-mt-12 px-2 sm:px-4 pb-4">
+        <div className="w-full -mt-10 md:-mt-12 px-2 sm:px-4 pb-4">
             <div className="w-full flex items-start justify-center gap-1 sm:gap-2 md:gap-3">
                 <TimeBlock value={formatNumber(timeLeft.days)} label="DAYS" />
 

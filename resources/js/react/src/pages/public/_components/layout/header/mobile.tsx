@@ -12,7 +12,7 @@ export const MobileHeader = () => {
     return (
         <>
             <div className="md:hidden">
-                <div className="border-b border-border bg-white px-4 py-2.5">
+                <div className="border-b border-border bg-white px-4 py-1.5">
                     <div className="flex items-center justify-between gap-3">
                         <HeaderLogo />
 
