@@ -29,6 +29,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     const removeCartMutation = useRemoveCartMutation();
     const updateCartMutation = useUpdateCartMutation();
     const [addingProductId, setAddingProductId] = useState<number | null>(null);
+    const [removingItemId, setRemovingItemId] = useState<number | null>(null);
 
     const addItem = useCallback(
         (p: ICartAddToCart, type?: string) => {
@@ -51,7 +52,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
     const removeItem = useCallback(
         (cartId: number) => {
-            removeCartMutation.mutate({ id: cartId });
+            setRemovingItemId(cartId);
+            removeCartMutation.mutate(
+                { id: cartId },
+                {
+                    onSettled: () => {
+                        setRemovingItemId(null);
+                    },
+                },
+            );
         },
         [removeCartMutation],
     );
@@ -75,6 +84,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
                 items,
                 summary,
                 addingProductId,
+                removingItemId,
                 isRemoving: removeCartMutation.isPending,
                 isUpdating: updateCartMutation.isPending,
             }}

@@ -9,7 +9,8 @@ export const RemoveToCart = ({
     item: ICartItem;
     type?: string;
 }) => {
-    const { removeItem, isRemoving } = useCart();
+    const { removeItem, removingItemId } = useCart();
+    const isRemoving = removingItemId === item.id;
     const handleRemove = () => {
         removeItem(item.id);
     };

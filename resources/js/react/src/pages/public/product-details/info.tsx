@@ -156,6 +156,11 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [product?.id]);
 
+    console.log({
+        cur: currentVariant?.stock,
+        stock: product?.inventory?.stock,
+    });
+
     return (
         <div className="md:col-span-1 lg:col-span-6 md:sticky md:top-28 lg:sticky lg:top-28 h-fit space-y-4">
             <div>
@@ -218,7 +223,7 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
             <ProgressBar
                 stock={currentVariant?.stock ?? product?.inventory?.stock}
                 sold={product?.inventory?.total_sold ?? 0}
-                unit={product?.inventory?.unit || "piece"}
+                unit={product?.inventory?.unit || "Piece"}
             />
 
             <div className="pt-4 border-t border-gray-200 space-y-3">
@@ -263,7 +268,7 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
                                 : undefined,
                         }}
                         isInStock={
-                            (currentVariant && currentVariant?.stock > 0) ||
+                            (currentVariant && currentVariant?.stock > 0) ??
                             product?.inventory?.stock > 0
                         }
                         type="DETAILS"
@@ -290,6 +295,10 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
                                 ? { sku: currentVariant?.sku }
                                 : undefined,
                         }}
+                        isInStock={
+                            (currentVariant && currentVariant?.stock > 0) ??
+                            product?.inventory?.stock > 0
+                        }
                     />
                 </div>
                 <SocialMessage

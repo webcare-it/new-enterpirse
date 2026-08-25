@@ -113,7 +113,13 @@ export const AddToCartLink = ({ slug }: { slug: string }) => {
     );
 };
 
-export const BuyItNow = ({ p }: { p: ICartAddToCart }) => {
+export const BuyItNow = ({
+    p,
+    isInStock,
+}: {
+    p: ICartAddToCart;
+    isInStock: boolean;
+}) => {
     const { addItem, addingProductId } = useCart();
     const isAdding = addingProductId === p.product_id;
     const handleAddToCart = () => {
@@ -143,8 +149,8 @@ export const BuyItNow = ({ p }: { p: ICartAddToCart }) => {
     return (
         <button
             onClick={handleAddToCart}
-            disabled={isAdding}
-            className={`rounded-3xl w-full transition-all duration-300 cursor-pointer py-3 px-4 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border border-primary gap-2`}
+            disabled={isAdding || !isInStock}
+            className={`rounded-3xl w-full transition-all duration-300 py-3 px-4 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border border-primary gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
         >
             <LockIcon className="size-4 md:size-5" />{" "}
             {isAdding ? "loading..." : "Order now"}
