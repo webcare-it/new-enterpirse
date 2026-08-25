@@ -4,7 +4,7 @@ import { RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { getBaseUrl } from "@/helper";
 
-export const ServerError = () => {
+export const ServerErrorPage = () => {
     const handleRefresh = () => {
         window.location.reload();
     };

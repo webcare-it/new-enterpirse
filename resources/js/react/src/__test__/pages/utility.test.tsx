@@ -58,9 +58,9 @@ describe("NotFoundPage", () => {
 
 describe("ServerError", () => {
     it("renders server error page", async () => {
-        const { ServerError } =
+        const { ServerErrorPage } =
             await import("@/pages/public/utils-pages/server");
-        renderWithProviders(<ServerError />);
+        renderWithProviders(<ServerErrorPage />);
         expect(
             await screen.findByRole("button", { name: /try again/i }),
         ).toBeInTheDocument();

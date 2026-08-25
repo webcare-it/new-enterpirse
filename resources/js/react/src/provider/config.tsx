@@ -2,7 +2,7 @@ import { useGetConfig } from "@/api/config";
 import { ConfigContext } from "@/hooks/useConfig";
 import { updatePrimaryColor, updatePrimaryForeground } from "@/lib/chroma";
 import { RootPageLoading } from "@/pages/public/utils-pages/root-loading";
-import { ServerError } from "@/pages/public/utils-pages/server";
+import { ServerErrorPage } from "@/pages/public/utils-pages/server";
 import { useEffect } from "react";
 
 export const ConfigProvider = ({ children }: { children: React.ReactNode }) => {
@@ -25,7 +25,7 @@ export const ConfigProvider = ({ children }: { children: React.ReactNode }) => {
     return (
         <ConfigContext.Provider value={config}>
             {error ? (
-                <ServerError />
+                <ServerErrorPage />
             ) : isLoading ? (
                 <RootPageLoading />
             ) : (

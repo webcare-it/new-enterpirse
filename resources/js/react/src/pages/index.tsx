@@ -1,6 +1,9 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router";
 import { RootPageLoading } from "./public/utils-pages/root-loading";
+import { MaintenancePage } from "./public/utils-pages/maintenance";
+import { NotFoundPage } from "./public/utils-pages/notfound";
+import { ServerErrorPage } from "./public/utils-pages/server";
 
 const HomePage = lazy(() =>
     import("./public/home").then((m) => ({ default: m.HomePage })),
@@ -110,22 +113,6 @@ const RedirectPage = lazy(() =>
     })),
 );
 
-const ServerError = lazy(() =>
-    import("./public/utils-pages/server").then((m) => ({
-        default: m.ServerError,
-    })),
-);
-const MaintenancePage = lazy(() =>
-    import("./public/utils-pages/maintenance").then((m) => ({
-        default: m.MaintenancePage,
-    })),
-);
-const NotFoundPage = lazy(() =>
-    import("./public/utils-pages/notfound").then((m) => ({
-        default: m.NotFoundPage,
-    })),
-);
-
 // Private
 const Dashboard = lazy(() =>
     import("./private/dashboard").then((m) => ({
@@ -207,9 +194,9 @@ export const AppRoutes = () => {
                     />
 
                     {/** Other Routes */}
-                    <Route path="/500" element={<ServerError />} />
-                    <Route path="/maintenance" element={<MaintenancePage />} />
                     <Route path="*" element={<NotFoundPage />} />
+                    <Route path="/500" element={<ServerErrorPage />} />
+                    <Route path="/maintenance" element={<MaintenancePage />} />
                 </Routes>
             </ScrollToTop>
         </Suspense>

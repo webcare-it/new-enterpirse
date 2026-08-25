@@ -46,10 +46,7 @@ export default defineConfig(({ mode }) => ({
                         "class-variance-authority",
                         "tailwind-merge",
                     ],
-                    lightbox: [
-                        "photoswipe",
-                        "yet-another-react-lightbox",
-                    ],
+                    lightbox: ["photoswipe"],
                 },
             },
         },
