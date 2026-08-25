@@ -1,5 +1,5 @@
 import { getAuthUserId, getTempUserId, getUUID, setCookie } from "@/helper";
-import { CartIcon } from "./icon";
+import { CartIcon, StockOutIcon } from "./icon";
 import { useCart, type ICartAddToCart } from "@/hooks/useCart";
 import { Link } from "react-router-dom";
 import { TEMP_USER_ID } from "@/constant";
@@ -61,7 +61,7 @@ export const AddToCart = ({
                     onClick={() => handleAddToCart("CHECKOUT")}
                     disabled={isAdding || !isInStock}
                     aria-label={`Add ${p?.product_id ?? "product"} to cart`}
-                    className={`flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-10 md:h-12 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border text-sm md:text-base border-primary gap-1 md:gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-10 md:h-12 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary border text-sm md:text-base border-primary gap-1 md:gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
                 >
                     <LockIcon className="size-4" />
                     {isAdding ? "loading..." : " Order now"}
@@ -85,9 +85,14 @@ export const AddToCart = ({
                 key={p?.product_id}
                 onClick={() => handleAddToCart()}
                 disabled={isAdding || !isInStock}
-                className={`rounded-3xl w-full transition-all duration-300 py-3 px-4 flex items-center justify-center bg-primary/90 hover:bg-primary-foreground hover:text-primary text-primary-foreground border border-primary gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
+                className={`rounded-3xl w-full transition-all duration-300 py-3 px-4 flex items-center justify-center border gap-2 ${!isInStock ? "cursor-not-allowed text-red-600 border-red-600 bg-red-100" : "cursor-pointer bg-primary/90 hover:bg-primary-foreground hover:text-primary text-primary-foreground  border-primary"}`}
             >
-                <CartIcon /> {isAdding ? "loading..." : "Add to cart"}
+                {!isInStock ? <StockOutIcon /> : <CartIcon />}
+                {isAdding
+                    ? "loading..."
+                    : !isInStock
+                      ? "Out of stock"
+                      : "Add to cart"}
             </button>
         );
     }
@@ -150,10 +155,18 @@ export const BuyItNow = ({
         <button
             onClick={handleAddToCart}
             disabled={isAdding || !isInStock}
-            className={`rounded-3xl w-full transition-all duration-300 py-3 px-4 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border border-primary gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
+            className={`rounded-3xl w-full transition-all duration-300 py-3 px-4 flex items-center justify-center border gap-2 ${!isInStock ? "cursor-not-allowed border-red-600 bg-red-100 text-red-600" : "cursor-pointer hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground  border-primary"}`}
         >
-            <LockIcon className="size-4 md:size-5" />{" "}
-            {isAdding ? "loading..." : "Order now"}
+            {!isInStock ? (
+                <StockOutIcon />
+            ) : (
+                <LockIcon className="size-4 md:size-5" />
+            )}
+            {isAdding
+                ? "loading..."
+                : !isInStock
+                  ? "Out of stock"
+                  : "Order now"}
         </button>
     );
 };
