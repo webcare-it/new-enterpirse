@@ -7,15 +7,10 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Cookie } from "lucide-react";
-import { useCookie } from "@/hooks/useCookie";
 
 export const CookieConsent = () => {
-    const { showCookieBanner, acceptCookies, declineCookies } = useCookie();
-
-    if (!showCookieBanner) return null;
-
     return (
-        <div className="fixed bottom-4 left-4 z-50 w-full max-w-xs sm:max-w-sm animate-in slide-in-from-bottom-2 duration-300">
+        <div className="fixed left-4 bottom-4 z-50 w-full max-w-xs sm:max-w-sm animate-in slide-in-from-bottom-2 duration-300">
             <Card className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border shadow-lg max-h-[80vh] p-3 md:p-4 overflow-y-auto">
                 <CardHeader className="px-0">
                     <div className="flex items-center gap-2">
@@ -39,7 +34,6 @@ export const CookieConsent = () => {
                         </p>
                         <div className="flex items-center justify-between gap-2">
                             <Button
-                                onClick={declineCookies}
                                 variant="outline"
                                 className="flex-1"
                                 size="sm"
@@ -47,7 +41,6 @@ export const CookieConsent = () => {
                                 Decline
                             </Button>
                             <Button
-                                onClick={acceptCookies}
                                 className="flex-1 bg-primary hover:bg-primary/90"
                                 size="sm"
                             >
