@@ -54,16 +54,16 @@ export const AddToCart = ({
         return (
             <div
                 key={p?.product_id}
-                className="flex justify-between items-center gap-2 mt-1"
+                className="flex justify-between items-center gap-1 md:gap-2 mt-1"
             >
                 <button
                     type="button"
                     onClick={() => handleAddToCart("CHECKOUT")}
                     disabled={isAdding || !isInStock}
                     aria-label={`Add ${p?.product_id ?? "product"} to cart`}
-                    className={`flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-10 md:h-12 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary border text-sm md:text-base border-primary gap-1 md:gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`flex-1 text-xs sm:text-sm md:text-base rounded-3xl w-full transition-all duration-300 cursor-pointer h-10 md:h-12 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border border-primary gap-1 md:gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
                 >
-                    <LockIcon className="size-4" />
+                    <LockIcon className="size-3 sm:size-4" />
                     {isAdding ? "loading..." : " Order now"}
                 </button>
 

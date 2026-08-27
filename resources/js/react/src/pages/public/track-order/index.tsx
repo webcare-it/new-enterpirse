@@ -11,6 +11,7 @@ import { OrderDetails } from "../_components/common/order-details";
 import { BreadcrumbWrapper } from "@/components/common/breadcrumb-wrapper";
 import { Loading } from "../_components/common/loading";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
+import type { AxiosError } from "axios";
 
 export function TrackOrderPage() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -44,6 +45,8 @@ export function TrackOrderPage() {
         setSearchParams({});
         reset();
     };
+
+    const axiosError = error as AxiosError<{ message?: string }> | null;
 
     const order = (data?.data?.details as IOrderDetails) || null;
     const notFound = isSuccess && !data?.data?.details;
@@ -178,16 +181,19 @@ export function TrackOrderPage() {
                                         </div>
                                     </form>
 
-                                    {error && (
+                                    {axiosError && (
                                         <motion.p
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             className="text-sm text-destructive"
                                         >
-                                            {error?.message ||
+                                            {axiosError.response?.data
+                                                ?.message ||
+                                                axiosError.message ||
                                                 "Order not found. Please check the ID and try again."}
                                         </motion.p>
                                     )}
+
                                     {notFound && (
                                         <motion.p
                                             initial={{ opacity: 0 }}

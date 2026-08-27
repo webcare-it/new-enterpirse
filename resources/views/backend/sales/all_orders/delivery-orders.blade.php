@@ -479,16 +479,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="10" class="text-center">
-                                    <div class="py-5">
-                                        <i class="las la-shopping-cart fs-60 text-muted"></i>
-                                        <h5 class="text-muted mt-3">{{ translate('No orders found') }}</h5>
-                                        <p class="text-muted">{{ translate('Create your first order to get started.') }}
-                                        </p>
-                                    </div>
-                                </td>
-                            </tr>
+
                         @endforelse
                     </tbody>
                 </table>
