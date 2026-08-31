@@ -131,12 +131,11 @@ class ProductController extends Controller
 
     public function droplooProductList(Request $request)
     {
-
         // $appKey = get_setting('droploo_app_key', ' ');
         // $appSecret = get_setting('droploo_app_secret', ' ');
         // $userName = get_setting('droploo_username', ' ');
-
         // Hardcoded credentials (consider using settings)
+
         $appKey = "3AYL43PAG8OYGUXI";
         $appSecret = "GhcsdNOSnaCEhXI6kb0oz6ovzBCkSedj";
         $userName = "abdul-gaffa_afiadreamcom";
@@ -224,104 +223,933 @@ class ProductController extends Controller
         }
     }
 
+
+    public function droplooProductAdd1($id)
+    {
+        $appKey    = "3AYL43PAG8OYGUXI";
+        $appSecret = "GhcsdNOSnaCEhXI6kb0oz6ovzBCkSedj";
+        $userName  = "abdul-gaffa_afiadreamcom";
+
+        $apiUrl = "https://nittoz.com/api/v1/dropshippers/products/{$id}";
+
+        try {
+            $response = Http::withHeaders([
+                'api_secret' => $appSecret,
+                'api_key'    => $appKey,
+                'username'   => $userName,
+            ])->get($apiUrl);
+
+            if (!$response->successful()) {
+                \Log::error('Droploo API Error', [
+                    'status' => $response->status(),
+                    'body'   => $response->body(),
+                ]);
+                return redirect()->back()->with('error', 'Failed to fetch product from dropshipper API.');
+            }
+
+            $apiResponse = $response->json();
+
+            // Validate API response structure
+            if (empty($apiResponse['data']['product'])) {
+                \Log::error('Droploo API: Product not found', ['response' => $apiResponse]);
+                return redirect()->back()->with('error', 'Product not found in dropshipper API.');
+            }
+
+            // Convert the entire product data to an object (stdClass) with nested objects
+            $productData = $apiResponse['data']['product'];
+            $product = json_decode(json_encode($productData));
+
+            // ------------------------------------------------------------
+            // Load local data for dropdowns (categories, brands, subcategories)
+            // ------------------------------------------------------------
+            // Assuming you have these models: Category, Brand, Subcategory
+            // Adjust the column names if they differ in your DB.
+
+            $categories = Category::select('id', 'category_name')
+                ->orderBy('category_name')
+                ->get();
+
+            $brands = Brand::select('id', 'name')
+                ->orderBy('name')
+                ->get();
+
+            $subcategories = Subcategory::select('id', 'name')
+                ->orderBy('name')
+                ->get();
+
+            // ------------------------------------------------------------
+            // (Optional) Transform variants into the format expected by
+            // the 'variant_combinations' partial – if you decide to include it.
+            // Since the view checks for $combinations, we can omit it
+            // and the view will show a "no variants" message.
+            // If you need it, uncomment and adapt the mapping below.
+            // ------------------------------------------------------------
+            // $combinations = [];
+            // if (!empty($product->variants) && is_array($product->variants)) {
+            //     foreach ($product->variants as $variant) {
+            //         // Map to the structure expected by the partial.
+            //         // This is just an example; adjust to your actual partial requirements.
+            //         $combinations[] = [
+            //             'sku'             => $variant->sku ?? '',
+            //             'price'           => $variant->price ?? 0,
+            //             'wholesale_price' => $variant->wholesale_price ?? 0,
+            //             'stock'           => $variant->stock ?? 0,
+            //             'attribute_value' => (array) ($variant->attribute_value ?? []),
+            //         ];
+            //     }
+            // }
+
+            // Pass everything to the view
+            return view('backend.product.products.droploo-add', compact(
+                'product',
+                'categories',
+                'brands',
+                'subcategories'
+                // 'combinations' // uncomment if you map variants
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Droploo Exception', [
+                'product_id' => $id,
+                'message'    => $e->getMessage(),
+            ]);
+            return redirect()->back()->with('error', 'An error occurred while fetching the product: ' . $e->getMessage());
+        }
+    }
+
+
     public function droplooProductAdd($id)
     {
-        $product = Product::with([
-            'inventory',
-            'variants',
-            'price',
-            'shipping',
-            'seo',
-            'taxes',
-            'category',
-            'subcategory',
-            'brand'
-        ])->findOrFail($id);
+        $appKey = "3AYL43PAG8OYGUXI";
+        $appSecret = "GhcsdNOSnaCEhXI6kb0oz6ovzBCkSedj";
+        $userName = "abdul-gaffa_afiadreamcom";
 
-        // Categories
-        $categories = Category::latest()->get();
+        $apiUrl = "https://nittoz.com/api/v1/dropshippers/products";
 
-        // Subcategories
-        $subcategories = SubCategory::where(
-            'category_id',
-            $product->category_id
-        )->get();
+        try {
+            $response = Http::withHeaders([
+                'api_secret' => $appSecret,
+                'api_key'    => $appKey,
+                'username'   => $userName,
+            ])->get($apiUrl);
 
-        // Brands
-        $brands = Brand::latest()->get();
-
-        // Colors
-        $colors = Color::latest()->get();
-
-        // Selected colors
-        $selected_colors = [];
-
-        if (!empty($product->colors)) {
-
-            $selected_colors = json_decode($product->colors, true);
-
-            if (!is_array($selected_colors)) {
-                $selected_colors = [];
+            if (!$response->successful()) {
+                return view('errors.401-droploo');
             }
-        }
 
-        // Attributes
-        $attributes = Attribute::with('values')->latest()->get();
+            $responseData = $response->json();
 
-        // Selected attributes
-        $selected_attributes = [];
+            $apiProducts = $responseData['data']['products']
+                ?? $responseData['products']
+                ?? [];
 
-        if (!empty($product->choice_attributes)) {
+            $imagePath = $responseData['imagePath']
+                ?? $responseData['data']['imagePath']
+                ?? '';
 
-            $selected_attributes = json_decode(
-                $product->choice_attributes,
-                true
-            );
-
-            if (!is_array($selected_attributes)) {
-                $selected_attributes = [];
+            if (!is_array($apiProducts)) {
+                $apiProducts = [];
             }
-        }
 
-        // Existing attribute values
-        $existing_attributes = [];
+            $apiProduct = collect($apiProducts)->first(function ($item) use ($id) {
+                if (is_array($item)) {
+                    return (string) ($item['id'] ?? '') === (string) $id;
+                }
 
-        if (!empty($product->choice_options)) {
+                if (is_object($item)) {
+                    return (string) ($item->id ?? '') === (string) $id;
+                }
 
-            $choice_options = json_decode(
-                $product->choice_options,
-                true
-            );
+                return false;
+            });
 
-            if (is_array($choice_options)) {
+            if (!$apiProduct) {
+                abort(404, 'Droploo product not found.');
+            }
 
-                foreach ($choice_options as $option) {
-                    if (
-                        isset($option['attribute_id']) && isset($option['values'])
-                    ) {
+            $product = is_array($apiProduct)
+                ? json_decode(json_encode($apiProduct))
+                : $apiProduct;
 
-                        $existing_attributes[$option['attribute_id']] = $option['values'];
+            $product->id = $product->id ?? $id;
+            $product->name = $product->name ?? '';
+            $product->slug = $product->slug ?? \Str::slug($product->name);
+
+            $product->category_id = $product->category_id ?? null;
+            $product->subcategory_id = $product->subcategory_id ?? null;
+            $product->brand_id = $product->brand_id ?? null;
+
+            $product->unit = $product->unit ?? 'pc';
+            $product->barcode = $product->barcode ?? '';
+            $product->badge_name = $product->badge_name ?? '';
+            $product->batch_no = $product->batch_no ?? null;
+            $product->short_description = $product->short_description ?? '';
+            $product->description = $product->description ?? '';
+            $product->video_link = $product->video_link ?? '';
+            $product->position = $product->position ?? 0;
+
+            $product->status = isset($product->status)
+                ? (int) $product->status
+                : 1;
+
+            $product->is_published = isset($product->is_published)
+                ? (int) $product->is_published
+                : 1;
+
+            $product->is_featured = isset($product->is_featured)
+                ? (int) $product->is_featured
+                : 0;
+
+            $product->best_selling = isset($product->best_selling)
+                ? (int) $product->best_selling
+                : 0;
+
+            $product->is_new_arrival = isset($product->is_new_arrival)
+                ? (int) $product->is_new_arrival
+                : 0;
+
+            $product->todays_deal = isset($product->todays_deal)
+                ? (int) $product->todays_deal
+                : 0;
+
+            if (isset($product->tags_array)) {
+                if (is_string($product->tags_array)) {
+                    $decodedTags = json_decode($product->tags_array, true);
+
+                    $product->tags_array = is_array($decodedTags)
+                        ? $decodedTags
+                        : array_filter(array_map(
+                            'trim',
+                            explode(',', $product->tags_array)
+                        ));
+                } elseif (!is_array($product->tags_array)) {
+                    $product->tags_array = [];
+                }
+            } elseif (isset($product->tags)) {
+                if (is_string($product->tags)) {
+                    $decodedTags = json_decode($product->tags, true);
+
+                    $product->tags_array = is_array($decodedTags)
+                        ? $decodedTags
+                        : array_filter(array_map(
+                            'trim',
+                            explode(',', $product->tags)
+                        ));
+                } else {
+                    $product->tags_array = [];
+                }
+            } else {
+                $product->tags_array = [];
+            }
+
+            if (isset($product->photos)) {
+                if (is_array($product->photos)) {
+                    $product->photos = json_encode($product->photos);
+                } elseif (is_object($product->photos)) {
+                    $product->photos = json_encode((array) $product->photos);
+                } elseif (!is_string($product->photos)) {
+                    $product->photos = json_encode([]);
+                }
+            } else {
+                $gallery = $product->gallery
+                    ?? $product->images
+                    ?? [];
+
+                $product->photos = is_array($gallery)
+                    ? json_encode($gallery)
+                    : json_encode([]);
+            }
+
+            $product->thumbnail = $product->thumbnail
+                ?? $product->thumbnail_img
+                ?? $product->image
+                ?? '';
+
+            $apiPrice = $product->price ?? 0;
+
+            if (is_object($apiPrice)) {
+                $product->price = $apiPrice;
+            } elseif (is_array($apiPrice)) {
+                $product->price = json_decode(json_encode($apiPrice));
+            } else {
+                $product->price = new \stdClass();
+
+                $product->price->purchase_price = 0;
+                $product->price->regular_price = is_numeric($apiPrice)
+                    ? (float) $apiPrice
+                    : 0;
+                $product->price->wholesale_price = is_numeric($apiPrice)
+                    ? (float) $apiPrice
+                    : 0;
+                $product->price->discount = 0;
+                $product->price->discount_type = 'flat';
+                $product->price->discount_start = null;
+                $product->price->discount_end = null;
+            }
+
+            $product->price->purchase_price =
+                $product->price->purchase_price
+                ?? $product->purchase_price
+                ?? 0;
+
+            $product->price->regular_price =
+                $product->price->regular_price
+                ?? $product->regular_price
+                ?? $product->sale_price
+                ?? 0;
+
+            $product->price->wholesale_price =
+                $product->price->wholesale_price
+                ?? $product->wholesale_price
+                ?? $product->price->regular_price
+                ?? 0;
+
+            $product->price->discount =
+                $product->price->discount
+                ?? $product->discount
+                ?? 0;
+
+            $product->price->discount_type =
+                $product->price->discount_type
+                ?? 'flat';
+
+            $product->price->discount_start =
+                $product->price->discount_start
+                ?? null;
+
+            $product->price->discount_end =
+                $product->price->discount_end
+                ?? null;
+
+            if (!isset($product->inventory)) {
+                $product->inventory = new \stdClass();
+            } elseif (is_array($product->inventory)) {
+                $product->inventory = json_decode(
+                    json_encode($product->inventory)
+                );
+            } elseif (!is_object($product->inventory)) {
+                $product->inventory = new \stdClass();
+            }
+
+            $product->inventory->sku =
+                $product->inventory->sku
+                ?? $product->sku
+                ?? '';
+
+            $product->inventory->stock =
+                $product->inventory->stock
+                ?? $product->stock
+                ?? 0;
+
+            $product->inventory->low_stock_qty =
+                $product->inventory->low_stock_qty ?? 1;
+
+            $product->inventory->track_inventory =
+                $product->inventory->track_inventory ?? 1;
+
+            if (!isset($product->shipping)) {
+                $product->shipping = new \stdClass();
+            } elseif (is_array($product->shipping)) {
+                $product->shipping = json_decode(
+                    json_encode($product->shipping)
+                );
+            } elseif (!is_object($product->shipping)) {
+                $product->shipping = new \stdClass();
+            }
+
+            $product->shipping->shipping_type =
+                $product->shipping->shipping_type ?? 'flat_rate';
+
+            $product->shipping->shipping_cost =
+                $product->shipping->shipping_cost
+                ?? $product->shipping_cost
+                ?? 0;
+
+            $product->shipping->weight =
+                $product->shipping->weight
+                ?? $product->weight
+                ?? 0;
+
+            $product->shipping->length =
+                $product->shipping->length
+                ?? $product->length
+                ?? 0;
+
+            $product->shipping->width =
+                $product->shipping->width
+                ?? $product->width
+                ?? 0;
+
+            $product->shipping->height =
+                $product->shipping->height
+                ?? $product->height
+                ?? 0;
+
+            if (!isset($product->seo)) {
+                $product->seo = new \stdClass();
+            } elseif (is_array($product->seo)) {
+                $product->seo = json_decode(
+                    json_encode($product->seo)
+                );
+            } elseif (!is_object($product->seo)) {
+                $product->seo = new \stdClass();
+            }
+
+            $product->seo->meta_title =
+                $product->seo->meta_title
+                ?? $product->meta_title
+                ?? $product->name;
+
+            $product->seo->meta_description =
+                $product->seo->meta_description
+                ?? $product->meta_description
+                ?? '';
+
+            $product->seo->meta_image =
+                $product->seo->meta_image ?? '';
+
+            if (!isset($product->taxes)) {
+                $product->taxes = [];
+            } elseif (is_object($product->taxes)) {
+                $product->taxes = (array) $product->taxes;
+            } elseif (!is_array($product->taxes)) {
+                $product->taxes = [];
+            }
+
+            if (!isset($product->variants)) {
+                $product->variants = [];
+            } elseif (is_object($product->variants)) {
+                $product->variants = (array) $product->variants;
+            } elseif (!is_array($product->variants)) {
+                $product->variants = [];
+            }
+
+            $categories = Category::latest()->get();
+
+            $subcategories = SubCategory::where(
+                'category_id',
+                $product->category_id
+            )->get();
+
+            $brands = Brand::latest()->get();
+
+            $colors = Color::latest()->get();
+
+            $selected_colors = [];
+
+            if (!empty($product->colors)) {
+                $selected_colors = is_string($product->colors)
+                    ? json_decode($product->colors, true)
+                    : $product->colors;
+
+                if (!is_array($selected_colors)) {
+                    $selected_colors = [];
+                }
+            }
+
+            $attributes = Attribute::with('values')
+                ->latest()
+                ->get();
+
+            $selected_attributes = [];
+
+            if (!empty($product->choice_attributes)) {
+                $selected_attributes = is_string(
+                    $product->choice_attributes
+                )
+                    ? json_decode(
+                        $product->choice_attributes,
+                        true
+                    )
+                    : $product->choice_attributes;
+
+                if (!is_array($selected_attributes)) {
+                    $selected_attributes = [];
+                }
+            }
+
+            $existing_attributes = [];
+
+            if (!empty($product->choice_options)) {
+                $choice_options = is_string($product->choice_options)
+                    ? json_decode($product->choice_options, true)
+                    : $product->choice_options;
+
+                if (is_array($choice_options)) {
+                    foreach ($choice_options as $option) {
+                        if (
+                            isset($option['attribute_id']) &&
+                            isset($option['values'])
+                        ) {
+                            $existing_attributes[$option['attribute_id']] = $option['values'];
+                        }
                     }
+                }
+            }
+
+            $combinations = $this->generateVariantCombinations($product);
+
+            return view(
+                'backend.product.products.edit',
+                compact(
+                    'product',
+                    'categories',
+                    'subcategories',
+                    'brands',
+                    'colors',
+                    'selected_colors',
+                    'attributes',
+                    'selected_attributes',
+                    'existing_attributes',
+                    'combinations'
+                )
+            );
+        } catch (\Exception $e) {
+            \Log::error('Droploo Product Add Exception', [
+                'product_id' => $id,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'error' => 'Exception occurred',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
+
+
+
+
+    public function droplooProductStore($id, Request $request)
+    {
+        return $request;
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|unique:products,slug,' . $id,
+            'category_id' => 'required|exists:categories,id',
+            'subcategory_id' => 'nullable|exists:sub_categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'regular_price' => 'required|numeric|min:0',
+            'wholesale_price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'thumbnail_img' => 'required|string',
+            'description' => 'nullable|string',
+        ]);
+
+
+        $discount = $request->input('discount');
+        $discountType = $request->input('discount_type');
+
+        $product = Product::with(['price', 'variants'])->findOrFail($id);
+
+        if ($discount !== null && $discountType !== null && $product->price) {
+            $discountValue = (float) $discount;
+            $regularPrice = (float) $product->price->regular_price;
+
+            if ($discountType === 'flat') {
+                $salePrice = max(0, $regularPrice - $discountValue);
+                $discountPercentage = ($regularPrice > 0) ? ($discountValue / $regularPrice) * 100 : 0;
+            } elseif ($discountType === 'percent') {
+                $salePrice = max(0, $regularPrice - ($regularPrice * $discountValue / 100));
+                $discountPercentage = $discountValue;
+            } else {
+                $salePrice = $regularPrice;
+                $discountPercentage = 0;
+            }
+
+            $product->price->sale_price = number_format($salePrice, 2, '.', '');
+            $product->price->current = number_format($salePrice, 2, '.', '');
+            $product->price->discount = $discount;
+            $product->price->discount_type = $discountType;
+            $product->price->discount_percentage = round($discountPercentage, 2);
+
+            // --- Apply the SAME discount to each variant ---
+            if ($product->variants->isNotEmpty()) {
+                foreach ($product->variants as $variant) {
+                    $variantPrice = (float) $variant->price;
+
+                    if ($discountType === 'flat') {
+                        $newPrice = max(0, $variantPrice - $discountValue);
+                    } elseif ($discountType === 'percent') {
+                        $newPrice = max(0, $variantPrice - ($variantPrice * $discountValue / 100));
+                    } else {
+                        $newPrice = $variantPrice;
+                    }
+                    $variant->price = number_format($newPrice, 2, '.', '');
                 }
             }
         }
 
-        // Generate variant combinations
-        $combinations = $this->generateVariantCombinations($product);
 
-        return view('backend.product.products.droploo-add', compact(
-            'product',
-            'categories',
-            'subcategories',
-            'brands',
-            'colors',
-            'selected_colors',
-            'attributes',
-            'selected_attributes',
-            'existing_attributes',
-            'combinations'
-        ));
+
+
+        try {
+            $product = Product::findOrFail($id);
+            $slug = $request->slug ?: Str::slug($request->name);
+            $photos = $request->photos ? json_encode(explode(',', $request->photos)) : null;
+            $tags = $request->tags ? json_encode($request->tags) : null;
+            $button = $request->input('button', 'update');
+            $is_published = $button === 'update' ? ($request->has('is_published') ? true : false) : false;
+            $status = $button === 'draft' ? 0 : 1;
+
+            $product->update([
+                'name' => $request->name,
+                'slug' => $slug,
+                'brand_id' => $request->brand_id,
+                'category_id' => $request->category_id,
+                'subcategory_id' => $request->subcategory_id,
+                'thumbnail' => $request->thumbnail_img,
+                'photos' => $photos,
+                'tags' => $tags,
+                'description' => $request->description,
+                'short_description' => $request->short_description,
+                'status' => $status,
+                'is_published' => $is_published,
+                'is_featured' => $request->has('is_featured') ? true : false,
+                'best_selling' => $request->has('best_selling') ? true : false,
+                'is_new_arrival' => $request->has('is_new_arrival') ? true : false,
+                'unit' => $request->unit,
+                'barcode' => $request->barcode,
+                'video_link' => $request->video_link,
+                'badge_name' => $request->badge_name,
+                'batch_no' => $request->batch_no,
+                'todays_deal' => $request->todays_deal ?? 0,
+                'position' => $request->position ?? 0,
+            ]);
+
+            $inventory = $product->inventory;
+            if ($inventory) {
+                $inventory->update([
+                    'sku' => $request->sku ?: $this->generateSku($request->name),
+                    'barcode' => $request->barcode,
+                    'stock' => $request->stock,
+                    'low_stock_qty' => $request->low_stock_qty ?? 1,
+                    'track_inventory' => $request->has('track_inventory') ? true : false,
+                ]);
+            } else {
+                ProductInventory::create([
+                    'product_id' => $product->id,
+                    'sku' => $request->sku ?: $this->generateSku($request->name),
+                    'barcode' => $request->barcode,
+                    'stock' => $request->stock,
+                    'low_stock_qty' => $request->low_stock_qty ?? 1,
+                    'track_inventory' => $request->has('track_inventory') ? true : false,
+                ]);
+            }
+
+            // Handle product price - Update or create
+            $discount_start = null;
+            $discount_end = null;
+
+            if ($request->date_range) {
+                $dates = explode(' to ', $request->date_range);
+                if (count($dates) == 2) {
+                    $discount_start = Carbon::parse($dates[0]);
+                    $discount_end = Carbon::parse($dates[1]);
+                }
+            }
+
+            $price = $product->price;
+
+            $regularPrice = (float) $request->regular_price;
+            $WholesalePrice = (float) $request->wholesale_price;
+            $discount = (float) ($request->discount ?? 0);
+
+            if ($request->discount_type === 'flat') {
+                $salePrice = max(0, $regularPrice - $discount);
+            } elseif ($request->discount_type === 'percent') {
+                $salePrice = max(0, $regularPrice - (($regularPrice * $discount) / 100));
+            } else {
+                $salePrice = $regularPrice;
+            }
+
+            $salePrice = (int) round($salePrice);
+
+            $price = $product->price;
+
+            if ($price) {
+                $price->update([
+                    'purchase_price' => $request->purchase_price ?? 0,
+                    'regular_price' => (int) $regularPrice,
+                    'wholesale_price' => (int) $WholesalePrice,
+                    'sale_price' => $salePrice,
+                    'discount_type' => $request->discount_type,
+                    'discount' => $discount,
+                    'discount_start' => $discount_start,
+                    'discount_end' => $discount_end,
+                ]);
+            } else {
+                ProductPrice::create([
+                    'product_id' => $product->id,
+                    'purchase_price' => $request->purchase_price ?? 0,
+                    'regular_price' => (int) $regularPrice,
+                    'wholesale_price' => (int) $WholesalePrice,
+                    'sale_price' => $salePrice,
+                    'discount_type' => $request->discount_type,
+                    'discount' => $discount,
+                    'discount_start' => $discount_start,
+                    'discount_end' => $discount_end,
+                    'currency' => 'BDT',
+                ]);
+            }
+
+            // Handle product shipping - Update or create
+            $shipping = $product->shipping;
+            if ($shipping) {
+                $shipping->update([
+                    'shipping_type' => $request->shipping_type ?? 'flat_rate',
+                    'shipping_cost' => $request->shipping_cost ?? 0,
+                    'weight' => $request->weight,
+                    'length' => $request->length,
+                    'width' => $request->width,
+                    'height' => $request->height,
+                ]);
+            } else {
+                ProductShipping::create([
+                    'product_id' => $product->id,
+                    'shipping_type' => $request->shipping_type ?? 'flat_rate',
+                    'shipping_cost' => $request->shipping_cost ?? 0,
+                    'weight' => $request->weight,
+                    'length' => $request->length,
+                    'width' => $request->width,
+                    'height' => $request->height,
+                ]);
+            }
+
+            // Handle SEO - Update or create
+            $seo = $product->seo;
+            if ($seo) {
+                $seo->update([
+                    'meta_title' => $request->meta_title,
+                    'meta_image' => $request->meta_img,
+                    'meta_description' => $request->meta_description,
+                ]);
+            } else {
+                ProductSeo::create([
+                    'product_id' => $product->id,
+                    'meta_title' => $request->meta_title,
+                    'meta_image' => $request->meta_img,
+                    'meta_description' => $request->meta_description,
+                ]);
+            }
+
+            // Handle taxes - Delete existing and recreate
+            ProductTax::where('product_id', $product->id)->delete();
+
+            if ($request->has('tax_names') && is_array($request->tax_names)) {
+                foreach ($request->tax_names as $index => $taxName) {
+                    if (!empty($taxName) && isset($request->tax_values[$index]) && $request->tax_values[$index] > 0) {
+                        ProductTax::create([
+                            'product_id' => $product->id,
+                            'tax_id' => $this->getOrCreateTax($taxName, $request->tax_types[$index] ?? 'percent'),
+                            'tax_type' => $request->tax_types[$index] ?? 'percent',
+                        ]);
+                    }
+                }
+            }
+
+            // Return response
+            $message = 'Product updated successfully!';
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'product_id' => $product->id,
+                    'redirect_url' => route('products.index')
+                ]);
+            }
+
+            flash(translate($message))->success();
+            return redirect()->route('products.index');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error: ' . $e->getMessage()
+                ], 500);
+            }
+
+            flash(translate('Error: ' . $e->getMessage()))->error();
+            return back()->withInput();
+        }
     }
+
+
+    public function droplooProductStore1($id, Request $request)
+    {
+        // Validate input (same as before)
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'subcategory_id' => 'nullable|exists:sub_categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'regular_price' => 'required|numeric|min:0',
+            'wholesale_price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'thumbnail_img' => 'required|string',
+            'description' => 'nullable|string',
+        ]);
+
+
+        // Generate a unique slug
+        $baseSlug = $request->slug ?: Str::slug($request->name);
+        $slug = $baseSlug;
+        $counter = 1;
+        while (Product::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter++;
+        }
+
+        // Prepare data for the new product
+        $photos = $request->photos ? json_encode(explode(',', $request->photos)) : null;
+        $tags = $request->tags ? json_encode($request->tags) : null;
+        $is_published = $request->has('is_published') ? true : false;
+        $status = $request->button === 'draft' ? 0 : 1;
+
+        // Create new product
+        $product = Product::create([
+            'name' => $request->name,
+            'slug' => $slug,
+            'brand_id' => $request->brand_id,
+            'category_id' => $request->category_id,
+            'subcategory_id' => $request->subcategory_id,
+            'thumbnail' => $request->thumbnail_img,
+            'photos' => $photos,
+            'tags' => $tags,
+            'description' => $request->description,
+            'short_description' => $request->short_description,
+            'status' => $status,
+            'is_published' => $is_published,
+            'is_featured' => $request->has('is_featured') ? true : false,
+            'best_selling' => $request->has('best_selling') ? true : false,
+            'is_new_arrival' => $request->has('is_new_arrival') ? true : false,
+            'unit' => $request->unit,
+            'barcode' => $request->barcode,
+            'video_link' => $request->video_link,
+            'badge_name' => $request->badge_name,
+            'batch_no' => $request->batch_no,
+            'todays_deal' => $request->todays_deal ?? 0,
+            'position' => $request->position ?? 0,
+        ]);
+
+        // Create Inventory
+        ProductInventory::create([
+            'product_id' => $product->id,
+            'sku' => $request->sku ?: $this->generateSku($request->name),
+            'barcode' => $request->barcode,
+            'stock' => $request->stock,
+            'low_stock_qty' => $request->low_stock_qty ?? 1,
+            'track_inventory' => $request->has('track_inventory') ? true : false,
+        ]);
+
+        // Create Price
+        $discount_start = null;
+        $discount_end = null;
+        if ($request->date_range) {
+            $dates = explode(' to ', $request->date_range);
+            if (count($dates) == 2) {
+                $discount_start = Carbon::parse($dates[0]);
+                $discount_end = Carbon::parse($dates[1]);
+            }
+        }
+
+        $regularPrice = (float) $request->regular_price;
+        $WholesalePrice = (float) $request->wholesale_price;
+        $discount = (float) ($request->discount ?? 0);
+
+        if ($request->discount_type === 'flat') {
+            $salePrice = max(0, $regularPrice - $discount);
+        } elseif ($request->discount_type === 'percent') {
+            $salePrice = max(0, $regularPrice - (($regularPrice * $discount) / 100));
+        } else {
+            $salePrice = $regularPrice;
+        }
+        $salePrice = (int) round($salePrice);
+
+        ProductPrice::create([
+            'product_id' => $product->id,
+            'purchase_price' => $request->purchase_price ?? 0,
+            'regular_price' => (int) $regularPrice,
+            'wholesale_price' => (int) $WholesalePrice,
+            'sale_price' => $salePrice,
+            'discount_type' => $request->discount_type,
+            'discount' => $discount,
+            'discount_start' => $discount_start,
+            'discount_end' => $discount_end,
+            'currency' => 'BDT',
+        ]);
+
+        // Create Shipping
+        ProductShipping::create([
+            'product_id' => $product->id,
+            'shipping_type' => $request->shipping_type ?? 'flat_rate',
+            'shipping_cost' => $request->shipping_cost ?? 0,
+            'weight' => $request->weight,
+            'length' => $request->length,
+            'width' => $request->width,
+            'height' => $request->height,
+        ]);
+
+        // Create SEO
+        ProductSeo::create([
+            'product_id' => $product->id,
+            'meta_title' => $request->meta_title,
+            'meta_image' => $request->meta_img,
+            'meta_description' => $request->meta_description,
+        ]);
+
+        // Create Taxes (if any)
+        if ($request->has('tax_names') && is_array($request->tax_names)) {
+            foreach ($request->tax_names as $index => $taxName) {
+                if (!empty($taxName) && isset($request->tax_values[$index]) && $request->tax_values[$index] > 0) {
+                    ProductTax::create([
+                        'product_id' => $product->id,
+                        'tax_id' => $this->getOrCreateTax($taxName, $request->tax_types[$index] ?? 'percent'),
+                        'tax_type' => $request->tax_types[$index] ?? 'percent',
+                    ]);
+                }
+            }
+        }
+
+        // Handle Variants (if any)
+        if ($request->has('variant_attributes') && is_array($request->variant_attributes)) {
+            foreach ($request->variant_attributes as $variantData) {
+                // Ensure required fields exist
+                if (isset($variantData['price'], $variantData['sku'], $variantData['quantity'])) {
+                    ProductVarient::create([
+                        'product_id' => $product->id,
+                        'price' => $variantData['price'],
+                        'wholesale_price' => $variantData['wholesale_price'] ?? null,
+                        'sku' => $variantData['sku'],
+                        'quantity' => $variantData['quantity'],
+                        'image' => $variantData['image'] ?? null,
+                        // Add any other variant fields you have
+                    ]);
+                }
+            }
+        }
+
+        // Return response
+        $message = 'Product copied and saved as new!';
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'product_id' => $product->id,
+                'redirect_url' => route('products.index')
+            ]);
+        }
+
+        flash(translate($message))->success();
+        return redirect()->route('products.index');
+    }
+
 
 
     public function create()
