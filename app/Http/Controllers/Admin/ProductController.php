@@ -19,6 +19,8 @@ use App\Models\Admin\SubCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Http;
 
 
 class ProductController extends Controller
@@ -121,6 +123,203 @@ class ProductController extends Controller
             'products',
             'categories',
             'brands'
+        ));
+    }
+
+
+    // Droploo Products with API (Debug Version)
+
+    public function droplooProductList(Request $request)
+    {
+
+        // $appKey = get_setting('droploo_app_key', ' ');
+        // $appSecret = get_setting('droploo_app_secret', ' ');
+        // $userName = get_setting('droploo_username', ' ');
+
+        // Hardcoded credentials (consider using settings)
+        $appKey = "3AYL43PAG8OYGUXI";
+        $appSecret = "GhcsdNOSnaCEhXI6kb0oz6ovzBCkSedj";
+        $userName = "abdul-gaffa_afiadreamcom";
+
+        $apiUrl = 'https://nittoz.com/api/v1/dropshippers/products';
+
+        // Default values (same as all_products)
+        $col_name = null;
+        $query = null;
+        $seller_id = null;
+        $sort_search = null;
+        $type = 'All';
+
+        // Handle search
+        if ($request->has('search') && $request->search != null) {
+            $sort_search = $request->search;
+        }
+
+        try {
+            // Make the API request (do NOT return here)
+            $response = Http::withHeaders([
+                'api_secret' => $appSecret,
+                'api_key'    => $appKey,
+                'username'   => $userName,
+            ])->get($apiUrl);
+
+            if ($response->successful()) {
+                $responseData = $response->json();
+                // Extract products and image path (if available)
+                $products  = $responseData['data']['products'] ?? $responseData['products'] ?? [];
+                $imagePath = $responseData['imagePath'] ?? '';
+                // Filter by search term if provided
+                if ($sort_search != null) {
+                    $collection = collect($products);
+                    $products = $collection->filter(function ($product) use ($sort_search) {
+                        return stripos($product['name'], $sort_search) !== false;
+                    })->values()->all();
+                }
+
+                // Paginate the (filtered) collection
+                $currentPage = LengthAwarePaginator::resolveCurrentPage();
+                $perPage = 15;
+                $collection = collect($products);
+                $paginatedProducts = new LengthAwarePaginator(
+                    $collection->forPage($currentPage, $perPage),
+                    $collection->count(),
+                    $perPage,
+                    $currentPage,
+                    ['path' => $request->url(), 'query' => $request->query()]
+                );
+
+                $products =  $paginatedProducts;
+
+                $categories = Category::select('id', 'category_name')
+                    ->orderBy('category_name')
+                    ->get();
+
+
+                $brands = Brand::select('id', 'name')
+                    ->orderBy('name')
+                    ->get();
+
+
+                return view('backend.product.products.droploo-products', compact(
+                    'products',
+                    'imagePath',
+                    'type',
+                    'col_name',
+                    'query',
+                    'seller_id',
+                    'sort_search',
+                    'categories',
+                    'brands'
+                ));
+            } else {
+                return view('errors.401-droploo');
+            }
+        } catch (\Exception $e) {
+            // Log the exception for debugging
+            \Log::error('Droploo API exception: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Exception occurred',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function droplooProductAdd($id)
+    {
+        $product = Product::with([
+            'inventory',
+            'variants',
+            'price',
+            'shipping',
+            'seo',
+            'taxes',
+            'category',
+            'subcategory',
+            'brand'
+        ])->findOrFail($id);
+
+        // Categories
+        $categories = Category::latest()->get();
+
+        // Subcategories
+        $subcategories = SubCategory::where(
+            'category_id',
+            $product->category_id
+        )->get();
+
+        // Brands
+        $brands = Brand::latest()->get();
+
+        // Colors
+        $colors = Color::latest()->get();
+
+        // Selected colors
+        $selected_colors = [];
+
+        if (!empty($product->colors)) {
+
+            $selected_colors = json_decode($product->colors, true);
+
+            if (!is_array($selected_colors)) {
+                $selected_colors = [];
+            }
+        }
+
+        // Attributes
+        $attributes = Attribute::with('values')->latest()->get();
+
+        // Selected attributes
+        $selected_attributes = [];
+
+        if (!empty($product->choice_attributes)) {
+
+            $selected_attributes = json_decode(
+                $product->choice_attributes,
+                true
+            );
+
+            if (!is_array($selected_attributes)) {
+                $selected_attributes = [];
+            }
+        }
+
+        // Existing attribute values
+        $existing_attributes = [];
+
+        if (!empty($product->choice_options)) {
+
+            $choice_options = json_decode(
+                $product->choice_options,
+                true
+            );
+
+            if (is_array($choice_options)) {
+
+                foreach ($choice_options as $option) {
+                    if (
+                        isset($option['attribute_id']) && isset($option['values'])
+                    ) {
+
+                        $existing_attributes[$option['attribute_id']] = $option['values'];
+                    }
+                }
+            }
+        }
+
+        // Generate variant combinations
+        $combinations = $this->generateVariantCombinations($product);
+
+        return view('backend.product.products.droploo-add', compact(
+            'product',
+            'categories',
+            'subcategories',
+            'brands',
+            'colors',
+            'selected_colors',
+            'attributes',
+            'selected_attributes',
+            'existing_attributes',
+            'combinations'
         ));
     }
 
