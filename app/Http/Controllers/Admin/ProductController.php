@@ -632,15 +632,8 @@ class ProductController extends Controller
     }
 
 
-
-
-
-
-
     public function droplooProductStore($id, Request $request)
     {
-        return $request;
-
         $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|unique:products,slug,' . $id,
