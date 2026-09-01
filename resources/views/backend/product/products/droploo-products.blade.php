@@ -289,6 +289,7 @@
                             <th>{{ translate('Price') }}</th>
                             <th>{{ translate('Stock') }}</th>
                             <th>{{ translate('Status') }}</th>
+                            <th>{{ translate('Action') }}</th>
                             <th width="10%" class="text-right">{{ translate('Actions') }}</th>
                         </tr>
                     </thead>
@@ -342,6 +343,17 @@
                                         class="badge badge-inline {{ $product['in_stock'] ? 'badge-success' : 'badge-danger' }}">
                                         {{ $product['in_stock'] ? translate('Active') : translate('Inactive') }}
                                     </span>
+                                </td>
+                                <td>
+                                    @if (in_array((string) $product['id'], $addedProductIds))
+                                        <span class="badge badge-inline badge-success">
+                                            {{ translate('Already Added') }}
+                                        </span>
+                                    @else
+                                        <span class="badge badge-inline badge-warning">
+                                            {{ translate('Not Added') }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="text-right">
                                     <div class="btn-group" role="group">

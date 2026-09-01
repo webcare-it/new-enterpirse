@@ -136,6 +136,12 @@ class ProductController extends Controller
         // $userName = get_setting('droploo_username', ' ');
         // Hardcoded credentials (consider using settings)
 
+        $addedProductIds = Product::whereNotNull('droploo_product_id')
+            ->pluck('droploo_product_id')
+            ->map(function ($id) {
+                return (string) $id;
+            })->toArray();
+
         $appKey = "3AYL43PAG8OYGUXI";
         $appSecret = "GhcsdNOSnaCEhXI6kb0oz6ovzBCkSedj";
         $userName = "abdul-gaffa_afiadreamcom";
@@ -208,7 +214,8 @@ class ProductController extends Controller
                     'seller_id',
                     'sort_search',
                     'categories',
-                    'brands'
+                    'brands',
+                    'addedProductIds'
                 ));
             } else {
                 return view('errors.401-droploo');
@@ -223,106 +230,11 @@ class ProductController extends Controller
         }
     }
 
-
-    public function droplooProductAdd1($id)
-    {
-        $appKey    = "3AYL43PAG8OYGUXI";
-        $appSecret = "GhcsdNOSnaCEhXI6kb0oz6ovzBCkSedj";
-        $userName  = "abdul-gaffa_afiadreamcom";
-
-        $apiUrl = "https://nittoz.com/api/v1/dropshippers/products/{$id}";
-
-        try {
-            $response = Http::withHeaders([
-                'api_secret' => $appSecret,
-                'api_key'    => $appKey,
-                'username'   => $userName,
-            ])->get($apiUrl);
-
-            if (!$response->successful()) {
-                \Log::error('Droploo API Error', [
-                    'status' => $response->status(),
-                    'body'   => $response->body(),
-                ]);
-                return redirect()->back()->with('error', 'Failed to fetch product from dropshipper API.');
-            }
-
-            $apiResponse = $response->json();
-
-            // Validate API response structure
-            if (empty($apiResponse['data']['product'])) {
-                \Log::error('Droploo API: Product not found', ['response' => $apiResponse]);
-                return redirect()->back()->with('error', 'Product not found in dropshipper API.');
-            }
-
-            // Convert the entire product data to an object (stdClass) with nested objects
-            $productData = $apiResponse['data']['product'];
-            $product = json_decode(json_encode($productData));
-
-            // ------------------------------------------------------------
-            // Load local data for dropdowns (categories, brands, subcategories)
-            // ------------------------------------------------------------
-            // Assuming you have these models: Category, Brand, Subcategory
-            // Adjust the column names if they differ in your DB.
-
-            $categories = Category::select('id', 'category_name')
-                ->orderBy('category_name')
-                ->get();
-
-            $brands = Brand::select('id', 'name')
-                ->orderBy('name')
-                ->get();
-
-            $subcategories = Subcategory::select('id', 'name')
-                ->orderBy('name')
-                ->get();
-
-            // ------------------------------------------------------------
-            // (Optional) Transform variants into the format expected by
-            // the 'variant_combinations' partial – if you decide to include it.
-            // Since the view checks for $combinations, we can omit it
-            // and the view will show a "no variants" message.
-            // If you need it, uncomment and adapt the mapping below.
-            // ------------------------------------------------------------
-            // $combinations = [];
-            // if (!empty($product->variants) && is_array($product->variants)) {
-            //     foreach ($product->variants as $variant) {
-            //         // Map to the structure expected by the partial.
-            //         // This is just an example; adjust to your actual partial requirements.
-            //         $combinations[] = [
-            //             'sku'             => $variant->sku ?? '',
-            //             'price'           => $variant->price ?? 0,
-            //             'wholesale_price' => $variant->wholesale_price ?? 0,
-            //             'stock'           => $variant->stock ?? 0,
-            //             'attribute_value' => (array) ($variant->attribute_value ?? []),
-            //         ];
-            //     }
-            // }
-
-            // Pass everything to the view
-            return view('backend.product.products.droploo-add', compact(
-                'product',
-                'categories',
-                'brands',
-                'subcategories'
-                // 'combinations' // uncomment if you map variants
-            ));
-        } catch (\Exception $e) {
-            \Log::error('Droploo Exception', [
-                'product_id' => $id,
-                'message'    => $e->getMessage(),
-            ]);
-            return redirect()->back()->with('error', 'An error occurred while fetching the product: ' . $e->getMessage());
-        }
-    }
-
-
     public function droplooProductAdd($id)
     {
         $appKey = "3AYL43PAG8OYGUXI";
         $appSecret = "GhcsdNOSnaCEhXI6kb0oz6ovzBCkSedj";
         $userName = "abdul-gaffa_afiadreamcom";
-
         $apiUrl = "https://nittoz.com/api/v1/dropshippers/products";
 
         try {
@@ -375,6 +287,7 @@ class ProductController extends Controller
             $product->slug = $product->slug ?? \Str::slug($product->name);
 
             $product->category_id = $product->category_id ?? null;
+
             $product->subcategory_id = $product->subcategory_id ?? null;
             $product->brand_id = $product->brand_id ?? null;
 
@@ -689,7 +602,7 @@ class ProductController extends Controller
             $combinations = $this->generateVariantCombinations($product);
 
             return view(
-                'backend.product.products.edit',
+                'backend.product.products.droploo-add',
                 compact(
                     'product',
                     'categories',
@@ -983,6 +896,9 @@ class ProductController extends Controller
 
     public function droplooProductStore1($id, Request $request)
     {
+
+        return $request;
+
         // Validate input (same as before)
         $request->validate([
             'name' => 'required|string|max:255',
@@ -1405,7 +1321,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|unique:products,slug',
+            // 'slug' => 'nullable|string|unique:products,slug',
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'nullable|exists:sub_categories,id',
             'brand_id' => 'nullable|exists:brands,id',
@@ -1416,8 +1332,21 @@ class ProductController extends Controller
             'description' => 'nullable|string'
         ]);
 
+
+        // return $request;
+
         try {
             $slug = $request->slug ?: Str::slug($request->name);
+            $slug = Str::slug($request->name);
+
+            $originalSlug = $slug;
+            $count = 1;
+
+            while (Product::where('slug', $slug)->exists()) {
+                $slug = $originalSlug . '-' . $count;
+                $count++;
+            }
+
             $photos = $request->photos ? json_encode(explode(',', $request->photos)) : null;
             $tags = $request->tags ? json_encode($request->tags) : null;
 
@@ -1428,6 +1357,7 @@ class ProductController extends Controller
             // Create main product
             $product = Product::create([
                 'name' => $request->name,
+                'droploo_product_id' => $request->droploo_product_id,
                 'slug' => $slug,
                 'added_by' => auth()->id(),
                 'vendor_id' => null,
