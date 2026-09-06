@@ -19,7 +19,6 @@ class CreateProductsTable extends Migration
             $table->string('name');
             $table->string('slug')->unique()->nullable();
             $table->foreignId('added_by');
-            // $table->foreignId('vendor_id')->nullable()->constrained('vendors')->nullOnDelete();
             $table->foreignId('user_id');
             $table->foreignId('brand_id')->nullable();
             $table->foreignId('category_id')->nullable();
