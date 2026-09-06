@@ -39,17 +39,19 @@
                                 value="{{ $combination['price'] }}" step="0.01" class="form-control" required>
                         </td>
                         <td>
-                            <input type="number" name="variant_attributes[{{ $key }}][wholesale_price]"
+                            <input type="number" readonly title="{{ translate('Price not changeable') }}"
+                                name="variant_attributes[{{ $key }}][wholesale_price]"
                                 value="{{ $combination['wholesale_price'] }}" step="0.01" class="form-control"
                                 required>
                         </td>
                         <td>
-                            <input type="text" name="variant_attributes[{{ $key }}][sku]"
-                                value="{{ $combination['sku'] }}" class="form-control" required>
+                            <input type="text" readonly title="{{ translate('SKU not changeable') }}"
+                                name="variant_attributes[{{ $key }}][sku]" value="{{ $combination['sku'] }}"
+                                class="form-control" required>
                         </td>
                         <td>
                             <input type="number" name="variant_attributes[{{ $key }}][quantity]"
-                                value="{{ $combination['quantity'] }}" min="0" class="form-control" required>
+                                value="120" min="0" class="form-control" required>
                         </td>
                         <td>
                             <div class="input-group" data-toggle="aizuploader" data-type="image">

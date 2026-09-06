@@ -1169,6 +1169,9 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+
+        return $request;
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             // 'slug' => 'nullable|string|unique:products,slug',

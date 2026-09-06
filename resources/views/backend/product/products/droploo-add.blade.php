@@ -247,7 +247,7 @@
                                 <div class="col-md-8">
                                     <input type="number" lang="en" min="0" step="0.01"
                                         placeholder="{{ translate('Purchase Price') }}" name="purchase_price"
-                                        class="form-control" value="{{ $product->price->purchase_price ?? 0 }}">
+                                        class="form-control" value="{{ $product->price->wholesale_price ?? 0 }}">
                                 </div>
                             </div>
 
@@ -257,18 +257,18 @@
                                 <div class="col-md-8">
                                     <input type="number" lang="en" min="0" step="0.01"
                                         placeholder="{{ translate('Regular Price') }}" name="regular_price"
-                                        class="form-control" required value="{{ $product->price->regular_price ?? 0 }}">
+                                        class="form-control" required value="{{ $product->price->regular ?? 0 }}">
                                 </div>
                             </div>
 
                             <div class="form-group row">
                                 <label class="col-md-3 col-from-label">{{ translate('Wholesale Price') }} <span
-                                        class="text-danger">*</span></label>
+                                        class="text-danger"></span></label>
                                 <div class="col-md-8">
                                     <input type="number" lang="en" min="0" step="0.01"
-                                        placeholder="{{ translate('Wholesale Price') }}" name="wholesale_price"
-                                        class="form-control" required
-                                        value="{{ $product->price->wholesale_price ?? 0 }}">
+                                        title="{{ translate('Price not changeable') }}" name="wholesale_price"
+                                        placeholder="{{ translate('Wholesale Price') }}" readonly class="form-control"
+                                        required value="{{ $product->price->wholesale_price ?? 0 }}">
                                 </div>
                             </div>
 
@@ -349,7 +349,7 @@
                     </div>
 
                     {{-- Shipping --}}
-                    <div class="card">
+                    {{-- <div class="card">
                         <div class="card-header">
                             <h5 class="mb-0 h6">{{ translate('Shipping Configuration') }}</h5>
                         </div>
@@ -412,7 +412,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
 
                     {{-- SEO --}}
                     <div class="card">
@@ -489,6 +489,24 @@
                                     <label class="aiz-switch aiz-switch-success mb-0">
                                         <input type="checkbox" name="is_published" value="1"
                                             {{ $product->is_published ? 'checked' : '' }}>
+                                        <span></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Has Variant --}}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0 h6">{{ translate('Product Type') }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-md-6 col-from-label">{{ translate('Has Variants') }}</label>
+                                <div class="col-md-6">
+                                    <label class="aiz-switch aiz-switch-success mb-0">
+                                        <input type="checkbox" name="is_variant" id="is_variant" value="1" checked>
                                         <span></span>
                                     </label>
                                 </div>
