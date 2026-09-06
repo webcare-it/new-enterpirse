@@ -1169,9 +1169,6 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-
-        return $request;
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             // 'slug' => 'nullable|string|unique:products,slug',
@@ -1489,7 +1486,7 @@ class ProductController extends Controller
         ));
     }
 
-    private function generateVariantCombinations($product)
+    private function generateVariantCombinationsFinal($product)
     {
         $combinations = [];
         $variants = $product->variants ?? [];
@@ -1526,6 +1523,54 @@ class ProductController extends Controller
                     'wholesale_price'      => $variant->wholesale_price ?? 0,
                     'attribute_value'      => $attributeValue,        // raw (keep if needed)
                     'attribute_value_text' => $attributeText,         // ✅ safe for display
+                    'quantity'             => $variant->quantity ?? 0,
+                    'image'                => $variant->image ?? '',
+                    'attributes'           => $variant->attribute ?? []
+                ];
+            }
+        }
+
+        return $combinations;
+    }
+
+    private function generateVariantCombinations($product)
+    {
+        $combinations = [];
+        $variants = $product->variants ?? [];
+
+        if (is_array($variants) && count($variants) > 0) {
+            foreach ($variants as $variant) {
+                if (is_array($variant)) {
+                    $variant = (object) $variant;
+                }
+
+                // Convert attribute_value (object) to a display string and JSON
+                $attributeValue = $variant->attribute_value ?? [];
+                $attributeText = '';
+
+                if (is_object($attributeValue)) {
+                    $attributeArray = (array) $attributeValue;
+                } elseif (is_array($attributeValue)) {
+                    $attributeArray = $attributeValue;
+                } else {
+                    $attributeArray = [];
+                }
+
+                if (!empty($attributeArray)) {
+                    $parts = [];
+                    foreach ($attributeArray as $key => $val) {
+                        $parts[] = "$key: $val";
+                    }
+                    $attributeText = implode(', ', $parts);
+                }
+
+                $combinations[] = [
+                    'sku'                  => $variant->sku ?? '',
+                    'price'                => $variant->price ?? 0,
+                    'wholesale_price'      => $variant->wholesale_price ?? 0,
+                    'attribute_value'      => $attributeValue,                    // raw object
+                    'attribute_value_text' => $attributeText,                     // display
+                    'attributes_json'      => json_encode($attributeArray),       // ✅ for hidden input
                     'quantity'             => $variant->quantity ?? 0,
                     'image'                => $variant->image ?? '',
                     'attributes'           => $variant->attribute ?? []

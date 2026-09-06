@@ -16,27 +16,42 @@
                 @foreach ($combinations as $key => $combination)
                     <tr class="variant">
                         <td>
-                            {{ $combination['attribute_value_text'] }}
-                            {{-- ✅ Hidden input for attributes JSON --}}
-                            <input type="hidden" name="variant_attributes[{{ $key }}][attributes]"
-                                value="{{ $combination['attributes_json'] ?? '{}' }}">
+                            {{--
+                                ✅ FIX: Convert attribute_value (stdClass) to a display string.
+                                Example: {"Color":"Black","Age":"1/2 Age"} → "Color: Black, Age: 1/2 Age"
+                            --}}
+                            @php
+                                $attrValue = $combination['attribute_value'];
+                                $attrs = is_object($attrValue) ? (array) $attrValue : $attrValue;
+                                $display = '';
+                                if (is_array($attrs) && !empty($attrs)) {
+                                    $parts = [];
+                                    foreach ($attrs as $k => $v) {
+                                        $parts[] = $k . ': ' . $v;
+                                    }
+                                    $display = implode(', ', $parts);
+                                }
+                            @endphp
+                            {{ $display }}
                         </td>
                         <td>
                             <input type="number" name="variant_attributes[{{ $key }}][price]"
                                 value="{{ $combination['price'] }}" step="0.01" class="form-control" required>
                         </td>
                         <td>
-                            <input type="number" name="variant_attributes[{{ $key }}][wholesale_price]"
+                            <input type="number" readonly title="{{ translate('Price not changeable') }}"
+                                name="variant_attributes[{{ $key }}][wholesale_price]"
                                 value="{{ $combination['wholesale_price'] }}" step="0.01" class="form-control"
                                 required>
                         </td>
                         <td>
-                            <input type="text" name="variant_attributes[{{ $key }}][sku]"
-                                value="{{ $combination['sku'] }}" class="form-control" required>
+                            <input type="text" readonly title="{{ translate('SKU not changeable') }}"
+                                name="variant_attributes[{{ $key }}][sku]" value="{{ $combination['sku'] }}"
+                                class="form-control" required>
                         </td>
                         <td>
                             <input type="number" name="variant_attributes[{{ $key }}][quantity]"
-                                value="{{ $combination['quantity'] }}" min="0" class="form-control" required>
+                                value="120" min="0" class="form-control" required>
                         </td>
                         <td>
                             <div class="input-group" data-toggle="aizuploader" data-type="image">
