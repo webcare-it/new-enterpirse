@@ -289,7 +289,6 @@
                             <th>{{ translate('Price') }}</th>
                             <th>{{ translate('Stock') }}</th>
                             <th>{{ translate('Status') }}</th>
-                            <th>{{ translate('Action') }}</th>
                             <th width="10%" class="text-right">{{ translate('Actions') }}</th>
                         </tr>
                     </thead>
