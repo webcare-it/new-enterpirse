@@ -15,10 +15,10 @@ class CreateProductsTable extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->integer('droploo_product_id')->nullable();
             $table->string('name');
             $table->string('slug')->unique()->nullable();
             $table->foreignId('added_by');
-            // $table->foreignId('vendor_id')->nullable()->constrained('vendors')->nullOnDelete();
             $table->foreignId('user_id');
             $table->foreignId('brand_id')->nullable();
             $table->foreignId('category_id')->nullable();

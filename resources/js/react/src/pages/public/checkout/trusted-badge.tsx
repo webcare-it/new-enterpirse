@@ -72,7 +72,7 @@ export function TrustedBadge() {
         },
     ];
     return (
-        <div className="hidden md:grid grid-cols-4 gap-4">
+        <div className="hidden md:grid grid-cols-2 xl:grid-cols-4 gap-4">
             {features.map((item, index) => {
                 const Icon = item.icon;
 

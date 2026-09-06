@@ -1,8 +1,8 @@
-import { useRef, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import type { ICategory } from "@/type";
 import { useConfig } from "@/hooks/useConfig";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { LayoutContainer } from "../_components/layout/base-layout";
 import { OptimizedImage } from "@/components/common/optimized-image";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
@@ -79,7 +79,7 @@ export const CategorySection = () => {
                     <div
                         ref={scrollRef}
                         className="
-                            flex gap-4 md:gap-5
+                            flex gap-3 sm:gap-3 md:gap-5
                             overflow-x-auto
                             overflow-y-hidden
                             scrollbar-hide
@@ -101,7 +101,7 @@ export const CategorySection = () => {
                                     duration: 0.4,
                                     ease: [0.25, 0.46, 0.45, 0.94],
                                 }}
-                                className="shrink-0 w-[150px] sm:w-[170px] md:w-[190px]"
+                                className="shrink-0 w-[120px] sm:w-[170px] md:w-[190px]"
                             >
                                 <Link
                                     to={`/categories/${category?.slug}`}
@@ -116,11 +116,11 @@ export const CategorySection = () => {
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-90" />
 
                                     <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-white group-hover:text-primary">
-                                        <div className="flex justify-center items-center gap-2">
-                                            <span className="font-semibold text-sm md:text-base text-center leading-tight drop-shadow-md">
+                                        <div className="flex justify-center items-center">
+                                            <span className="font-medium md:font-semibold text-xs sm:text-sm md:text-base text-center leading-tight drop-shadow-md text-nowrap">
                                                 {category?.name}
                                             </span>
-                                            <ArrowRight className="w-4 h-4" />
+                                            <ArrowRight className="size-4" />
                                         </div>
                                     </div>
                                 </Link>

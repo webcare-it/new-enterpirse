@@ -6,13 +6,13 @@
     </div>
 
     <div class="">
-        <form class="form form-horizontal mar-top" action="{{ route('products.update', $product->id) }}" method="POST"
+        <form class="form form-horizontal mar-top" action="{{ route('products.store') }}" method="POST"
             enctype="multipart/form-data" id="choice_form">
             @csrf
-            @method('PUT')
-
+            @method('POST')
             <div class="row gutters-5">
                 <div class="col-lg-8">
+                    <input type="hidden" name="droploo_product_id" id="droploo_product_id" value="{{ $product->id }}">
 
                     {{-- Basic Information --}}
                     <div class="card">
@@ -292,7 +292,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-group row">
+                            {{-- <div class="form-group row">
                                 <label class="col-md-3 col-from-label">{{ translate('Discount Date Range') }}</label>
                                 <div class="col-md-8">
                                     <input type="text" class="form-control aiz-date-range" name="date_range"
@@ -300,7 +300,7 @@
                                         data-format="DD-MM-Y HH:mm:ss" data-separator=" to " autocomplete="off"
                                         value="{{ $product->price->discount_start && $product->price->discount_end ? \Carbon\Carbon::parse($product->price->discount_start)->format('d-m-Y H:i:s') . ' to ' . \Carbon\Carbon::parse($product->price->discount_end)->format('d-m-Y H:i:s') : '' }}">
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <div class="form-group row">
                                 <label class="col-md-3 col-from-label">{{ translate('SKU') }}</label>
