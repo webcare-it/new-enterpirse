@@ -16,7 +16,23 @@
                 @foreach ($combinations as $key => $combination)
                     <tr class="variant">
                         <td>
-                            {{ $combination['attribute_value'] }}
+                            {{--
+                                ✅ FIX: Convert attribute_value (stdClass) to a display string.
+                                Example: {"Color":"Black","Age":"1/2 Age"} → "Color: Black, Age: 1/2 Age"
+                            --}}
+                            @php
+                                $attrValue = $combination['attribute_value'];
+                                $attrs = is_object($attrValue) ? (array) $attrValue : $attrValue;
+                                $display = '';
+                                if (is_array($attrs) && !empty($attrs)) {
+                                    $parts = [];
+                                    foreach ($attrs as $k => $v) {
+                                        $parts[] = $k . ': ' . $v;
+                                    }
+                                    $display = implode(', ', $parts);
+                                }
+                            @endphp
+                            {{ $display }}
                         </td>
                         <td>
                             <input type="number" name="variant_attributes[{{ $key }}][price]"

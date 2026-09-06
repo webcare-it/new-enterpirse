@@ -152,6 +152,7 @@
                         <div class="card-body">
                             <div class="form-group row">
                                 <div class="col-md-12">
+                                    {{-- ✅ The description will now be populated from the API (after controller fix) --}}
                                     <textarea class="aiz-text-editor" name="description">{!! $product->description !!}</textarea>
                                 </div>
                             </div>
@@ -291,16 +292,6 @@
                                     </select>
                                 </div>
                             </div>
-
-                            {{-- <div class="form-group row">
-                                <label class="col-md-3 col-from-label">{{ translate('Discount Date Range') }}</label>
-                                <div class="col-md-8">
-                                    <input type="text" class="form-control aiz-date-range" name="date_range"
-                                        placeholder="{{ translate('Select Date Range') }}" data-time-picker="true"
-                                        data-format="DD-MM-Y HH:mm:ss" data-separator=" to " autocomplete="off"
-                                        value="{{ $product->price->discount_start && $product->price->discount_end ? \Carbon\Carbon::parse($product->price->discount_start)->format('d-m-Y H:i:s') . ' to ' . \Carbon\Carbon::parse($product->price->discount_end)->format('d-m-Y H:i:s') : '' }}">
-                                </div>
-                            </div> --}}
 
                             <div class="form-group row">
                                 <label class="col-md-3 col-from-label">{{ translate('SKU') }}</label>

@@ -235,62 +235,44 @@ class ProductController extends Controller
         $appKey = "3AYL43PAG8OYGUXI";
         $appSecret = "GhcsdNOSnaCEhXI6kb0oz6ovzBCkSedj";
         $userName = "abdul-gaffa_afiadreamcom";
-        $apiUrl = "https://nittoz.com/api/v1/dropshippers/products";
+        $apiUrl = "https://nittoz.com/api/v1/dropshippers/products/$id";
 
         try {
+            // 1. Fetch product from API (do NOT return here)
             $response = Http::withHeaders([
                 'api_secret' => $appSecret,
                 'api_key'    => $appKey,
                 'username'   => $userName,
             ])->get($apiUrl);
 
+            // 2. Check for successful response
             if (!$response->successful()) {
                 return view('errors.401-droploo');
             }
 
             $responseData = $response->json();
 
-            $apiProducts = $responseData['data']['products']
-                ?? $responseData['products']
-                ?? [];
-
-            $imagePath = $responseData['imagePath']
-                ?? $responseData['data']['imagePath']
-                ?? '';
-
-            if (!is_array($apiProducts)) {
-                $apiProducts = [];
-            }
-
-            $apiProduct = collect($apiProducts)->first(function ($item) use ($id) {
-                if (is_array($item)) {
-                    return (string) ($item['id'] ?? '') === (string) $id;
-                }
-
-                if (is_object($item)) {
-                    return (string) ($item->id ?? '') === (string) $id;
-                }
-
-                return false;
-            });
+            // 3. Extract the product – the API returns a single product in data.product
+            $apiProduct = $responseData['data']['product'] ?? null;
 
             if (!$apiProduct) {
                 abort(404, 'Droploo product not found.');
             }
 
+            // 4. Convert to object for consistent access
             $product = is_array($apiProduct)
                 ? json_decode(json_encode($apiProduct))
                 : $apiProduct;
 
+            // 5. Map category and brand IDs from nested objects
+            $product->category_id = $product->category->id ?? null;
+            $product->brand_id = $product->brand->id ?? null;
+
+            // 6. Fill in missing or default values
             $product->id = $product->id ?? $id;
             $product->name = $product->name ?? '';
             $product->slug = $product->slug ?? \Str::slug($product->name);
-
-            $product->category_id = $product->category_id ?? null;
-
             $product->subcategory_id = $product->subcategory_id ?? null;
-            $product->brand_id = $product->brand_id ?? null;
-
             $product->unit = $product->unit ?? 'pc';
             $product->barcode = $product->barcode ?? '';
             $product->badge_name = $product->badge_name ?? '';
@@ -300,53 +282,30 @@ class ProductController extends Controller
             $product->video_link = $product->video_link ?? '';
             $product->position = $product->position ?? 0;
 
-            $product->status = isset($product->status)
-                ? (int) $product->status
-                : 1;
+            // Status flags
+            $product->status = isset($product->status) ? (int) $product->status : 1;
+            $product->is_published = isset($product->is_published) ? (int) $product->is_published : 1;
+            $product->is_featured = isset($product->is_featured) ? (int) $product->is_featured : 0;
+            $product->best_selling = isset($product->best_selling) ? (int) $product->best_selling : 0;
+            $product->is_new_arrival = isset($product->is_new_arrival) ? (int) $product->is_new_arrival : 0;
+            $product->todays_deal = isset($product->todays_deal) ? (int) $product->todays_deal : 0;
 
-            $product->is_published = isset($product->is_published)
-                ? (int) $product->is_published
-                : 1;
-
-            $product->is_featured = isset($product->is_featured)
-                ? (int) $product->is_featured
-                : 0;
-
-            $product->best_selling = isset($product->best_selling)
-                ? (int) $product->best_selling
-                : 0;
-
-            $product->is_new_arrival = isset($product->is_new_arrival)
-                ? (int) $product->is_new_arrival
-                : 0;
-
-            $product->todays_deal = isset($product->todays_deal)
-                ? (int) $product->todays_deal
-                : 0;
-
+            // Tags
             if (isset($product->tags_array)) {
                 if (is_string($product->tags_array)) {
                     $decodedTags = json_decode($product->tags_array, true);
-
                     $product->tags_array = is_array($decodedTags)
                         ? $decodedTags
-                        : array_filter(array_map(
-                            'trim',
-                            explode(',', $product->tags_array)
-                        ));
+                        : array_filter(array_map('trim', explode(',', $product->tags_array)));
                 } elseif (!is_array($product->tags_array)) {
                     $product->tags_array = [];
                 }
             } elseif (isset($product->tags)) {
                 if (is_string($product->tags)) {
                     $decodedTags = json_decode($product->tags, true);
-
                     $product->tags_array = is_array($decodedTags)
                         ? $decodedTags
-                        : array_filter(array_map(
-                            'trim',
-                            explode(',', $product->tags)
-                        ));
+                        : array_filter(array_map('trim', explode(',', $product->tags)));
                 } else {
                     $product->tags_array = [];
                 }
@@ -354,6 +313,7 @@ class ProductController extends Controller
                 $product->tags_array = [];
             }
 
+            // Gallery images (photos)
             if (isset($product->photos)) {
                 if (is_array($product->photos)) {
                     $product->photos = json_encode($product->photos);
@@ -363,244 +323,141 @@ class ProductController extends Controller
                     $product->photos = json_encode([]);
                 }
             } else {
-                $gallery = $product->gallery
-                    ?? $product->images
-                    ?? [];
-
+                $gallery = $product->gallery ?? $product->images ?? [];
                 $product->photos = is_array($gallery)
                     ? json_encode($gallery)
                     : json_encode([]);
             }
 
+            // Thumbnail
             $product->thumbnail = $product->thumbnail
                 ?? $product->thumbnail_img
                 ?? $product->image
                 ?? '';
 
+            // Price object
             $apiPrice = $product->price ?? 0;
-
             if (is_object($apiPrice)) {
                 $product->price = $apiPrice;
             } elseif (is_array($apiPrice)) {
                 $product->price = json_decode(json_encode($apiPrice));
             } else {
                 $product->price = new \stdClass();
-
                 $product->price->purchase_price = 0;
-                $product->price->regular_price = is_numeric($apiPrice)
-                    ? (float) $apiPrice
-                    : 0;
-                $product->price->wholesale_price = is_numeric($apiPrice)
-                    ? (float) $apiPrice
-                    : 0;
+                $product->price->regular_price = is_numeric($apiPrice) ? (float) $apiPrice : 0;
+                $product->price->wholesale_price = is_numeric($apiPrice) ? (float) $apiPrice : 0;
                 $product->price->discount = 0;
                 $product->price->discount_type = 'flat';
                 $product->price->discount_start = null;
                 $product->price->discount_end = null;
             }
+            // Ensure price properties exist
+            $product->price->purchase_price = $product->price->purchase_price ?? $product->purchase_price ?? 0;
+            $product->price->regular_price = $product->price->regular_price ?? $product->regular_price ?? $product->sale_price ?? 0;
+            $product->price->wholesale_price = $product->price->wholesale_price ?? $product->wholesale_price ?? $product->price->regular_price ?? 0;
+            $product->price->discount = $product->price->discount ?? $product->discount ?? 0;
+            $product->price->discount_type = $product->price->discount_type ?? 'flat';
+            $product->price->discount_start = $product->price->discount_start ?? null;
+            $product->price->discount_end = $product->price->discount_end ?? null;
 
-            $product->price->purchase_price =
-                $product->price->purchase_price
-                ?? $product->purchase_price
-                ?? 0;
-
-            $product->price->regular_price =
-                $product->price->regular_price
-                ?? $product->regular_price
-                ?? $product->sale_price
-                ?? 0;
-
-            $product->price->wholesale_price =
-                $product->price->wholesale_price
-                ?? $product->wholesale_price
-                ?? $product->price->regular_price
-                ?? 0;
-
-            $product->price->discount =
-                $product->price->discount
-                ?? $product->discount
-                ?? 0;
-
-            $product->price->discount_type =
-                $product->price->discount_type
-                ?? 'flat';
-
-            $product->price->discount_start =
-                $product->price->discount_start
-                ?? null;
-
-            $product->price->discount_end =
-                $product->price->discount_end
-                ?? null;
-
+            // Inventory object
             if (!isset($product->inventory)) {
                 $product->inventory = new \stdClass();
             } elseif (is_array($product->inventory)) {
-                $product->inventory = json_decode(
-                    json_encode($product->inventory)
-                );
+                $product->inventory = json_decode(json_encode($product->inventory));
             } elseif (!is_object($product->inventory)) {
                 $product->inventory = new \stdClass();
             }
+            $product->inventory->sku = $product->inventory->sku ?? $product->sku ?? '';
+            $product->inventory->stock = $product->inventory->stock ?? $product->stock ?? 0;
+            $product->inventory->low_stock_qty = $product->inventory->low_stock_qty ?? 1;
+            $product->inventory->track_inventory = $product->inventory->track_inventory ?? 1;
 
-            $product->inventory->sku =
-                $product->inventory->sku
-                ?? $product->sku
-                ?? '';
-
-            $product->inventory->stock =
-                $product->inventory->stock
-                ?? $product->stock
-                ?? 0;
-
-            $product->inventory->low_stock_qty =
-                $product->inventory->low_stock_qty ?? 1;
-
-            $product->inventory->track_inventory =
-                $product->inventory->track_inventory ?? 1;
-
+            // Shipping object
             if (!isset($product->shipping)) {
                 $product->shipping = new \stdClass();
             } elseif (is_array($product->shipping)) {
-                $product->shipping = json_decode(
-                    json_encode($product->shipping)
-                );
+                $product->shipping = json_decode(json_encode($product->shipping));
             } elseif (!is_object($product->shipping)) {
                 $product->shipping = new \stdClass();
             }
+            $product->shipping->shipping_type = $product->shipping->shipping_type ?? 'flat_rate';
+            $product->shipping->shipping_cost = $product->shipping->shipping_cost ?? $product->shipping_cost ?? 0;
+            $product->shipping->weight = $product->shipping->weight ?? $product->weight ?? 0;
+            $product->shipping->length = $product->shipping->length ?? $product->length ?? 0;
+            $product->shipping->width = $product->shipping->width ?? $product->width ?? 0;
+            $product->shipping->height = $product->shipping->height ?? $product->height ?? 0;
 
-            $product->shipping->shipping_type =
-                $product->shipping->shipping_type ?? 'flat_rate';
-
-            $product->shipping->shipping_cost =
-                $product->shipping->shipping_cost
-                ?? $product->shipping_cost
-                ?? 0;
-
-            $product->shipping->weight =
-                $product->shipping->weight
-                ?? $product->weight
-                ?? 0;
-
-            $product->shipping->length =
-                $product->shipping->length
-                ?? $product->length
-                ?? 0;
-
-            $product->shipping->width =
-                $product->shipping->width
-                ?? $product->width
-                ?? 0;
-
-            $product->shipping->height =
-                $product->shipping->height
-                ?? $product->height
-                ?? 0;
-
+            // SEO object
             if (!isset($product->seo)) {
                 $product->seo = new \stdClass();
             } elseif (is_array($product->seo)) {
-                $product->seo = json_decode(
-                    json_encode($product->seo)
-                );
+                $product->seo = json_decode(json_encode($product->seo));
             } elseif (!is_object($product->seo)) {
                 $product->seo = new \stdClass();
             }
+            $product->seo->meta_title = $product->seo->meta_title ?? $product->meta_title ?? $product->name;
+            $product->seo->meta_description = $product->seo->meta_description ?? $product->meta_description ?? '';
+            $product->seo->meta_image = $product->seo->meta_image ?? '';
 
-            $product->seo->meta_title =
-                $product->seo->meta_title
-                ?? $product->meta_title
-                ?? $product->name;
+            // Taxes
+            $product->taxes = isset($product->taxes)
+                ? (is_object($product->taxes) ? (array) $product->taxes : (array) $product->taxes)
+                : [];
 
-            $product->seo->meta_description =
-                $product->seo->meta_description
-                ?? $product->meta_description
-                ?? '';
+            // Variants
+            $product->variants = isset($product->variants)
+                ? (is_object($product->variants) ? (array) $product->variants : (array) $product->variants)
+                : [];
 
-            $product->seo->meta_image =
-                $product->seo->meta_image ?? '';
-
-            if (!isset($product->taxes)) {
-                $product->taxes = [];
-            } elseif (is_object($product->taxes)) {
-                $product->taxes = (array) $product->taxes;
-            } elseif (!is_array($product->taxes)) {
-                $product->taxes = [];
-            }
-
-            if (!isset($product->variants)) {
-                $product->variants = [];
-            } elseif (is_object($product->variants)) {
-                $product->variants = (array) $product->variants;
-            } elseif (!is_array($product->variants)) {
-                $product->variants = [];
-            }
-
+            // 7. Fetch dropdown data for the view
             $categories = Category::latest()->get();
-
-            $subcategories = SubCategory::where(
-                'category_id',
-                $product->category_id
-            )->get();
-
+            $subcategories = SubCategory::where('category_id', $product->category_id)->get();
             $brands = Brand::latest()->get();
-
             $colors = Color::latest()->get();
 
+            // Selected colors (if any)
             $selected_colors = [];
-
             if (!empty($product->colors)) {
                 $selected_colors = is_string($product->colors)
                     ? json_decode($product->colors, true)
                     : $product->colors;
-
                 if (!is_array($selected_colors)) {
                     $selected_colors = [];
                 }
             }
 
-            $attributes = Attribute::with('values')
-                ->latest()
-                ->get();
-
+            // Attributes
+            $attributes = Attribute::with('values')->latest()->get();
             $selected_attributes = [];
-
             if (!empty($product->choice_attributes)) {
-                $selected_attributes = is_string(
-                    $product->choice_attributes
-                )
-                    ? json_decode(
-                        $product->choice_attributes,
-                        true
-                    )
+                $selected_attributes = is_string($product->choice_attributes)
+                    ? json_decode($product->choice_attributes, true)
                     : $product->choice_attributes;
-
                 if (!is_array($selected_attributes)) {
                     $selected_attributes = [];
                 }
             }
 
+            // Existing attribute values (for variant generation)
             $existing_attributes = [];
-
             if (!empty($product->choice_options)) {
                 $choice_options = is_string($product->choice_options)
                     ? json_decode($product->choice_options, true)
                     : $product->choice_options;
-
                 if (is_array($choice_options)) {
                     foreach ($choice_options as $option) {
-                        if (
-                            isset($option['attribute_id']) &&
-                            isset($option['values'])
-                        ) {
+                        if (isset($option['attribute_id']) && isset($option['values'])) {
                             $existing_attributes[$option['attribute_id']] = $option['values'];
                         }
                     }
                 }
             }
 
+            // Generate variant combinations (assuming method exists)
             $combinations = $this->generateVariantCombinations($product);
 
+            // 8. Return the view with all data
             return view(
                 'backend.product.products.droploo-add',
                 compact(
@@ -1632,19 +1489,47 @@ class ProductController extends Controller
     private function generateVariantCombinations($product)
     {
         $combinations = [];
-        if ($product->variants && $product->variants->count() > 0) {
-            foreach ($product->variants as $variant) {
+        $variants = $product->variants ?? [];
+
+        if (is_array($variants) && count($variants) > 0) {
+            foreach ($variants as $variant) {
+                if (is_array($variant)) {
+                    $variant = (object) $variant;
+                }
+
+                // Convert attribute_value (object or array) to a readable string
+                $attributeValue = $variant->attribute_value ?? [];
+                $attributeText = '';
+
+                if (is_object($attributeValue)) {
+                    $attributeArray = (array) $attributeValue;
+                } elseif (is_array($attributeValue)) {
+                    $attributeArray = $attributeValue;
+                } else {
+                    $attributeArray = [];
+                }
+
+                if (!empty($attributeArray)) {
+                    $parts = [];
+                    foreach ($attributeArray as $key => $val) {
+                        $parts[] = "$key: $val";
+                    }
+                    $attributeText = implode(', ', $parts);
+                }
+
                 $combinations[] = [
-                    'sku' => $variant->sku,
-                    'price' => $variant->price,
-                    'wholesale_price' => $variant->wholesale_price,
-                    'attribute_value' => $variant->attribute_value,
-                    'quantity' => $variant->quantity,
-                    'image' => $variant->image,
-                    'attributes' => $variant->attribute
+                    'sku'                  => $variant->sku ?? '',
+                    'price'                => $variant->price ?? 0,
+                    'wholesale_price'      => $variant->wholesale_price ?? 0,
+                    'attribute_value'      => $attributeValue,        // raw (keep if needed)
+                    'attribute_value_text' => $attributeText,         // ✅ safe for display
+                    'quantity'             => $variant->quantity ?? 0,
+                    'image'                => $variant->image ?? '',
+                    'attributes'           => $variant->attribute ?? []
                 ];
             }
         }
+
         return $combinations;
     }
 
