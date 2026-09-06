@@ -401,6 +401,12 @@
                                 </a>
                             </li>
                             <li class="aiz-side-nav-item">
+                                <a href="{{ route('products.droploo.product') }}"
+                                    class="aiz-side-nav-link {{ areActiveRoutes(['products.droploo.product']) }}">
+                                    <span class="aiz-side-nav-text">{{ translate('Droploo Products') }}</span>
+                                </a>
+                            </li>
+                            <li class="aiz-side-nav-item">
                                 <a href="{{ route('products.create') }}"
                                     class="aiz-side-nav-link {{ areActiveRoutes(['products.create']) }}">
                                     <span class="aiz-side-nav-text">{{ translate('Add New Product') }}</span>

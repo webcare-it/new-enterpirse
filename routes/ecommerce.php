@@ -76,6 +76,10 @@ Route::prefix('color')->name('colors.')->group(function () {
 Route::prefix('product')->name('products.')->group(function () {
     // Resource routes
     Route::get('/', [\App\Http\Controllers\Admin\ProductController::class, 'index'])->name('index');
+    Route::get('/droploo/product', [\App\Http\Controllers\Admin\ProductController::class, 'droplooProductList'])->name('droploo.product');
+    Route::get('/droploo/{id}/add', [\App\Http\Controllers\Admin\ProductController::class, 'droplooProductAdd'])->name('droploo.product.add');
+    Route::put('/droploo/{id}/product/store', [\App\Http\Controllers\Admin\ProductController::class, 'droplooProductStore'])->name('droploo.product.store');
+
     Route::get('/create', [\App\Http\Controllers\Admin\ProductController::class, 'create'])->name('create');
     Route::post('/store', [\App\Http\Controllers\Admin\ProductController::class, 'store'])->name('store');
     Route::get('/{id}/edit', [\App\Http\Controllers\Admin\ProductController::class, 'edit'])->name('edit');
