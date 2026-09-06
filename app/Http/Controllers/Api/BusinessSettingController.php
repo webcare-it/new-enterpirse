@@ -103,7 +103,7 @@ class BusinessSettingController extends Controller
                     'id'    => $category->id,
                     'slug'  => $category->slug,
                     'name'  => $category->category_name,
-                    'image' => $category->category_image,
+                    'image' => $category->category_image  ? uploaded_asset($category->category_image) : null,
                 ];
             });
 

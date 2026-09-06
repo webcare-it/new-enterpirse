@@ -124,33 +124,15 @@ class AuthenticationController extends Controller
             ],
         ]);
     }
-    
-    public function oauth(Request $request)
+
+    public function google(Request $request)
     {
-        $type = $request->query('type');
-        if (!$type && $request->filled('state')) {
-            $state = json_decode($request->query('state'), true);
-            $type = $state['type'] ?? null;
-        }
+        try {
+            $googleClientId     = env('GOOGLE_CLIENT_ID');
+            $googleClientSecret = env('GOOGLE_CLIENT_SECRET');
+            $redirectUri        = url('/api/v1/auth/oauth/google');
+            $frontendUrl        = env('APP_URL') . 'redirect';
 
-        if (!in_array($type, ['google', 'facebook'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid or unsupported social provider. Use "google" or "facebook".',
-            ], 422);
-        }
-
-        // I"ll change the credentials later
-        $googleClientId     = '750537223027-e9fobgg4e3ds4q73sc4d56toeuvbhn5l.apps.googleusercontent.com';
-        $googleClientSecret = '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';
-        $facebookAppId     = '1046826597928521';
-        $facebookAppSecret = 'ff5a57a354be0905a7443a54df98a921';
-
-        $redirectUri = url('/api/v1/auth/oauth');
-
-        $frontendUrl = 'https://new.nittoz.com/redirect';
-
-        if ($type === 'google') {
             if (!$request->filled('code')) {
                 $params = http_build_query([
                     'client_id'     => $googleClientId,
@@ -176,7 +158,6 @@ class AuthenticationController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to exchange authorization code with Google.',
-                    'debug'   => $tokenResponse->json(),
                 ], 400);
             }
 
@@ -193,8 +174,56 @@ class AuthenticationController extends Controller
             $providerId = $userInfo->json('sub');
             $name       = $userInfo->json('name') ?: trim(($userInfo->json('given_name') ?? '') . ' ' . ($userInfo->json('family_name') ?? ''));
             $email      = $userInfo->json('email');
-        } else if ($type === 'facebook') {
-          
+
+            $user = User::where('provider_id', $providerId)->first();
+
+            if (!$user) {
+                $user = $email ? User::where('email', $email)->first() : null;
+
+                if ($user) {
+                    $user->update(['provider_id' => $providerId]);
+                } else {
+                    $user = User::create([
+                        'user_type'         => 'customer',
+                        'name'              => $name ?: 'User',
+                        'email'             => $email,
+                        'provider_id'       => $providerId,
+                        'password'          => Hash::make(Str::random(32)),
+                        'referral_code'     => $this->generateReferralCode(),
+                        'email_verified_at' => now(),
+                        'banned'            => 0,
+                    ]);
+                }
+            }
+
+            if ($user->banned) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your account has been banned.',
+                ], 403);
+            }
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return redirect($frontendUrl . '?token=' . urlencode($token) . '&user_id=' . $user->id);
+
+        } catch (\Exception $e) {
+            \Log::error('Google OAuth Error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong during Google login. Please try again.',
+            ], 500);
+        }
+    }
+    public function facebook(Request $request)
+    {
+        try {
+            $facebookAppId     = env('FACEBOOK_CLIENT_ID');
+            $facebookAppSecret = env('FACEBOOK_CLIENT_SECRET');
+            $redirectUri       = url('/api/v1/auth/oauth/facebook');
+            $frontendUrl       = env('APP_URL') . 'redirect';
+
             if (!$request->filled('code')) {
                 $params = http_build_query([
                     'client_id'     => $facebookAppId,
@@ -218,7 +247,6 @@ class AuthenticationController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to exchange authorization code with Facebook.',
-                    'debug'   => $tokenResponse->json(),
                 ], 400);
             }
 
@@ -237,40 +265,49 @@ class AuthenticationController extends Controller
             $providerId = $userInfo->json('id');
             $name       = $userInfo->json('name');
             $email      = $userInfo->json('email');
-        }
 
-        $user = User::where('provider_id', $providerId)->first();
+            $user = User::where('provider_id', $providerId)->first();
 
-        if (!$user) {
-            $user = $email ? User::where('email', $email)->first() : null;
+            if (!$user) {
+                $user = $email ? User::where('email', $email)->first() : null;
 
-            if ($user) {
-                $user->update(['provider_id' => $providerId]);
-            } else {
-                $user = User::create([
-                    'user_type'         => 'customer',
-                    'name'              => $name ?: 'User',
-                    'email'             => $email,
-                    'provider_id'       => $providerId,
-                    'password'          => Hash::make(Str::random(32)),
-                    'referral_code'     => $this->generateReferralCode(),
-                    'email_verified_at' => now(),
-                    'banned'            => 0,
-                ]);
+                if ($user) {
+                    $user->update(['provider_id' => $providerId]);
+                } else {
+                    $user = User::create([
+                        'user_type'         => 'customer',
+                        'name'              => $name ?: 'User',
+                        'email'             => $email,
+                        'provider_id'       => $providerId,
+                        'password'          => Hash::make(Str::random(32)),
+                        'referral_code'     => $this->generateReferralCode(),
+                        'email_verified_at' => now(),
+                        'banned'            => 0,
+                    ]);
+                }
             }
-        }
 
-        if ($user->banned) {
+            if ($user->banned) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your account has been banned.',
+                ], 403);
+            }
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return redirect($frontendUrl . '?token=' . urlencode($token) . '&user_id=' . $user->id);
+
+        } catch (\Exception $e) {
+            // Log the real error
+            \Log::error('Facebook OAuth Error: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Your account has been banned.',
-            ], 403);
+                'message' => 'Something went wrong during Facebook login. Please try again.',
+            ], 500);
         }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-        return redirect($frontendUrl . '?token=' . urlencode($token) . '&user_id=' . $user->id);
     }
-
     /**
      * Logout user (revoke token).
      */
@@ -291,8 +328,6 @@ class AuthenticationController extends Controller
     {
         $user = $request->user();
 
-        // return response()->json($user);
-
         $customer = Customer::where('user_id', $user->id)->first();
 
         $loyaltySetting = BusinessSetting::where('type', 'loyalty')->first();
@@ -302,7 +337,7 @@ class AuthenticationController extends Controller
         }
 
         if ($user->avatar) {
-            $user->avatar = asset($user->avatar);
+            $user->avatar = asset('public/' . $user->avatar);
         }
 
         $userPoints = $customer->point ?? 0;
@@ -480,6 +515,7 @@ class AuthenticationController extends Controller
         }
 
         $data = $validator->validated();
+
 
         if (!empty($data['avatar'])) {
             $avatarBase64 = $data['avatar'];

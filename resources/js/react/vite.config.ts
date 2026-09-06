@@ -15,8 +15,7 @@ export default defineConfig(({ mode }) => ({
     },
 
     build: {
-        target: "es2015",
-        cssTarget: "safari11",
+        target: "es2020",
         outDir: "../../../public/app",
         emptyOutDir: true,
         chunkSizeWarningLimit: 500,

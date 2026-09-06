@@ -36,7 +36,7 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
                         <OptimizedImage
                             src={p?.image || ""}
                             className="absolute w-full h-full transition-transform duration-500 ease-out hover:scale-110 z-0"
-                            alt="Product Image"
+                            alt={p?.name || "Product Image"}
                         />
                     </Link>
 
