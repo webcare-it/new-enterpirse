@@ -231,6 +231,17 @@ class ProductController extends Controller
         $appSecret = env('DROPLOO_APP_SECRET');
         $userName = env('DROPLOO_USERNAME');
 
+        $addedProductIds = Product::whereNotNull('droploo_product_id')
+            ->pluck('droploo_product_id')
+            ->toArray();
+
+        if (in_array($id, $addedProductIds)) {
+            $isAdded = 1;
+        } else {
+            $isAdded = 0;
+        }
+
+
 
         $apiUrl = "https://nittoz.com/api/v1/dropshippers/products/$id";
 
@@ -467,7 +478,8 @@ class ProductController extends Controller
                     'attributes',
                     'selected_attributes',
                     'existing_attributes',
-                    'combinations'
+                    'combinations',
+                    'isAdded'
                 )
             );
         } catch (\Exception $e) {

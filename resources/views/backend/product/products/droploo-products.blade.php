@@ -11,21 +11,6 @@
                     <i class="las la-plus"></i>
                     {{ translate('Add Product') }}
                 </a>
-
-                <a href="{{ route('products.import.preview') }}" class="smart-btn preview-btn">
-                    <i class="las la-eye"></i>
-                    CSV Preview
-                </a>
-
-                <button type="button" class="smart-btn delete-btn" data-toggle="modal" data-target="#deleteAllModal">
-                    <i class="las la-trash"></i>
-                    {{ translate('Delete All') }}
-                </button>
-
-                <a href="{{ route('products.import') }}" class="smart-btn import-btn-new">
-                    <i class="las la-file-import"></i>
-                    {{ translate('Import CSV') }}
-                </a>
             </div>
 
             <style>
@@ -161,8 +146,7 @@
                                 <div class="form-group">
                                     <label>{{ translate('Search') }}</label>
                                     <input type="text" class="form-control" name="search"
-                                        value="{{ request('search') }}"
-                                        placeholder="{{ translate('Search by name...') }}">
+                                        value="{{ request('search') }}" placeholder="{{ translate('Search by name...') }}">
                                 </div>
                             </div>
                             <div class="col-md-3">
