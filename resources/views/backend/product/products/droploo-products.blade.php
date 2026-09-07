@@ -6,7 +6,14 @@
             <div class="col-md-6">
                 <h5 class="mb-0 h6">{{ translate('Dropshipping Products List') }}</h5>
             </div>
-            <style>
+            <div class="col-md-6 text-md-right product-action-wrap">
+                <a href="{{ route('products.create') }}" class="smart-btn add-btn">
+                    <i class="las la-plus"></i>
+                    {{ translate('Add Product') }}
+                </a>
+            </div>
+
+          <style>
                 .product-action-wrap {
                     display: flex;
                     justify-content: flex-end;
@@ -173,8 +180,7 @@
                                 <div class="form-group">
                                     <label>{{ translate('Search') }}</label>
                                     <input type="text" class="form-control" name="search"
-                                        value="{{ request('search') }}"
-                                        placeholder="{{ translate('Search by name...') }}">
+                                        value="{{ request('search') }}" placeholder="{{ translate('Search by name...') }}">
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -301,7 +307,6 @@
                             <th>{{ translate('Price') }}</th>
                             <th>{{ translate('Stock') }}</th>
                             <th>{{ translate('Status') }}</th>
-                            <th>{{ translate('Action') }}</th>
                             <th width="10%" class="text-right">{{ translate('Actions') }}</th>
                         </tr>
                     </thead>
@@ -356,23 +361,25 @@
                                         {{ $product['in_stock'] ? translate('Active') : translate('Inactive') }}
                                     </span>
                                 </td>
-                                <td>
-                                    @if (in_array((string) $product['id'], $addedProductIds))
-                                        <span class="badge badge-inline badge-success">
-                                            {{ translate('Already Added') }}
-                                        </span>
-                                    @else
-                                        <span class="badge badge-inline badge-warning">
-                                            {{ translate('Not Added') }}
-                                        </span>
-                                    @endif
-                                </td>
                                 <td class="text-right">
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('products.droploo.product.add', $product['id']) }}"
-                                            class="btn btn-sm btn-icon btn-info" title="{{ translate('Add Product') }}">
-                                            <i class="las la-plus"></i>
-                                        </a>
+                                    <div class="d-flex flex-column align-items-end">
+
+                                        @if (in_array((string) $product['id'], $addedProductIds))
+                                            <span class="badge badge-inline badge-success mb-2">
+                                                {{ translate('Already Added') }}
+                                            </span>
+                                        @else
+                                            <span class="badge badge-inline badge-warning mb-2">
+                                                {{ translate('Not Added') }}
+                                            </span>
+
+                                            <a href="{{ route('products.droploo.product.add', $product['id']) }}"
+                                                class="btn btn-sm btn-icon btn-info"
+                                                title="{{ translate('Add Product') }}">
+                                                <i class="las la-plus"></i>
+                                            </a>
+                                        @endif
+
                                     </div>
                                 </td>
                             </tr>

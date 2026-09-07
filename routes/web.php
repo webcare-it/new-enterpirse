@@ -4,7 +4,6 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\Vendor\VendorLoginController;
 
 // Sitemap - dynamic, generated from DB
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);

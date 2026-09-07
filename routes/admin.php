@@ -70,6 +70,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::post('/visitor-logs/{id}/block', '\App\Http\Controllers\Admin\VisitorLogController@block')->name('admin.visitor_log.block');
     Route::post('/visitor-logs/{id}/unblock', '\App\Http\Controllers\Admin\VisitorLogController@unblock')->name('admin.visitor_log.unblock');
 
-    require __DIR__ . '/droploo.php';
+    require __DIR__ . '/cms.php';
     require __DIR__ . '/ecommerce.php';
 });
