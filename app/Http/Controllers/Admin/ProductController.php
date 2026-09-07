@@ -131,20 +131,15 @@ class ProductController extends Controller
 
     public function droplooProductList(Request $request)
     {
-        // $appKey = get_setting('droploo_app_key', ' ');
-        // $appSecret = get_setting('droploo_app_secret', ' ');
-        // $userName = get_setting('droploo_username', ' ');
-        // Hardcoded credentials (consider using settings)
+        $appKey = env('DROPLOO_APP_KEY');
+        $appSecret = env('DROPLOO_APP_SECRET');
+        $userName = env('DROPLOO_USERNAME');
 
         $addedProductIds = Product::whereNotNull('droploo_product_id')
             ->pluck('droploo_product_id')
             ->map(function ($id) {
                 return (string) $id;
             })->toArray();
-
-        $appKey = "3AYL43PAG8OYGUXI";
-        $appSecret = "GhcsdNOSnaCEhXI6kb0oz6ovzBCkSedj";
-        $userName = "abdul-gaffa_afiadreamcom";
 
         $apiUrl = 'https://nittoz.com/api/v1/dropshippers/products';
 
@@ -232,9 +227,11 @@ class ProductController extends Controller
 
     public function droplooProductAdd($id)
     {
-        $appKey = "3AYL43PAG8OYGUXI";
-        $appSecret = "GhcsdNOSnaCEhXI6kb0oz6ovzBCkSedj";
-        $userName = "abdul-gaffa_afiadreamcom";
+        $appKey = env('DROPLOO_APP_KEY');
+        $appSecret = env('DROPLOO_APP_SECRET');
+        $userName = env('DROPLOO_USERNAME');
+
+
         $apiUrl = "https://nittoz.com/api/v1/dropshippers/products/$id";
 
         try {
@@ -743,181 +740,6 @@ class ProductController extends Controller
         }
     }
 
-
-    public function droplooProductStore1($id, Request $request)
-    {
-
-        return $request;
-
-        // Validate input (same as before)
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'subcategory_id' => 'nullable|exists:sub_categories,id',
-            'brand_id' => 'nullable|exists:brands,id',
-            'regular_price' => 'required|numeric|min:0',
-            'wholesale_price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'thumbnail_img' => 'required|string',
-            'description' => 'nullable|string',
-        ]);
-
-
-        // Generate a unique slug
-        $baseSlug = $request->slug ?: Str::slug($request->name);
-        $slug = $baseSlug;
-        $counter = 1;
-        while (Product::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter++;
-        }
-
-        // Prepare data for the new product
-        $photos = $request->photos ? json_encode(explode(',', $request->photos)) : null;
-        $tags = $request->tags ? json_encode($request->tags) : null;
-        $is_published = $request->has('is_published') ? true : false;
-        $status = $request->button === 'draft' ? 0 : 1;
-
-        // Create new product
-        $product = Product::create([
-            'name' => $request->name,
-            'slug' => $slug,
-            'brand_id' => $request->brand_id,
-            'category_id' => $request->category_id,
-            'subcategory_id' => $request->subcategory_id,
-            'thumbnail' => $request->thumbnail_img,
-            'photos' => $photos,
-            'tags' => $tags,
-            'description' => $request->description,
-            'short_description' => $request->short_description,
-            'status' => $status,
-            'is_published' => $is_published,
-            'is_featured' => $request->has('is_featured') ? true : false,
-            'best_selling' => $request->has('best_selling') ? true : false,
-            'is_new_arrival' => $request->has('is_new_arrival') ? true : false,
-            'unit' => $request->unit,
-            'barcode' => $request->barcode,
-            'video_link' => $request->video_link,
-            'badge_name' => $request->badge_name,
-            'batch_no' => $request->batch_no,
-            'todays_deal' => $request->todays_deal ?? 0,
-            'position' => $request->position ?? 0,
-        ]);
-
-        // Create Inventory
-        ProductInventory::create([
-            'product_id' => $product->id,
-            'sku' => $request->sku ?: $this->generateSku($request->name),
-            'barcode' => $request->barcode,
-            'stock' => $request->stock,
-            'low_stock_qty' => $request->low_stock_qty ?? 1,
-            'track_inventory' => $request->has('track_inventory') ? true : false,
-        ]);
-
-        // Create Price
-        $discount_start = null;
-        $discount_end = null;
-        if ($request->date_range) {
-            $dates = explode(' to ', $request->date_range);
-            if (count($dates) == 2) {
-                $discount_start = Carbon::parse($dates[0]);
-                $discount_end = Carbon::parse($dates[1]);
-            }
-        }
-
-        $regularPrice = (float) $request->regular_price;
-        $WholesalePrice = (float) $request->wholesale_price;
-        $discount = (float) ($request->discount ?? 0);
-
-        if ($request->discount_type === 'flat') {
-            $salePrice = max(0, $regularPrice - $discount);
-        } elseif ($request->discount_type === 'percent') {
-            $salePrice = max(0, $regularPrice - (($regularPrice * $discount) / 100));
-        } else {
-            $salePrice = $regularPrice;
-        }
-        $salePrice = (int) round($salePrice);
-
-        ProductPrice::create([
-            'product_id' => $product->id,
-            'purchase_price' => $request->purchase_price ?? 0,
-            'regular_price' => (int) $regularPrice,
-            'wholesale_price' => (int) $WholesalePrice,
-            'sale_price' => $salePrice,
-            'discount_type' => $request->discount_type,
-            'discount' => $discount,
-            'discount_start' => $discount_start,
-            'discount_end' => $discount_end,
-            'currency' => 'BDT',
-        ]);
-
-        // Create Shipping
-        ProductShipping::create([
-            'product_id' => $product->id,
-            'shipping_type' => $request->shipping_type ?? 'flat_rate',
-            'shipping_cost' => $request->shipping_cost ?? 0,
-            'weight' => $request->weight,
-            'length' => $request->length,
-            'width' => $request->width,
-            'height' => $request->height,
-        ]);
-
-        // Create SEO
-        ProductSeo::create([
-            'product_id' => $product->id,
-            'meta_title' => $request->meta_title,
-            'meta_image' => $request->meta_img,
-            'meta_description' => $request->meta_description,
-        ]);
-
-        // Create Taxes (if any)
-        if ($request->has('tax_names') && is_array($request->tax_names)) {
-            foreach ($request->tax_names as $index => $taxName) {
-                if (!empty($taxName) && isset($request->tax_values[$index]) && $request->tax_values[$index] > 0) {
-                    ProductTax::create([
-                        'product_id' => $product->id,
-                        'tax_id' => $this->getOrCreateTax($taxName, $request->tax_types[$index] ?? 'percent'),
-                        'tax_type' => $request->tax_types[$index] ?? 'percent',
-                    ]);
-                }
-            }
-        }
-
-        // Handle Variants (if any)
-        if ($request->has('variant_attributes') && is_array($request->variant_attributes)) {
-            foreach ($request->variant_attributes as $variantData) {
-                // Ensure required fields exist
-                if (isset($variantData['price'], $variantData['sku'], $variantData['quantity'])) {
-                    ProductVarient::create([
-                        'product_id' => $product->id,
-                        'price' => $variantData['price'],
-                        'wholesale_price' => $variantData['wholesale_price'] ?? null,
-                        'sku' => $variantData['sku'],
-                        'quantity' => $variantData['quantity'],
-                        'image' => $variantData['image'] ?? null,
-                        // Add any other variant fields you have
-                    ]);
-                }
-            }
-        }
-
-        // Return response
-        $message = 'Product copied and saved as new!';
-
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'product_id' => $product->id,
-                'redirect_url' => route('products.index')
-            ]);
-        }
-
-        flash(translate($message))->success();
-        return redirect()->route('products.index');
-    }
-
-
-
     public function create()
     {
         $categories = Category::latest()->get();
@@ -1221,7 +1043,7 @@ class ProductController extends Controller
                 'description' => $request->description,
                 'short_description' => $request->short_description,
                 'status' => $status,
-                'is_published' => $is_published,
+                'is_published' => 1,
                 'is_cat' => false,
                 'is_featured' => $request->has('is_featured'),
                 'best_selling' => $request->has('best_selling'),

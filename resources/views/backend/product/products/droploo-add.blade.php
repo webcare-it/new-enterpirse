@@ -166,31 +166,32 @@
                         </div>
                         <div class="card-body">
                             <div class="form-group row">
-                                <label class="col-md-3 col-form-label">{{ translate('Gallery Images') }}</label>
+                                <label class="col-md-3 col-form-label">
+                                    {{ translate('Gallery Images') }}
+                                </label>
+
                                 <div class="col-md-8">
                                     <div class="input-group" data-toggle="aizuploader" data-type="image"
                                         data-multiple="true">
+
                                         <div class="input-group-prepend">
                                             <div class="input-group-text bg-soft-secondary font-weight-medium">
                                                 {{ translate('Browse') }}
                                             </div>
                                         </div>
-                                        <div class="form-control file-amount">{{ translate('Choose File') }}</div>
-                                        <input type="hidden" name="photos" class="selected-files"
-                                            value="{{ $product->photos ? implode(',', json_decode($product->photos, true)) : '' }}">
+
+                                        <div class="form-control file-amount">
+                                            {{ translate('Choose File') }}
+                                        </div>
+
+                                        <input type="hidden" name="photos" class="selected-files" value="">
                                     </div>
-                                    <div class="file-preview box sm">
-                                        @if ($product->photos)
-                                            @php $photos = json_decode($product->photos, true) @endphp
-                                            @foreach ($photos as $photo)
-                                                <div class="file-preview-item">
-                                                    <img src="{{ uploaded_asset($photo) }}" class="size-60px">
-                                                </div>
-                                            @endforeach
-                                        @endif
-                                    </div>
-                                    <small
-                                        class="text-muted">{{ translate('These images appear in product gallery.') }}</small>
+
+                                    <div class="file-preview box sm"></div>
+
+                                    <small class="text-muted">
+                                        {{ translate('These images appear in product gallery.') }}
+                                    </small>
                                 </div>
                             </div>
 
