@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\LandingpageController;
 use App\Http\Controllers\Vendor\VendorLoginController;
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function () {
@@ -73,3 +74,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     require __DIR__ . '/cms.php';
     require __DIR__ . '/ecommerce.php';
 });
+
+
+
+Route::get('/preview-landing-page/{slug}', [LandingpageController::class, 'preview'])->name('landing.product.preview');
+Route::post('/preview-landing-order', [LandingpageController::class, 'landingProductOrder'])->name('landing.product.order');
