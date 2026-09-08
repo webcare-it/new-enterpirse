@@ -284,6 +284,7 @@ class BusinessSettingsController extends Controller
 
     public function update(Request $request)
     {
+        Artisan::call('optimize:clear');
         // Validate all fields
         $request->validate([
             // Layout breakpoints
@@ -377,7 +378,7 @@ class BusinessSettingsController extends Controller
             }
         }
 
-        Artisan::call('cache:clear');
+        Artisan::call('optimize:clear');
 
         flash(translate("Settings updated successfully"))->success();
         return back();
