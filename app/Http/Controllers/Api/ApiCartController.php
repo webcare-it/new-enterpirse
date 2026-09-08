@@ -373,18 +373,27 @@ class ApiCartController extends Controller
             ], 404);
         }
 
-        if ($cartItem->sku && $cartItem->sku !== $product->sku) {
+        $inventory = $product->inventory;
+        $baseSkus = array_filter([
+            $product->sku,
+            optional($inventory)->sku,
+        ]);
+        $variant = null;
+
+        if ($cartItem->sku && !in_array($cartItem->sku, $baseSkus, true)) {
             $variant = ProductVarient::where('product_id', $product->id)
                 ->where('sku', $cartItem->sku)
                 ->first();
 
-            if (!$variant) {
+            if (!$variant && $product->variants()->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Variant not found',
                 ], 404);
             }
+        }
 
+        if ($variant) {
             if ($variant->quantity < $newQuantity) {
                 return response()->json([
                     'success' => false,
@@ -392,7 +401,6 @@ class ApiCartController extends Controller
                 ], 400);
             }
         } else {
-            $inventory = $product->inventory;
             if (!$inventory || $inventory->stock < $newQuantity) {
                 $available = $inventory ? $inventory->stock : 0;
                 return response()->json([

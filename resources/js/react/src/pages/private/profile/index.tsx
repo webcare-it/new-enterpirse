@@ -113,7 +113,6 @@ const ProfileInfoTab = ({ user }: { user: IUserProfile }) => {
             state: form.state || undefined,
             country: form.country || undefined,
             postal_code: form.postal_code || undefined,
-            avatar: form.avatar ?? undefined,
         });
     };
 
@@ -142,86 +141,88 @@ const ProfileInfoTab = ({ user }: { user: IUserProfile }) => {
 
             <Card className="rounded-2xl">
                 <CardContent className="p-6">
-                    <h3 className="font-semibold text-foreground mb-1">
-                        Personal Information
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-5">
-                        Update your account details
-                    </p>
+                    <form onSubmit={handleSubmit}>
+                        <h3 className="font-semibold text-foreground mb-1">
+                            Personal Information
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-5">
+                            Update your account details
+                        </p>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <Field
-                            label="Full Name"
-                            name="name"
-                            value={form?.name}
-                            onChange={handleChange}
-                            required
-                        />
-                        <Field
-                            label="Email"
-                            name="email"
-                            type="email"
-                            value={form?.email}
-                            onChange={handleChange}
-                        />
-                        <div className="space-y-2">
-                            <Label>Phone</Label>
-                            <Input
-                                defaultValue={form?.phone}
-                                className="h-11"
-                                readOnly={true}
-                                disabled
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <Field
+                                label="Full Name"
+                                name="name"
+                                value={form?.name}
+                                onChange={handleChange}
+                                required
+                            />
+                            <Field
+                                label="Email"
+                                name="email"
+                                type="email"
+                                value={form?.email}
+                                onChange={handleChange}
+                            />
+                            <div className="space-y-2">
+                                <Label>Phone</Label>
+                                <Input
+                                    defaultValue={form?.phone}
+                                    className="h-11"
+                                    readOnly={true}
+                                    disabled
+                                />
+                            </div>
+                            <Field
+                                label="Address"
+                                name="address"
+                                value={form?.address || ""}
+                                onChange={handleChange}
+                            />
+                            <Field
+                                label="City"
+                                name="city"
+                                value={form?.city || ""}
+                                onChange={handleChange}
+                            />
+                            <Field
+                                label="State / Province"
+                                name="state"
+                                value={form?.state || ""}
+                                onChange={handleChange}
+                            />
+                            <Field
+                                label="Country"
+                                name="country"
+                                value={form?.country || ""}
+                                onChange={handleChange}
+                            />
+                            <Field
+                                label="Postal Code"
+                                name="postal_code"
+                                value={form?.postal_code || ""}
+                                onChange={handleChange}
                             />
                         </div>
-                        <Field
-                            label="Address"
-                            name="address"
-                            value={form?.address || ""}
-                            onChange={handleChange}
-                        />
-                        <Field
-                            label="City"
-                            name="city"
-                            value={form?.city || ""}
-                            onChange={handleChange}
-                        />
-                        <Field
-                            label="State / Province"
-                            name="state"
-                            value={form?.state || ""}
-                            onChange={handleChange}
-                        />
-                        <Field
-                            label="Country"
-                            name="country"
-                            value={form?.country || ""}
-                            onChange={handleChange}
-                        />
-                        <Field
-                            label="Postal Code"
-                            name="postal_code"
-                            value={form?.postal_code || ""}
-                            onChange={handleChange}
-                        />
-                    </div>
 
-                    <Separator className="my-6" />
+                        <Separator className="my-6" />
 
-                    <div className="flex justify-end">
-                        <Button
-                            type="submit"
-                            size="lg"
-                            disabled={isPending}
-                            className="gap-2"
-                        >
-                            {isPending ? (
-                                <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                                <Save className="size-4" />
-                            )}
-                            {isPending ? "Saving..." : "Save Changes"}
-                        </Button>
-                    </div>
+                        <div className="flex justify-end">
+                            <Button
+                                type="submit"
+                                size="lg"
+                                disabled={isPending}
+                                className="gap-2"
+                            >
+                                {isPending ? (
+                                    <Loader2 className="size-4 animate-spin" />
+                                ) : (
+                                    <Save className="size-4" />
+                                )}
+                                {isPending ? "Saving..." : "Save Changes"}
+                            </Button>
+                        </div>
+                    </form>
                 </CardContent>
             </Card>
         </div>

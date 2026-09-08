@@ -4,7 +4,7 @@
     <div class="aiz-titlebar text-left mt-2 mb-3">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <h5 class="mb-0 h6">{{ translate('All Products') }}</h5>
+                <h5 class="mb-0 h6">{{ translate('Dropshipping Products List') }}</h5>
             </div>
             <div class="col-md-6 text-md-right product-action-wrap">
                 <a href="{{ route('products.create') }}" class="smart-btn add-btn">
@@ -125,6 +125,43 @@
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0 h6">{{ translate('API Connection Information') }}</h5>
+
+                    <a href="/admin/credentials" class="btn btn-light btn-sm shadow-sm">
+                        <i class="las la-external-link-alt mr-1"></i>
+                        {{ translate('Configure API Credentials') }}
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>{{ translate('Username') }}:</strong>
+                                {{ get_setting('droploo_username', 'Not configured') }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>{{ translate('App Key') }}:</strong>
+                                {{ get_setting('droploo_app_key', 'Not configured') }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>{{ translate('App Secret') }}:</strong>
+                                {{ get_setting('droploo_app_secret', 'Not configured') }}</p>
+                        </div>
+                    </div>
+                    @if (!get_setting('droploo_username') || !get_setting('droploo_app_key') || !get_setting('droploo_app_secret'))
+                        <div class="alert alert-warning">
+                            {{ translate('Please configure your Droploo API credentials in Business Settings') }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+
     <div class="card">
         <div class="card-header">
             <h5 class="mb-0 h6">{{ translate('Product List') }}</h5>
@@ -146,7 +183,8 @@
                                 <div class="form-group">
                                     <label>{{ translate('Search') }}</label>
                                     <input type="text" class="form-control" name="search"
-                                        value="{{ request('search') }}" placeholder="{{ translate('Search by name...') }}">
+                                        value="{{ request('search') }}"
+                                        placeholder="{{ translate('Search by name...') }}">
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -356,7 +394,7 @@
 
             <!-- Pagination -->
             <div class="aiz-pagination">
-                {{ $products->links('backend.paginate.paination') }}
+                {{ $products->links('backend.paginate.pagination') }}
             </div>
         </div>
     </div>

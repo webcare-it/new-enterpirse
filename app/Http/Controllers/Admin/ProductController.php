@@ -761,7 +761,7 @@ class ProductController extends Controller
 
     /**
      * Get subcategories for a given category (AJAX)
-     * 
+     *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -785,7 +785,7 @@ class ProductController extends Controller
 
     /**
      * Add more choice option for product attributes (AJAX)
-     * 
+     *
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
@@ -814,7 +814,7 @@ class ProductController extends Controller
 
     /**
      * Generate SKU combinations for product variants (AJAX)
-     * 
+     *
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
@@ -872,19 +872,19 @@ class ProductController extends Controller
                             <strong>' . e($variantName) . '</strong>
                         </td>
                         <td>
-                            <input type="number" name="variant_attributes[' . $key . '][price]" 
+                            <input type="number" name="variant_attributes[' . $key . '][price]"
                                 value="' . $unitPrice . '" step="0.01" class="form-control" required>
                         </td>
                         <td>
-                            <input type="number" name="variant_attributes[' . $key . '][wholesale_price]" 
+                            <input type="number" name="variant_attributes[' . $key . '][wholesale_price]"
                                 value="' . $unitPrice . '" step="0.01" class="form-control" required>
                         </td>
                         <td>
-                            <input type="text" name="variant_attributes[' . $key . '][sku]" 
+                            <input type="text" name="variant_attributes[' . $key . '][sku]"
                                 value="' . $sku . '" class="form-control" required>
                         </td>
                         <td>
-                            <input type="number" name="variant_attributes[' . $key . '][quantity]" 
+                            <input type="number" name="variant_attributes[' . $key . '][quantity]"
                                 value="0" min="0" class="form-control" required>
                         </td>
                         <td>
@@ -931,7 +931,7 @@ class ProductController extends Controller
 
     /**
      * Generate all possible combinations of attributes and colors
-     * 
+     *
      * @param array $choice_options
      * @param array $colors
      * @param bool $colors_active
@@ -980,7 +980,7 @@ class ProductController extends Controller
 
     /**
      * Generate SKU from product name and variant attributes
-     * 
+     *
      * @param string $product_name
      * @param array $combination
      * @return string

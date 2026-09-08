@@ -352,7 +352,7 @@
 
             <!-- Pagination -->
             <div class="aiz-pagination">
-                {{ $products->links('backend.paginate.paination') }}
+                {{ $products->links('backend.paginate.pagination') }}
             </div>
         </div>
     </div>

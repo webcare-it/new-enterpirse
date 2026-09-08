@@ -283,22 +283,22 @@
                         <div class="form-group row">
                             <label class="col-md-3 col-from-label">{{translate('Description')}}</label>
                             <div class="col-md-8">
-                                <textarea class="aiz-text-editor" name="description">{{ $product['long_description'] }}</textarea>
+                                <textarea class="aiz-text-editor" name="description">{{ $product['description'] }}</textarea>
                             </div>
                         </div>
-                        
+
                         <!-- <div class="form-group row">-->
                         <!--    <label class="col-md-3 col-from-label">{{translate('Short description')}}</label>-->
                         <!--    <div class="col-md-8">-->
                         <!--        <textarea class="aiz-text-editor" maxlength="250" name="shortdescription"></textarea>-->
                         <!--    </div>-->
                         <!--</div>-->
-                         
-                       
+
+
                     </div>
-                   
+
                 </div>
-                 
+
 
 <!--                <div class="card">
                     <div class="card-header">
@@ -651,17 +651,17 @@
     $('form').bind('submit', function (e) {
         // Disable the submit button while evaluating if the form should be submitted
         $("button[type='submit']").prop('disabled', true);
-        
+
         var valid = true;
 
         if (!valid) {
             e.preventDefault();
-            
+
             // Reactivate the button if the form was not submitted
             $("button[type='submit']").button.prop('disabled', false);
         }
     });
-    
+
     $("[name=shipping_type]").on("change", function (){
         $(".flat_rate_shipping_div").hide();
 
@@ -746,7 +746,7 @@
             // Don't make AJAX call for variable products - combinations are pre-defined from API
             return;
         @endif
-        
+
         $.ajax({
            type:"POST",
            url:'{{ route('products.sku_combination') }}',

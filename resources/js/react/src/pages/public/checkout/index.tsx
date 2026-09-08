@@ -11,11 +11,12 @@ import { useCart } from "@/hooks/useCart";
 import { TrustedBadge } from "./trusted-badge";
 import { Lock } from "lucide-react";
 import { BreadcrumbWrapper } from "@/components/common/breadcrumb-wrapper";
-import { isValidEmail, removeLocalStorage, renderVariation } from "@/helper";
+import { removeLocalStorage, renderVariation } from "@/helper";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
 import { EmptyCart } from "../_components/common/empty-cart";
 import { useGtmTracker, type IPurchaseTracker } from "@/hooks/useGtmTracker";
 import { GTM_PURCHASE_TRACKED } from "@/constant";
+import toast from "react-hot-toast";
 
 export const CheckoutPage = () => {
     const firedRef = useRef(false);
@@ -56,6 +57,27 @@ export const CheckoutPage = () => {
 
     const handlePlace = () => {
         removeLocalStorage(GTM_PURCHASE_TRACKED);
+        if (!form.name || form.name.trim() === "") {
+            toast.error("Full name is required");
+            return;
+        }
+        if (!form.phone || form.phone.trim() === "") {
+            toast.error("Phone number is required");
+            return;
+        }
+        if (!form.address || form.address.trim() === "") {
+            toast.error("Shipping address is required");
+            return;
+        }
+        if (!form.shipping || form.shipping === "") {
+            toast.error("Shipping method is required");
+            return;
+        }
+        if (!form.payment || form.payment === "") {
+            toast.error("Payment method is required");
+            return;
+        }
+
         mutate({
             shipping_address: form.address,
             payment_type: form.payment,
@@ -121,16 +143,7 @@ export const CheckoutPage = () => {
                                         className="w-full inline-flex"
                                         size="xl"
                                         onClick={handlePlace}
-                                        disabled={
-                                            isPending ||
-                                            !form.shipping ||
-                                            !form.payment ||
-                                            !form.address ||
-                                            !form.name ||
-                                            !form.phone ||
-                                            !form.email ||
-                                            !isValidEmail(form.email)
-                                        }
+                                        disabled={isPending}
                                     >
                                         <Lock className="size-4" />
                                         {isPending

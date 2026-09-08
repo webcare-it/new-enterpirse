@@ -29,6 +29,9 @@
             color: #1f2937;
             background: #ffffff;
         }
+        .logo_img {
+            max-height: 100px;
+        }
 
         .invoice-wrapper {
             border: 1px solid #e5e7eb;
@@ -55,7 +58,7 @@
 
         .company-info {
             font-size: 12px;
-            color: #d1fae5;
+            color: #ffffff;
             line-height: 1.6;
         }
 
@@ -267,11 +270,13 @@
             <table class="header-table">
                 <tr>
                     <td width="60%">
-                        <div class="company-name">{{ get_setting('site_name', 'ShopHub') }}</div>
+                        {{-- <img class="mw-100" src="{{ uploaded_asset(get_setting('header_logo')) }}" class="brand-icon"
+                        alt="{{ get_setting('site_name') }}"> --}}
+                        <div class="company-name">{{ get_setting('website_name', 'ShopHub') }}</div>
                         <div class="company-info">
-                            {{ get_setting('site_address', '') }}<br>
-                            {{ translate('Phone') }}: {{ get_setting('site_phone', '') }}<br>
-                            {{ translate('Email') }}: {{ get_setting('site_email', '') }}
+                            {{ translate('Phone') }}: {{ get_setting('contact_phone', '') }}<br>
+                            {{ translate('Email') }}: {{ get_setting('contact_email', '') }}<br>
+                            {{ translate('Address') }}: {{ get_setting('contact_address', '') }}
                         </div>
                     </td>
                     <td width="40%" class="invoice-title">
@@ -356,10 +361,19 @@
                             <div class="product-name">
                                 {{ $detail->product->name ?? 'Product Not Found' }}
                             </div>
+                            @php
+                                $variation = json_decode($detail->variation, true);
+                            @endphp
 
-                            @if ($detail->variation)
+                            @if ($variation && collect($variation)->filter(fn($value) => $value !== null && $value !== '')->isNotEmpty())
                                 <div class="small">
-                                    {{ translate('Variation') }}: {{ $detail->variation }}
+                                    {{ translate('Variation') }}:
+
+                                    @foreach ($variation as $key => $value)
+                                        @if ($value !== null && $value !== '')
+                                            {{ $value }}
+                                        @endif
+                                    @endforeach
                                 </div>
                             @endif
 

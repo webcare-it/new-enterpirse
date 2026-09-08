@@ -421,7 +421,7 @@
         </div>
 
         <div class="aiz-pagination mt-4">
-            {{ $searches->links('backend.paginate.paination') }}
+            {{ $searches->links('backend.paginate.pagination') }}
         </div>
         </div>
         </div>

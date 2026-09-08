@@ -20,27 +20,58 @@ const GtmTracker = () => {
         const gtmIdValue = GTM_ID();
 
         if (scriptLoadedRef.current) return;
-        window.dataLayer = window.dataLayer || [];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).dataLayer = (window as any).dataLayer || [];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (function (w: any, d: Document, s: string, l: string, i: string) {
-            w[l] = w[l] || [];
-            w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
-            const f = d.getElementsByTagName(s)[0];
-            const j = d.createElement(s) as HTMLScriptElement;
-            const dl = l !== "dataLayer" ? "&l=" + l : "";
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+            "gtm.start": new Date().getTime(),
+            event: "gtm.js",
+        });
+
+        const loadGtmScript = () => {
+            if (scriptLoadedRef.current) return;
+            scriptLoadedRef.current = true;
+            removeDeferralListeners();
+
+            const f = document.getElementsByTagName("script")[0];
+            const j = document.createElement("script");
             j.async = true;
-            j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+            j.src = `https://www.googletagmanager.com/gtm.js?id=${gtmIdValue}`;
             if (f?.parentNode) {
                 f.parentNode.insertBefore(j, f);
             }
-        })(window, document, "script", "dataLayer", gtmIdValue);
+        };
 
-        scriptLoadedRef.current = true;
+        const deferralEvents: (keyof WindowEventMap)[] = [
+            "pointerdown",
+            "keydown",
+            "touchstart",
+            "scroll",
+        ];
+        const removeDeferralListeners = () => {
+            deferralEvents.forEach((evt) =>
+                window.removeEventListener(evt, loadGtmScript),
+            );
+        };
+        deferralEvents.forEach((evt) =>
+            window.addEventListener(evt, loadGtmScript, {
+                once: true,
+                passive: true,
+            }),
+        );
+
+        const usesIdleCallback = "requestIdleCallback" in window;
+        const idleHandle = usesIdleCallback
+            ? window.requestIdleCallback(loadGtmScript, { timeout: 4000 })
+            : window.setTimeout(loadGtmScript, 3000);
 
         return () => {
+            removeDeferralListeners();
+            if (usesIdleCallback) {
+                window.cancelIdleCallback(idleHandle);
+            } else {
+                window.clearTimeout(idleHandle);
+            }
+
             const existingScript = document.querySelector(
                 `script[src*="googletagmanager.com/gtm.js"]`,
             );

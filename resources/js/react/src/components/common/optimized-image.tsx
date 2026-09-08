@@ -5,10 +5,6 @@ interface Props {
     src: string;
     alt?: string;
     className?: string;
-    /**
-     * Mark the image as the LCP / above-the-fold asset so it loads eagerly
-     * with high priority instead of being lazy-loaded through a JS preloader.
-     */
     priority?: boolean;
 }
 

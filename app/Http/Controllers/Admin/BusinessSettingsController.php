@@ -337,7 +337,7 @@ class BusinessSettingsController extends Controller
                 continue;
             }
 
-            // ---- Original logic for all other types ----
+            // ---- Original logiac for all other types ----
             if ($type == 'timezone') {
                 $this->overWriteEnvFile('APP_TIMEZONE', $request[$type]);
             } else {

@@ -36,7 +36,7 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
                         <OptimizedImage
                             src={p?.image || ""}
                             className="absolute w-full h-full transition-transform duration-500 ease-out hover:scale-110 z-0"
-                            alt="Product Image"
+                            alt={p?.name || "Product Image"}
                         />
                     </Link>
 
@@ -170,7 +170,7 @@ const DiscountLabel = ({ children }: { children: string }) => {
 };
 
 const OutOfStock = () => (
-    <button className="rounded-3xl w-full transition-all duration-300 cursor-not-allowed h-10 md:h-12 flex items-center justify-center bg-red-100 text-red-600 hover:text-red-600 border text-sm md:text-base border-red-600 gap-1 md:gap-2">
+    <button className="rounded-3xl w-full transition-all duration-300 cursor-not-allowed h-10 md:h-12 flex items-center justify-center bg-red-100 text-red-600 hover:text-red-600 border text-sm md:text-base border-red-600 gap-1 md:gap-2 mt-1">
         <StockOutIcon />
         Out of stock
     </button>
