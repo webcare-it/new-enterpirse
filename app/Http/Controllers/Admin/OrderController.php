@@ -1337,6 +1337,13 @@ class OrderController extends Controller
             $appSecret = env('DROPLOO_APP_SECRET');
             $userName = env('DROPLOO_USERNAME');
 
+            if (empty($appKey) || empty($appSecret) || empty($userName)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dropshipping credentials are not configured. Please set credentials!',
+                ], 400);
+            }
+
             $productQuantity = $order->orderDetails->sum('quantity');
 
             $productsArray = [];
@@ -1349,7 +1356,14 @@ class OrderController extends Controller
                     }
                 }
 
-                $externalProductId = $detail->product->droploo_product_id ?? $detail->product_id;
+                if (empty($detail->product) || empty($detail->product->droploo_product_id)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot transfer: "' . ($detail->product->name ?? 'Unknown Product') . '" is not a dropshipping product.',
+                    ], 400);
+                }
+
+                $externalProductId = $detail->product->droploo_product_id;
 
                 $productsArray[] = [
                     'id' => (int) $externalProductId,
