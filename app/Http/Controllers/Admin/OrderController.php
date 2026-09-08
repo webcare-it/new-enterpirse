@@ -1324,7 +1324,7 @@ class OrderController extends Controller
                 'order_id' => 'required|exists:orders,id',
             ]);
 
-            $order = Order::with(['orderDetails', 'orderDetails.product', 'user'])->findOrFail($request->order_id);
+            $order = Order::with(['orderDetails', 'orderDetails.product'])->findOrFail($request->order_id);
 
             if ($order->delivery_status === 'transfer') {
                 return response()->json([
@@ -1361,8 +1361,8 @@ class OrderController extends Controller
 
             $apiData = [
                 'invoice_number' => $order->code,
-                'customer_name' => $order->user->name ?? 'Guest',
-                'customer_phone' => $order->phone_number ?? ($order->user->phone ?? ''),
+                'customer_name' => $order->name ?? 'Guest',
+                'customer_phone' => $order->phone_number ?? ($order->phone ?? ''),
                 'customer_address' => $order->shipping_address ?? '',
                 'delivery_cost' => (float) $order->shipping_cost,
                 'price' => (float) $order->grand_total,
