@@ -59,10 +59,21 @@
                                                     @endif
                                                     <div>
                                                         <strong>{{ $detail->product->name ?? 'Product Not Found' }}</strong>
-                                                        @if ($detail->variation)
+                                                        @php
+                                                            $variationData = json_decode($detail->variation ?? '', true);
+                                                            $displayValue = '';
+                                                            if (is_array($variationData)) {
+                                                                if (isset($variationData['attribute_value'])) {
+                                                                    $attr = json_decode($variationData['attribute_value'], true);
+                                                                    $displayValue = is_array($attr)
+                                                                        ? implode(' - ', array_values($attr))
+                                                                        : $variationData['attribute_value'];
+                                                                }
+                                                            }
+                                                        @endphp
+                                                        @if ($displayValue)
                                                             <br>
-                                                            <small class="text-muted">{{ translate('Variant') }}:
-                                                                {{ $detail->variation }}</small>
+                                                            <small class="text-muted">{{ $displayValue }}</small>
                                                         @endif
                                                         @if ($detail->product && $detail->product->inventory)
                                                             <br>
@@ -289,7 +300,7 @@
                     <div class="form-group">
                         <label>{{ translate('Delivery Status') }}</label>
                         <select class="form-control" id="order-status"
-                            {{ $order->delivery_status == 'delivered' ? 'disabled' : '' }}>
+                            {{ in_array($order->delivery_status, ['delivered', 'transfer']) ? 'disabled' : '' }}>
                             <option value="pending" {{ $order->delivery_status == 'pending' ? 'selected' : '' }}>
                                 {{ translate('Pending') }}
                             </option>
@@ -304,6 +315,9 @@
                             </option>
                             <option value="delivered" {{ $order->delivery_status == 'delivered' ? 'selected' : '' }}>
                                 {{ translate('Delivered') }}
+                            </option>
+                            <option value="transfer" {{ $order->delivery_status == 'transfer' ? 'selected' : '' }}>
+                                {{ translate('Transfer') }}
                             </option>
                             <option value="cancelled" {{ $order->delivery_status == 'cancelled' ? 'selected' : '' }}>
                                 {{ translate('Cancelled') }}
@@ -446,6 +460,33 @@
             </div>
         </div>
     </div>
+
+    <div id="transfer-modal" class="modal fade">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ translate('Transfer Order') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="las la-exchange-alt text-primary" style="font-size: 48px;"></i>
+                    <h4 class="mt-2">{{ translate('Transfer this order?') }}</h4>
+                    <p>{{ translate('This will send the order to the external system and lock the delivery status.') }}</p>
+                    <input type="hidden" id="transfer-order-id">
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary"
+                        data-dismiss="modal">{{ translate('Cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="confirm-transfer-btn">
+                        <i class="las la-paper-plane"></i> {{ translate('Transfer') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @section('script')
@@ -579,7 +620,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <input type="number" class="form-control form-control-sm product-price" 
+                                        <input type="number" class="form-control form-control-sm product-price"
                                             value="${product.price}" step="0.01" min="0">
                                     </td>
                                     <td class="text-center">
@@ -588,11 +629,11 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <input type="number" class="form-control form-control-sm product-qty" 
+                                        <input type="number" class="form-control form-control-sm product-qty"
                                             value="1" min="1" style="width: 70px;">
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-primary add-product-to-order" 
+                                        <button class="btn btn-sm btn-primary add-product-to-order"
                                             data-id="${product.id}">
                                             <i class="las la-plus"></i> Add
                                         </button>
@@ -1000,6 +1041,13 @@
             // UPDATE ORDER
             $('#update-order').on('click', function() {
                 var status = $('#order-status').val();
+
+                if (status === 'transfer') {
+                    $('#transfer-order-id').val('{{ $order->id }}');
+                    $('#transfer-modal').modal('show');
+                    return;
+                }
+
                 var paymentStatus = $('#payment-status').val();
                 var notes = $('#order-notes').val();
 
@@ -1038,6 +1086,42 @@
                         $('#update-order').prop('disabled', false).html(
                             '<i class="las la-save"></i> {{ translate('Update Order') }}'
                         );
+                    }
+                });
+            });
+
+            // TRANSFER ORDER
+            $('#confirm-transfer-btn').on('click', function() {
+                var orderId = $('#transfer-order-id').val();
+                var $btn = $(this);
+                $btn.prop('disabled', true).html('<i class="las la-spinner la-spin"></i> {{ translate("Transferring...") }}');
+
+                $.ajax({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    type: "POST",
+                    url: "{{ route('orders.transfer-order') }}",
+                    data: {
+                        order_id: orderId
+                    },
+                    success: function(response) {
+                        $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                        $('#transfer-modal').modal('hide');
+                        if (response.success) {
+                            AIZ.plugins.notify('success', response.message);
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            AIZ.plugins.notify('danger', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                        $('#transfer-modal').modal('hide');
+                        var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Something went wrong';
+                        AIZ.plugins.notify('danger', msg);
                     }
                 });
             });

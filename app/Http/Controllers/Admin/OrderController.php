@@ -965,6 +965,12 @@ class OrderController extends Controller
             $order = Order::findOrFail($request->order_id);
 
             if ($request->type == 'delivery') {
+                if ($request->status === 'transfer') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Transfer status cannot be set directly. Use the transfer action instead.'
+                    ], 400);
+                }
                 $order->delivery_status = $request->status;
                 $message = 'Delivery status updated successfully!';
             } else {
@@ -994,10 +1000,18 @@ class OrderController extends Controller
         try {
             $request->validate([
                 'order_id' => 'required|exists:orders,id',
-                'status' => 'required|in:pending,confirmed,picked_up,on_the_way,delivered,cancelled'
+                'status' => 'required|in:pending,confirmed,picked_up,on_the_way,delivered,transfer,cancelled'
             ]);
 
             $order = Order::with('orderDetails.product')->findOrFail($request->order_id);
+
+            if ($request->status === 'transfer') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transfer status cannot be set directly. Use the transfer action instead.'
+                ], 400);
+            }
+
             $oldStatus = $order->delivery_status;
 
             $isBecomingDelivered = $request->status === 'delivered' && $oldStatus !== 'delivered';
@@ -1300,5 +1314,157 @@ class OrderController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+
+    public function transferOrder(Request $request)
+    {
+        try {
+            $request->validate([
+                'order_id' => 'required|exists:orders,id',
+            ]);
+
+            $order = Order::with(['orderDetails', 'orderDetails.product', 'user'])->findOrFail($request->order_id);
+
+            if ($order->delivery_status === 'transfer') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This order has already been transferred.',
+                ], 400);
+            }
+
+            $appKey = env('DROPLOO_APP_KEY');
+            $appSecret = env('DROPLOO_APP_SECRET');
+            $userName = env('DROPLOO_USERNAME');
+
+            $productQuantity = $order->orderDetails->sum('quantity');
+
+            $productsArray = [];
+            foreach ($order->orderDetails as $detail) {
+                $variantSku = null;
+                if ($detail->variation) {
+                    $variation = json_decode($detail->variation, true);
+                    if (!empty($variation['sku'])) {
+                        $variantSku = $variation['sku'];
+                    }
+                }
+
+                $externalProductId = $detail->product->droploo_product_id ?? $detail->product_id;
+
+                $productsArray[] = [
+                    'id' => (int) $externalProductId,
+                    'price' => (float) $detail->price,
+                    'variant_sku' => $variantSku,
+                    'qty' => (int) $detail->quantity,
+                ];
+            }
+
+            $apiData = [
+                'invoice_number' => $order->code,
+                'customer_name' => $order->user->name ?? 'Guest',
+                'customer_phone' => $order->phone_number ?? ($order->user->phone ?? ''),
+                'customer_address' => $order->shipping_address ?? '',
+                'delivery_cost' => (float) $order->shipping_cost,
+                'price' => (float) $order->grand_total,
+                'discount' => (float) $order->discount,
+                'advance' => 0.00,
+                'product_quantity' => (int) $productQuantity,
+                'delivery_charge_type' => $order->shipping_type ?? 'inside',
+                'payment_type' => strtolower($order->payment_type ?? 'cod'),
+                'order_type' => 'Dropshipping',
+                'special_notes' => $order->notes ?? '',
+                'payment_gateway' => null,
+                'transaction_id' => null,
+                'products' => $productsArray,
+            ];
+
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => 'https://nittoz.com/api/v1/dropshippers/place-order',
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($apiData),
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_HTTPHEADER => [
+                    'username: ' . $userName,
+                    'api_key: ' . $appKey,
+                    'api_secret: ' . $appSecret,
+                    'Content-Type: application/json',
+                    'Accept: application/json',
+                ],
+            ]);
+
+            $apiResponseBody = curl_exec($ch);
+            $apiHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            if ($curlError) {
+                throw new \Exception('cURL error: ' . $curlError);
+            }
+
+            $apiResponseBody = json_decode($apiResponseBody, true);
+
+            Log::info('Transfer order API response', [
+                'order_code' => $order->code,
+                'status' => $apiHttpCode,
+                'body' => $apiResponseBody,
+                'sent_data' => $apiData
+            ]);
+
+            if ($apiHttpCode < 200 || $apiHttpCode >= 300) {
+                $errorMessage = $apiResponseBody['message'] ?? $apiResponseBody['error'] ?? 'Failed to transfer order to external system';
+
+                if (isset($apiResponseBody['errors']) && is_array($apiResponseBody['errors'])) {
+                    $flatErrors = [];
+                    foreach ($apiResponseBody['errors'] as $field => $msgs) {
+                        $flatErrors[] = $field . ': ' . implode(', ', (array)$msgs);
+                    }
+                    $errorMessage .= ' | ' . implode(' | ', $flatErrors);
+                }
+
+                Log::warning('Transfer order API rejected', [
+                    'order_code' => $order->code,
+                    'status' => $apiHttpCode,
+                    'body' => $apiResponseBody
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage,
+                ], 400);
+            }
+
+            $order->delivery_status = 'transfer';
+            $order->save();
+
+            Log::info('Transfer order success', [
+                'order_code' => $order->code,
+                'api_response' => $apiResponseBody
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order transferred successfully!',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Transfer order error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while transferring the order: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
