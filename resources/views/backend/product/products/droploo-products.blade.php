@@ -13,7 +13,7 @@
                 </a>
             </div>
 
-          <style>
+            <style>
                 .product-action-wrap {
                     display: flex;
                     justify-content: flex-end;
@@ -131,7 +131,7 @@
                 <div class="card-header">
                     <h5 class="mb-0 h6">{{ translate('API Connection Information') }}</h5>
 
-                     <a href="/admin/credentials" class="btn btn-light btn-sm shadow-sm">
+                    <a href="/admin/credentials" class="btn btn-light btn-sm shadow-sm">
                         <i class="las la-external-link-alt mr-1"></i>
                         {{ translate('Configure API Credentials') }}
                     </a>
@@ -139,16 +139,22 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <p><strong>{{ translate('Username') }}:</strong> {{ get_setting('droploo_username', 'Not configured') }}</p>
+                            <p>
+                                <strong>{{ translate('Username') }}:</strong>
+                                {{ get_setting('DROPLOO_USERNAME', 'Not configured') }}
+                            </p>
                         </div>
                         <div class="col-md-4">
-                            <p><strong>{{ translate('App Key') }}:</strong> {{ get_setting('droploo_app_key', 'Not configured') }}</p>
+                            <p><strong>{{ translate('App Key') }}:</strong>
+                                {{ get_setting('DROPLOO_APP_KEY', 'Not configured') }}
+                            </p>
                         </div>
                         <div class="col-md-4">
-                            <p><strong>{{ translate('App Secret') }}:</strong> {{ get_setting('droploo_app_secret', 'Not configured') }}</p>
+                            <p><strong>{{ translate('App Secret') }}:</strong>
+                                {{ get_setting('DROPLOO_APP_SECRET', 'Not configured') }}</p>
                         </div>
                     </div>
-                    @if(!get_setting('droploo_username') || !get_setting('droploo_app_key') || !get_setting('droploo_app_secret'))
+                    @if (!get_setting('DROPLOO_USERNAME') || !get_setting('DROPLOO_APP_KEY') || !get_setting('DROPLOO_APP_SECRET'))
                         <div class="alert alert-warning">
                             {{ translate('Please configure your Droploo API credentials in Business Settings') }}
                         </div>
@@ -162,104 +168,9 @@
     <div class="card">
         <div class="card-header">
             <h5 class="mb-0 h6">{{ translate('Product List') }}</h5>
-            <div class="pull-right">
-                <button class="btn btn-sm btn-primary" type="button" data-toggle="collapse" data-target="#filterCollapse"
-                    aria-expanded="false">
-                    <i class="las la-filter"></i> {{ translate('Filter') }}
-                </button>
-            </div>
         </div>
 
         <div class="card-body">
-            <!-- Filter Section -->
-            <div class="collapse" id="filterCollapse">
-                <div class="mb-3 p-3 bg-light rounded">
-                    <form action="{{ route('products.index') }}" method="GET" id="filter-form">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>{{ translate('Search') }}</label>
-                                    <input type="text" class="form-control" name="search"
-                                        value="{{ request('search') }}" placeholder="{{ translate('Search by name...') }}">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>{{ translate('Category') }}</label>
-                                    <select class="form-control aiz-selectpicker" name="category_id">
-                                        <option value="">{{ translate('All Categories') }}</option>
-                                        @foreach ($categories as $category)
-                                            <option value="{{ $category->id }}"
-                                                {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                                                {{ $category->category_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>{{ translate('Brand') }}</label>
-                                    <select class="form-control aiz-selectpicker" name="brand_id">
-                                        <option value="">{{ translate('All Brands') }}</option>
-                                        @foreach ($brands as $brand)
-                                            <option value="{{ $brand->id }}"
-                                                {{ request('brand_id') == $brand->id ? 'selected' : '' }}>
-                                                {{ $brand->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>{{ translate('Status') }}</label>
-                                    <select class="form-control aiz-selectpicker" name="status">
-                                        <option value="">{{ translate('All') }}</option>
-                                        <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>
-                                            {{ translate('Active') }}</option>
-                                        <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>
-                                            {{ translate('Inactive') }}</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>{{ translate('Sort By') }}</label>
-                                    <select class="form-control aiz-selectpicker" name="sort_by">
-                                        <option value="latest" {{ request('sort_by') == 'latest' ? 'selected' : '' }}>
-                                            {{ translate('Latest') }}</option>
-                                        <option value="oldest" {{ request('sort_by') == 'oldest' ? 'selected' : '' }}>
-                                            {{ translate('Oldest') }}</option>
-                                        <option value="name_asc" {{ request('sort_by') == 'name_asc' ? 'selected' : '' }}>
-                                            {{ translate('Name (A-Z)') }}</option>
-                                        <option value="name_desc"
-                                            {{ request('sort_by') == 'name_desc' ? 'selected' : '' }}>
-                                            {{ translate('Name (Z-A)') }}</option>
-                                        <option value="price_asc"
-                                            {{ request('sort_by') == 'price_asc' ? 'selected' : '' }}>
-                                            {{ translate('Price (Low to High)') }}</option>
-                                        <option value="price_desc"
-                                            {{ request('sort_by') == 'price_desc' ? 'selected' : '' }}>
-                                            {{ translate('Price (High to Low)') }}</option>
-                                        <option value="sale_count"
-                                            {{ request('sort_by') == 'sale_count' ? 'selected' : '' }}>
-                                            {{ translate('Most Sold') }}</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button type="submit" class="btn btn-primary">{{ translate('Apply Filters') }}</button>
-                                <a href="{{ route('products.index') }}"
-                                    class="btn btn-secondary">{{ translate('Reset') }}</a>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <!-- Bulk Action Bar -->
             <div class="mb-3" id="bulk-action-bar" style="display: none;">
                 <div class="alert alert-primary">

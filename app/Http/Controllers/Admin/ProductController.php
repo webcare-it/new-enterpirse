@@ -131,11 +131,9 @@ class ProductController extends Controller
 
     public function droplooProductList(Request $request)
     {
-
         $appKey = env('DROPLOO_APP_KEY');
         $appSecret = env('DROPLOO_APP_SECRET');
         $userName = env('DROPLOO_USERNAME');
-
 
         $addedProductIds = Product::whereNotNull('droploo_product_id')
             ->pluck('droploo_product_id')
@@ -242,8 +240,6 @@ class ProductController extends Controller
         } else {
             $isAdded = 0;
         }
-
-
 
         $apiUrl = "https://nittoz.com/api/v1/dropshippers/products/$id";
 
