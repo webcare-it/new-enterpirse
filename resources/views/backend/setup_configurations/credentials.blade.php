@@ -50,7 +50,7 @@
                                     </div>
                                 </div>
 
-                                {{-- App Secret (with show/hide) --}}
+                                {{-- App Secret (with show/hide and copy) --}}
                                 <div class="form-group row">
                                     <label
                                         class="col-sm-3 col-from-label font-weight-bold">{{ translate('App Secret') }}</label>
@@ -61,9 +61,9 @@
                                                 id="droploo_app_secret" value="{{ get_setting('DROPLOO_APP_SECRET') }}"
                                                 placeholder="{{ translate('Enter Droploo App Secret') }}">
                                             <div class="input-group-append">
-                                                <button class="btn btn-outline-secondary toggle-password" type="button"
-                                                    data-target="#droploo_app_secret" title="{{ translate('Show/Hide') }}">
-                                                    <i class="las la-eye"></i>
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                    onclick="togglePasswordVisibility('droploo_app_secret', 'toggleIconDroplooSecret')">
+                                                    <i class="lar la-eye" id="toggleIconDroplooSecret"></i>
                                                 </button>
                                                 <button class="btn btn-outline-secondary copy-btn" type="button"
                                                     data-target="#droploo_app_secret" title="{{ translate('Copy') }}">
@@ -116,6 +116,7 @@
             </div>
         </div>
     </div>
+
     <div class="row mt-4">
         <div class="col-lg-9 mx-auto">
             <div class="card shadow-sm border-0 rounded-lg">
@@ -139,33 +140,46 @@
                         class="mb-5">
                         @csrf
 
+                        {{-- Steadfast API Key --}}
                         <div class="form-group row align-items-center">
                             <label
                                 class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('Steadfast API Key') }}</label>
                             <div class="col-md-9">
                                 <input type="hidden" name="types[]" value="steadfast_api_key">
-                                <input type="text" name="steadfast_api_key" class="form-control"
-                                    value="{{ get_setting('steadfast_api_key') }}" placeholder="Enter Steadfast API Key">
+                                <div class="input-group">
+                                    <input type="text" name="steadfast_api_key" class="form-control"
+                                        id="steadfast_api_key" value="{{ get_setting('steadfast_api_key') }}"
+                                        placeholder="Enter Steadfast API Key">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#steadfast_api_key" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
                                 <small
                                     class="form-text text-muted mt-1">{{ translate('API Key provided by Steadfast Courier Ltd.') }}</small>
                             </div>
                         </div>
 
+                        {{-- Steadfast Secret Key --}}
                         <div class="form-group row align-items-center">
                             <label
                                 class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('Steadfast Secret Key') }}</label>
                             <div class="col-md-9">
                                 <input type="hidden" name="types[]" value="steadfast_secret_key">
                                 <div class="input-group">
-                                    <input type="password" name="steadfast_secret_key"
-                                        class="form-control border-right-0"
-                                        value="{{ get_setting('steadfast_secret_key') }}"
-                                        placeholder="Enter Steadfast Secret Key" id="steadfast_secret_key">
+                                    <input type="password" name="steadfast_secret_key" class="form-control"
+                                        id="steadfast_secret_key" value="{{ get_setting('steadfast_secret_key') }}"
+                                        placeholder="Enter Steadfast Secret Key">
                                     <div class="input-group-append">
-                                        <button type="button" class="btn btn-outline-light border-left-0 text-muted"
-                                            style="border: 1px solid #ced4da;"
+                                        <button type="button" class="btn btn-outline-secondary"
                                             onclick="togglePasswordVisibility('steadfast_secret_key', 'toggleIconSteadfast')">
                                             <i class="lar la-eye" id="toggleIconSteadfast"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#steadfast_secret_key" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -184,6 +198,7 @@
             </div>
         </div>
     </div>
+
     <div class="row mt-4">
         <div class="col-lg-9 mx-auto">
             <div class="card shadow-sm border-0 rounded-lg">
@@ -208,30 +223,44 @@
                 <div class="card-body px-4 pb-4">
                     <form action="{{ route('business_settings.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
+
+                        {{-- Fraud Checker URL (read-only) --}}
                         <div class="form-group row align-items-center">
                             <label
                                 class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('Fraud Checker URL') }}</label>
                             <div class="col-md-9">
-                                <input type="text" class="form-control bg-light text-muted border-dashed" readonly
-                                    value="https://api.bdcourier.com/courier-check" style="border-style: dashed;">
+                                <div class="input-group">
+                                    <input type="text" class="form-control bg-light text-muted border-dashed" readonly
+                                        value="https://api.bdcourier.com/courier-check" style="border-style: dashed;"
+                                        id="fraud_checker_url">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#fraud_checker_url" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
+                        {{-- Fraud Checker Secret Key --}}
                         <div class="form-group row align-items-center">
                             <label
                                 class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('Fraud Checker Secret Key') }}</label>
                             <div class="col-md-9">
                                 <input type="hidden" name="types[]" value="fraud_checker_api_key">
                                 <div class="input-group">
-                                    <input type="password" name="fraud_checker_api_key"
-                                        class="form-control border-right-0"
-                                        value="{{ get_setting('fraud_checker_api_key') }}"
-                                        placeholder="Enter Fraud Checker Secret Key" id="fraud_checker_api_key">
+                                    <input type="password" name="fraud_checker_api_key" class="form-control"
+                                        id="fraud_checker_api_key" value="{{ get_setting('fraud_checker_api_key') }}"
+                                        placeholder="Enter Fraud Checker Secret Key">
                                     <div class="input-group-append">
-                                        <button type="button" class="btn btn-outline-light border-left-0 text-muted"
-                                            style="border: 1px solid #ced4da;"
+                                        <button type="button" class="btn btn-outline-secondary"
                                             onclick="togglePasswordVisibility('fraud_checker_api_key', 'toggleIconFraudChecker')">
                                             <i class="lar la-eye" id="toggleIconFraudChecker"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#fraud_checker_api_key" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -250,6 +279,7 @@
             </div>
         </div>
     </div>
+
     <div class="row mt-4">
         <div class="col-lg-9 mx-auto">
             <div class="card shadow-sm border-0 rounded-lg">
@@ -276,30 +306,44 @@
                         enctype="multipart/form-data">
                         @csrf
 
-
+                        {{-- Pathao Client ID --}}
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label">{{ translate('Pathao Client ID') }}</label>
                             <div class="col-sm-9">
                                 <input type="hidden" name="types[]" value="pathao_client_id">
-                                <input type="text" name="pathao_client_id" class="form-control"
-                                    value="{{ get_setting('pathao_client_id') }}" placeholder="Enter Pathao Client ID">
+                                <div class="input-group">
+                                    <input type="text" name="pathao_client_id" class="form-control"
+                                        id="pathao_client_id" value="{{ get_setting('pathao_client_id') }}"
+                                        placeholder="Enter Pathao Client ID">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#pathao_client_id" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
                                 <small
                                     class="form-text text-muted">{{ translate('Client ID provided by Pathao Courier Ltd.') }}</small>
                             </div>
                         </div>
 
+                        {{-- Pathao Client Secret --}}
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label">{{ translate('Pathao Client Secret') }}</label>
                             <div class="col-sm-9">
                                 <input type="hidden" name="types[]" value="pathao_client_secret">
                                 <div class="input-group">
                                     <input type="password" name="pathao_client_secret" class="form-control"
-                                        value="{{ get_setting('pathao_client_secret') }}"
-                                        placeholder="Enter Pathao Client Secret" id="pathao_client_secret">
+                                        id="pathao_client_secret" value="{{ get_setting('pathao_client_secret') }}"
+                                        placeholder="Enter Pathao Client Secret">
                                     <div class="input-group-append">
                                         <button type="button" class="btn btn-outline-secondary"
-                                            onclick="togglePasswordVisibility('pathao_client_secret', 'toggleIconPathao')">
-                                            <i class="lar la-eye" id="toggleIconPathao"></i>
+                                            onclick="togglePasswordVisibility('pathao_client_secret', 'toggleIconPathaoSecret')">
+                                            <i class="lar la-eye" id="toggleIconPathaoSecret"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#pathao_client_secret" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -308,30 +352,44 @@
                             </div>
                         </div>
 
+                        {{-- Pathao Username --}}
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label">{{ translate('Pathao Username') }}</label>
                             <div class="col-sm-9">
                                 <input type="hidden" name="types[]" value="pathao_username">
-                                <input type="email" name="pathao_username" class="form-control"
-                                    value="{{ get_setting('pathao_username') }}"
-                                    placeholder="Enter Pathao dashboard email">
+                                <div class="input-group">
+                                    <input type="email" name="pathao_username" class="form-control"
+                                        id="pathao_username" value="{{ get_setting('pathao_username') }}"
+                                        placeholder="Enter Pathao dashboard email">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#pathao_username" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
                                 <small
                                     class="form-text text-muted">{{ translate('Email used for Pathao Courier authentication.') }}</small>
                             </div>
                         </div>
 
+                        {{-- Pathao Password --}}
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label">{{ translate('Pathao Password') }}</label>
                             <div class="col-sm-9">
                                 <input type="hidden" name="types[]" value="pathao_password">
                                 <div class="input-group">
                                     <input type="password" name="pathao_password" class="form-control"
-                                        value="{{ get_setting('pathao_password') }}"
-                                        placeholder="Enter Pathao dashboard password" id="pathao_password">
+                                        id="pathao_password" value="{{ get_setting('pathao_password') }}"
+                                        placeholder="Enter Pathao dashboard password">
                                     <div class="input-group-append">
                                         <button type="button" class="btn btn-outline-secondary"
                                             onclick="togglePasswordVisibility('pathao_password', 'toggleIconPathaoPassword')">
                                             <i class="lar la-eye" id="toggleIconPathaoPassword"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#pathao_password" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -340,19 +398,27 @@
                             </div>
                         </div>
 
+                        {{-- Pathao API Base URL --}}
                         <div class="form-group row">
                             <label class="col-sm-3 col-form-label">{{ translate('Pathao API Base URL') }}</label>
                             <div class="col-sm-9">
                                 <input type="hidden" name="types[]" value="pathao_base_url">
-                                <input type="text" name="pathao_base_url" class="form-control"
-                                    value="{{ get_setting('pathao_base_url', 'https://api-hermes.pathao.com') }}"
-                                    placeholder="https://api-hermes.pathao.com">
+                                <div class="input-group">
+                                    <input type="text" name="pathao_base_url" class="form-control"
+                                        id="pathao_base_url"
+                                        value="{{ get_setting('pathao_base_url', 'https://api-hermes.pathao.com') }}"
+                                        placeholder="https://api-hermes.pathao.com">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#pathao_base_url" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
                                 <small
                                     class="form-text text-muted">{{ translate('Use https://api-hermes.pathao.com for live and https://courier-api-sandbox.pathao.com for sandbox.') }}</small>
                             </div>
                         </div>
-
-
 
                         <div class="text-right mt-3">
                             <button type="submit" class="btn btn-primary">{{ translate('Update') }}</button>
@@ -384,19 +450,6 @@
 
     <script>
         $(document).ready(function() {
-            // ---- Toggle password visibility ----
-            $(document).on('click', '.toggle-password', function() {
-                let input = $($(this).data('target'));
-                let icon = $(this).find('i');
-                if (input.attr('type') === 'password') {
-                    input.attr('type', 'text');
-                    icon.removeClass('la-eye').addClass('la-eye-slash');
-                } else {
-                    input.attr('type', 'password');
-                    icon.removeClass('la-eye-slash').addClass('la-eye');
-                }
-            });
-
             // ---- Copy to clipboard (modern + fallback) ----
             $(document).on('click', '.copy-btn', function() {
                 let target = $(this).data('target');
