@@ -557,7 +557,8 @@
                 </div>
                 <div class="modal-body text-center">
                     <i class="las la-exchange-alt text-primary" style="font-size: 48px;"></i>
-                    <h4 class="mt-2">{{ translate('Transfer this order?') }}</h4>
+                    <h4 class="mt-2">{{ translate('Are you sure?') }}</h4>
+                    <h5 class="mt-2">{{ translate('Is this Dropshipping Product order?') }}</h5>
                     <p>{{ translate('This will send the order to the external system and lock the delivery status.') }}</p>
                     <input type="hidden" id="transfer-order-id">
                 </div>
