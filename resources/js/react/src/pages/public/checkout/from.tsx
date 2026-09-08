@@ -41,11 +41,6 @@ const validateField = (name: string, value: string): string => {
         case "name":
             if (!value.trim()) return "Name is required";
             break;
-        case "email":
-            if (!value.trim()) return "Email is required";
-            if (!isValidEmail(value))
-                return "Please enter a valid email address";
-            break;
         case "phone":
             if (!value.trim()) return "Phone number is required";
             if (value.replace(/[^\d]/g, "").length < 11)
@@ -153,7 +148,6 @@ export const OrderFrom = ({ form, setForm }: Props) => {
                         value={form.email}
                         onChange={onChange}
                         onBlur={handleBlur}
-                        required
                     />
                 </div>
                 {touched.email && errors.email && (
