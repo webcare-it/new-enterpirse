@@ -80,18 +80,19 @@
                                             <strong>{{ $detail->product->name ?? 'Product Not Found' }}</strong>
                                             @php
                                                 $variationData = json_decode($detail->variation ?? '', true);
-                                                $variationValues = is_array($variationData)
-                                                    ? array_filter($variationData, function ($value) {
-                                                        return $value !== null && $value !== '';
-                                                    })
-                                                    : [];
+                                                $displayValue = '';
+                                                if (is_array($variationData)) {
+                                                    if (isset($variationData['attribute_value'])) {
+                                                        $attr = json_decode($variationData['attribute_value'], true);
+                                                        $displayValue = is_array($attr)
+                                                            ? implode(' - ', array_values($attr))
+                                                            : $variationData['attribute_value'];
+                                                    }
+                                                }
                                             @endphp
-                                            @if (!empty($variationValues))
+                                            @if ($displayValue)
                                                 <br>
-                                                <small class="text-muted">{{ translate('Variation') }}:
-                                                    {{ collect($variationValues)->map(function ($value, $key) {
-                                                            return ucfirst(str_replace('_', ' ', $key)) . ': ' . $value;
-                                                        })->implode(', ') }}</small>
+                                                <small class="text-muted"> {{ $displayValue }}</small>
                                             @endif
                                             @if ($detail->product && $detail->product->inventory)
                                                 <br>
@@ -164,7 +165,7 @@
                     <div class="form-group no-print">
                         <label>{{ translate('Delivery Status') }}</label>
                         <select class="form-control" id="delivery_status" data-order-id="{{ $order->id }}"
-                            {{ $order->delivery_status == 'delivered' ? 'disabled' : '' }}>
+                            {{ in_array($order->delivery_status, ['delivered', 'transfer']) ? 'disabled' : '' }}>
                             <option value="pending" {{ $order->delivery_status == 'pending' ? 'selected' : '' }}>
                                 {{ translate('Pending') }}</option>
                             <option value="confirmed" {{ $order->delivery_status == 'confirmed' ? 'selected' : '' }}>
@@ -175,6 +176,8 @@
                                 {{ translate('Shipped') }}</option>
                             <option value="delivered" {{ $order->delivery_status == 'delivered' ? 'selected' : '' }}>
                                 {{ translate('Delivered') }}</option>
+                            <option value="transfer" {{ $order->delivery_status == 'transfer' ? 'selected' : '' }}>
+                                {{ translate('Transfer') }}</option>
                             <option value="cancelled" {{ $order->delivery_status == 'cancelled' ? 'selected' : '' }}>
                                 {{ translate('Cancelled') }}</option>
                         </select>
@@ -474,6 +477,32 @@
         </div>
     @endif
 
+    <div id="transfer-modal" class="modal fade">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ translate('Transfer Order') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="las la-exchange-alt text-primary" style="font-size: 48px;"></i>
+                    <h4 class="mt-2">{{ translate('Transfer this order?') }}</h4>
+                    <p>{{ translate('This will send the order to the external system and lock the delivery status.') }}</p>
+                    <input type="hidden" id="transfer-order-id">
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary"
+                        data-dismiss="modal">{{ translate('Cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="confirm-transfer-btn">
+                        <i class="las la-paper-plane"></i> {{ translate('Transfer') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @section('script')
@@ -505,8 +534,17 @@
     <script type="text/javascript">
         // Update delivery status
         $('#delivery_status').on('change', function() {
-            var orderId = $(this).data('order-id');
-            var status = $(this).val();
+            var $select = $(this);
+            var orderId = $select.data('order-id');
+            var status = $select.val();
+            var currentStatus = $select.find('option[selected]').val();
+
+            if (status === 'transfer') {
+                $('#transfer-order-id').val(orderId);
+                $('#transfer-modal').modal('show');
+                $select.val(currentStatus);
+                return;
+            }
 
             $.ajax({
                 headers: {
@@ -530,6 +568,42 @@
                 },
                 error: function(xhr) {
                     AIZ.plugins.notify('danger', 'Something went wrong');
+                }
+            });
+        });
+
+        // Transfer order
+        $('#confirm-transfer-btn').on('click', function() {
+            var orderId = $('#transfer-order-id').val();
+            var $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="las la-spinner la-spin"></i> {{ translate("Transferring...") }}');
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                type: "POST",
+                url: "{{ route('orders.transfer-order') }}",
+                data: {
+                    order_id: orderId
+                },
+                success: function(response) {
+                    $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                    $('#transfer-modal').modal('hide');
+                    if (response.success) {
+                        AIZ.plugins.notify('success', response.message);
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        AIZ.plugins.notify('danger', response.message);
+                    }
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                    $('#transfer-modal').modal('hide');
+                    var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Something went wrong';
+                    AIZ.plugins.notify('danger', msg);
                 }
             });
         });

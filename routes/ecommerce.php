@@ -275,6 +275,7 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::post('/update-status', [OrderController::class, 'updateStatus'])->name('update-status');
     Route::post('/update-delivery-status', [OrderController::class, 'updateDeliveryStatus'])->name('update-delivery-status');
     Route::post('/update-payment-status', [OrderController::class, 'updatePaymentStatus'])->name('update-payment-status');
+    Route::post('/transfer-order', [OrderController::class, 'transferOrder'])->name('transfer-order');
 
     // Bulk action routes
     Route::post('/bulk-update-delivery', [OrderController::class, 'bulkUpdateDeliveryStatus'])->name('bulk-update-delivery');

@@ -263,6 +263,9 @@
                                     <option value="delivered"
                                         {{ request('delivery_status') == 'delivered' ? 'selected' : '' }}>
                                         {{ translate('Delivered') }}</option>
+                                    <option value="transfer"
+                                        {{ request('delivery_status') == 'transfer' ? 'selected' : '' }}>
+                                        {{ translate('Transfer') }}</option>
                                     <option value="cancelled"
                                         {{ request('delivery_status') == 'cancelled' ? 'selected' : '' }}>
                                         {{ translate('Cancelled') }}</option>
@@ -415,7 +418,7 @@
                                         class="font-weight-bold text-primary">৳{{ number_format($order->grand_total, 2) }}</span>
                                 </td>
                                 <td>
-                                    <select {{ $order->delivery_status == 'delivered' ? 'disabled' : '' }}
+                                    <select {{ in_array($order->delivery_status, ['delivered', 'transfer']) ? 'disabled' : '' }}
                                         class="form-control form-control-sm delivery-status-select"
                                         data-order-id="{{ $order->id }}"
                                         data-current-status="{{ $order->delivery_status }}">
@@ -437,6 +440,10 @@
                                         <option value="delivered"
                                             {{ $order->delivery_status == 'delivered' ? 'selected' : '' }}>
                                             {{ translate('Delivered') }}</option>
+
+                                        <option value="transfer"
+                                            {{ $order->delivery_status == 'transfer' ? 'selected' : '' }}>
+                                            {{ translate('Transfer') }}</option>
 
                                         <option value="cancelled"
                                             {{ $order->delivery_status == 'cancelled' ? 'selected' : '' }}>
@@ -538,6 +545,33 @@
             </div>
         </div>
     </div>
+
+    <div id="transfer-modal" class="modal fade">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ translate('Transfer Order') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="las la-exchange-alt text-primary" style="font-size: 48px;"></i>
+                    <h4 class="mt-2">{{ translate('Are you sure?') }}</h4>
+                    <h5 class="mt-2">{{ translate('Is this Dropshipping Product order?') }}</h5>
+                    <p>{{ translate('This will send the order to the external system and lock the delivery status.') }}</p>
+                    <input type="hidden" id="transfer-order-id">
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary"
+                        data-dismiss="modal">{{ translate('Cancel') }}</button>
+                    <button type="button" class="btn btn-primary" id="confirm-transfer-btn">
+                        <i class="las la-paper-plane"></i> {{ translate('Transfer') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('script')
@@ -571,12 +605,19 @@
 
         $(document).on('change', '.delivery-status-select', function() {
             var $select = $(this);
-            if ($select.prop('disabled')) return; // already locked
+            if ($select.prop('disabled')) return;
 
             var orderId = $select.data('order-id');
             var status = $select.val();
             var currentStatus = $select.data('current-status');
             if (status === currentStatus) return;
+
+            if (status === 'transfer') {
+                $('#transfer-order-id').val(orderId);
+                $('#transfer-modal').modal('show');
+                $select.val(currentStatus);
+                return;
+            }
 
             $.ajax({
                 headers: {
@@ -614,9 +655,44 @@
             });
         });
 
+        $('#confirm-transfer-btn').on('click', function() {
+            var orderId = $('#transfer-order-id').val();
+            var $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="las la-spinner la-spin"></i> {{ translate("Transferring...") }}');
+
+            $.ajax({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                type: "POST",
+                url: "{{ route('orders.transfer-order') }}",
+                data: {
+                    order_id: orderId
+                },
+                success: function(response) {
+                    $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                    $('#transfer-modal').modal('hide');
+                    if (response.success) {
+                        AIZ.plugins.notify('success', response.message);
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        AIZ.plugins.notify('danger', response.message);
+                    }
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                    $('#transfer-modal').modal('hide');
+                    var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Something went wrong';
+                    AIZ.plugins.notify('danger', msg);
+                }
+            });
+        });
+
         function restoreDeliveryLock($select) {
             var prev = $select.data('current-status');
-            if (prev === 'delivered' || prev === 'cancelled') {
+            if (prev === 'delivered' || prev === 'cancelled' || prev === 'transfer') {
                 $select.prop('disabled', true);
             } else {
                 $select.prop('disabled', false);
