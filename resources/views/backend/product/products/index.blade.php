@@ -329,6 +329,11 @@
                                 </td>
                                 <td class="text-right">
                                     <div class="btn-group" role="group">
+                                        <a href="{{ env('APP_URL') }}/products/{{ $product->slug }}"
+                                            class="btn btn-sm btn-icon btn-success"
+                                            title="{{ translate('Frontend View') }}" target="_blank">
+                                            <i class="las la-external-link-alt"></i>
+                                        </a>
                                         <a href="{{ route('products.show', $product->id) }}"
                                             class="btn btn-sm btn-icon btn-info" title="{{ translate('View') }}">
                                             <i class="las la-eye"></i>
