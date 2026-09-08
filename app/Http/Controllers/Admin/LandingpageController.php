@@ -4,10 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin\LandingPageProduct;
+use App\Models\Admin\Order;
 use App\Models\Admin\Product;
+use App\Models\BusinessSetting;
 use App\Models\Landingpage;
+use App\Models\OrderDetail;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class LandingpageController extends Controller
@@ -356,10 +361,189 @@ class LandingpageController extends Controller
     /**
      * Preview landing page (admin)
      */
-    public function preview($id)
+    public function preview($slug)
     {
-        $landingPage = LandingPage::with('products')->findOrFail($id);
-        return view('frontend.landingpages.show', compact('landingPage'));
+        $landingPage = LandingPage::with('products')
+            ->where('slug', $slug)
+            ->firstOrFail();
+        $setting = BusinessSetting::where('type', 'header_logo')->first();
+        $headerLogoUrl = $setting ? uploaded_asset($setting->value) : null;
+        return view('frontend.landing_pages.show', compact('landingPage', 'headerLogoUrl'));
+    }
+
+    public function landingProductOrder(Request $request)
+    {
+        // return $request->all();
+        $validator = Validator::make($request->all(), [
+            'name'            => 'required|string|max:255',
+            'phone'           => 'required|string|max:20',
+            'address'         => 'required|string',
+            'delivery_area'   => 'required|in:inside_dhaka,outside_dhaka',
+            'product_ids'     => 'required|array|min:1',
+            'product_ids.*'   => 'exists:products,id',
+            'quantities'      => 'required|array|min:1',
+            'quantities.*'    => 'numeric|min:1',
+            'prices'          => 'required|array|min:1',
+            'prices.*'        => 'numeric|min:0',
+            'delivery_charge' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        // 2. Counts must match
+        $productIds = $request->product_ids;
+        $quantities = $request->quantities;
+        $prices     = $request->prices;
+
+        if (count($productIds) !== count($quantities) || count($productIds) !== count($prices)) {
+            return response()->json([
+                'success' => false,
+                'errors'  => ['quantities' => ['Product IDs, quantities, and prices must have the same count.']]
+            ], 422);
+        }
+
+        // 3. Verify products exist (prices come from the frontend, not DB)
+        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+        if ($products->count() !== count($productIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'One or more products not found.'
+            ], 404);
+        }
+
+        // 4. Build order items from sent data
+        $deliveryCharge = (float) $request->delivery_charge;
+        $subtotal = 0;
+        $orderItems = [];
+
+        foreach ($productIds as $index => $productId) {
+            $product = $products->get($productId);
+            $quantity = (int) $quantities[$index];
+            $unitPrice = (float) $prices[$index]; // ✅ uses the price from your summary
+
+            $itemTotal = $unitPrice * $quantity;
+            $subtotal += $itemTotal;
+
+            $orderItems[] = [
+                'product'    => $product,
+                'quantity'   => $quantity,
+                'unit_price' => $unitPrice,
+                'total'      => $itemTotal,
+            ];
+        }
+
+        $grandTotal = $subtotal + $deliveryCharge;
+
+        // 5. Optional tamper check
+        if ($request->has('total_price') && abs((float) $request->total_price - $grandTotal) > 0.01) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Price mismatch. Please refresh and try again.'
+            ], 422);
+        }
+
+        // ---- User handling (unchanged) ----
+        $userId = null;
+        $tempUserId = null;
+
+        if ($request->filled('email')) {
+            $user = User::where('email', $request->email)->first();
+            if (!$user) {
+                $user = User::create([
+                    'name'  => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                ]);
+            }
+            $userId = $user->id;
+        } else {
+            $user = User::where('phone', $request->phone)->first();
+            if ($user) {
+                $userId = $user->id;
+            } else {
+                $user = User::create([
+                    'name'  => $request->name,
+                    'phone' => $request->phone,
+                ]);
+                $userId = $user->id;
+            }
+        }
+
+        if (!$userId) {
+            $tempUserId = (string) Str::uuid();
+        }
+
+        // ---- Create order ----
+        $orderCode = 'ORD-' . strtoupper(Str::random(8)) . '-' . time();
+
+        DB::beginTransaction();
+
+        try {
+            $order = Order::create([
+                'user_id'           => $userId,
+                'guest_id'          => $userId ? null : $tempUserId,
+                'shipping_address'  => $request->address,
+                'shipping_type'     => 'flat_rate',
+                'shipping_cost'     => $deliveryCharge,
+                'shipping_area_id'  => null,
+                'coupon_discount'   => 0,
+                'discount'          => 0,
+                'grand_total'       => $grandTotal,
+                'code'              => $orderCode,
+                'notes'             => $request->notes ?? null,
+                'name'              => $request->name,
+                'email_address'     => $request->email ?? null,
+                'phone_number'      => $request->phone,
+                'payment_type'      => 'cod',
+                'payment_status'    => 'unpaid',
+                'delivery_status'   => 'pending',
+                'date'              => now(),
+                'viewed'            => 0,
+                'delivery_viewed'   => 0,
+                'payment_status_viewed' => 0,
+                'commission_calculated' => 0,
+                'order_type'        => 'normal'
+            ]);
+
+            // Create order details and vendor records
+            foreach ($orderItems as $item) {
+                $product = $item['product'];
+                $quantity = $item['quantity'];
+                $unitPrice = $item['unit_price'];
+
+                OrderDetail::create([
+                    'order_id'            => $order->id,
+                    'seller_id'           => $product->vendor_id ?? null,
+                    'product_id'          => $product->id,
+                    'sku'                 => $product->sku ?? null,
+                    'variation'           => null,
+                    'price'               => $unitPrice,
+                    'tax'                 => 0,
+                    'shipping_cost'       => 0,
+                    'quantity'            => $quantity,
+                    'payment_status'      => 'unpaid',
+                    'delivery_status'     => 'pending',
+                    'shipping_type'       => 'flat_rate',
+                    'product_referral_code' => null,
+                ]);
+            }
+
+            DB::commit();
+
+            flash(translate('Order has been successfully placed!'))->success();
+            return back();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to place order: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
