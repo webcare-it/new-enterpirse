@@ -241,8 +241,6 @@ class ProductController extends Controller
             $isAdded = 0;
         }
 
-
-
         $apiUrl = "https://nittoz.com/api/v1/dropshippers/products/$id";
 
         try {

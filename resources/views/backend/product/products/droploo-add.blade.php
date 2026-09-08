@@ -30,7 +30,7 @@
                 @csrf
                 @method('POST')
                 <div class="row gutters-5">
-                    <div class="col-lg-8">
+                    <div class="col-lg-10">
                         <input type="hidden" name="droploo_product_id" id="droploo_product_id" value="{{ $product->id }}">
 
                         {{-- Basic Information --}}
@@ -365,7 +365,7 @@
                             </div>
                             <div class="card-body">
                                 <div id="sku_combination">
-                                    @include('backend.product.products.variant_combinations', [
+                                    @include('backend.product.products.variant_combinations_add', [
                                         'combinations' => $combinations,
                                     ])
                                 </div>
@@ -488,7 +488,7 @@
                     </div> {{-- End col-lg-8 --}}
 
                     {{-- Right Sidebar --}}
-                    <div class="col-lg-4">
+                    <div class="col-lg-2">
 
                         {{-- Status --}}
                         <div class="card">
@@ -604,64 +604,6 @@
                                         value="{{ $product->position ?? 0 }}">
                                     <small class="text-muted">{{ translate('Lower numbers display first') }}</small>
                                 </div>
-                            </div>
-                        </div>
-
-                        {{-- Taxes --}}
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0 h6">{{ translate('Tax Configuration') }}</h5>
-                            </div>
-                            <div class="card-body" id="tax-container">
-                                @forelse($product->taxes as $index => $tax)
-                                    <div class="tax-row">
-                                        <div class="form-group">
-                                            <label>{{ translate('Tax') }} <span class="text-danger">*</span></label>
-                                            <div class="input-group mb-2">
-                                                <input type="text" class="form-control" name="tax_names[]"
-                                                    placeholder="{{ translate('Tax Name') }}"
-                                                    value="{{ optional($tax->tax)->name ?? '' }}">
-                                                <input type="number" class="form-control" name="tax_values[]"
-                                                    placeholder="{{ translate('Value') }}" step="0.01"
-                                                    value="{{ $tax->value ?? 0 }}">
-                                                <select class="form-control" name="tax_types[]">
-                                                    <option value="percent"
-                                                        {{ ($tax->tax_type ?? '') == 'percent' ? 'selected' : '' }}>
-                                                        {{ translate('Percent') }}
-                                                    </option>
-                                                    <option value="flat"
-                                                        {{ ($tax->tax_type ?? '') == 'flat' ? 'selected' : '' }}>
-                                                        {{ translate('Flat') }}
-                                                    </option>
-                                                </select>
-                                                <div class="input-group-append">
-                                                    <button class="btn btn-danger remove-tax" type="button">-</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="tax-row">
-                                        <div class="form-group">
-                                            <label>{{ translate('Tax') }} <span class="text-danger">*</span></label>
-                                            <div class="input-group mb-2">
-                                                <input type="text" class="form-control" name="tax_names[]"
-                                                    placeholder="{{ translate('Tax Name') }}">
-                                                <input type="number" class="form-control" name="tax_values[]"
-                                                    placeholder="{{ translate('Value') }}" step="0.01">
-                                                <select class="form-control" name="tax_types[]">
-                                                    <option value="percent">{{ translate('Percent') }}</option>
-                                                    <option value="flat">{{ translate('Flat') }}</option>
-                                                </select>
-                                                <div class="input-group-append">
-                                                    <button class="btn btn-danger remove-tax" type="button">-</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforelse
-                                <button type="button" class="btn btn-sm btn-info" id="add-tax">+
-                                    {{ translate('Add Tax') }}</button>
                             </div>
                         </div>
 
