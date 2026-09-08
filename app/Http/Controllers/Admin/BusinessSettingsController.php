@@ -284,8 +284,9 @@ class BusinessSettingsController extends Controller
 
     public function update(Request $request)
     {
-        // Validate simple fields (optional, but recommended)
+        // Validate all fields
         $request->validate([
+            // Layout breakpoints
             'homePage_mobile'      => 'nullable|integer|min:1|max:6',
             'homePage_tablet'      => 'nullable|integer|min:1|max:6',
             'homePage_laptop'      => 'nullable|integer|min:1|max:6',
@@ -301,6 +302,11 @@ class BusinessSettingsController extends Controller
             'fullLayout_laptop'    => 'nullable|integer|min:1|max:6',
             'fullLayout_desktop'   => 'nullable|integer|min:1|max:6',
             'fullLayout_ultrawide' => 'nullable|integer|min:1|max:6',
+
+            // Droploo credentials (optional)
+            'DROPLOO_APP_KEY'      => 'nullable|string|max:255',
+            'DROPLOO_APP_SECRET'   => 'nullable|string|max:255',
+            'DROPLOO_USERNAME'     => 'nullable|string|max:255',
         ]);
 
         foreach ($request->types as $key => $type) {
@@ -317,7 +323,6 @@ class BusinessSettingsController extends Controller
                     }
                 }
 
-                // Save as JSON – reuse the existing logic for saving a plain setting
                 $value = json_encode($layout);
                 $business_settings = BusinessSetting::where('type', $type)->first();
                 if ($business_settings) {
@@ -329,12 +334,10 @@ class BusinessSettingsController extends Controller
                         'value' => $value,
                     ]);
                 }
-
-                // Skip the rest of the loop for this type
                 continue;
             }
 
-            // ---- Original logic for all other types ----
+            // ---- Original logiac for all other types ----
             if ($type == 'timezone') {
                 $this->overWriteEnvFile('APP_TIMEZONE', $request[$type]);
             } else {
@@ -347,8 +350,9 @@ class BusinessSettingsController extends Controller
                     $business_settings = BusinessSetting::where('type', $type)->first();
                 }
 
-                $value = $request[$type];
+                $value = trim($request[$type]); // Trim to avoid accidental spaces
 
+                // Save to database
                 if ($business_settings != null) {
                     $business_settings->value = is_array($value) ? json_encode($value) : $value;
                     $business_settings->lang = $lang;
@@ -361,6 +365,12 @@ class BusinessSettingsController extends Controller
                     $business_settings->save();
                 }
 
+                // ---- Write Droploo credentials to .env ----
+                if (in_array($type, ['DROPLOO_APP_KEY', 'DROPLOO_APP_SECRET', 'DROPLOO_USERNAME'])) {
+                    $this->overWriteEnvFile($type, $value);
+                }
+
+                // Also handle site_name to .env
                 if ($type == 'site_name') {
                     $this->overWriteEnvFile('APP_NAME', $request[$type]);
                 }
