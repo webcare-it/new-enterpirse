@@ -23,49 +23,79 @@
                         class="mb-5">
                         @csrf
 
-                        <div class="form-group row align-items-center">
-                            <label
-                                class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('Droploo Username') }}</label>
-                            <div class="col-md-9">
-                                <input type="hidden" name="types[]" value="droploo_username">
-                                <input type="text" name="droploo_username" class="form-control bg-light-input"
-                                    value="{{ get_setting('droploo_username') }}" placeholder="Enter Droploo Username">
-                                <small
-                                    class="form-text text-muted mt-1">{{ translate('Your Droploo account username') }}</small>
+                        <div class="card mb-4">
+                            <div class="card-header bg-soft-warning d-flex align-items-center">
+                                <i class="las la-key la-2x mr-2 text-warning"></i>
+                                <h5 class="mb-0">{{ translate('Droploo API Credentials') }}</h5>
                             </div>
-                        </div>
-
-                        <div class="form-group row align-items-center">
-                            <label
-                                class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('Droploo App Key') }}</label>
-                            <div class="col-md-9">
-                                <input type="hidden" name="types[]" value="droploo_app_key">
-                                <input type="text" name="droploo_app_key" class="form-control"
-                                    value="{{ get_setting('droploo_app_key') }}" placeholder="Enter Droploo App Key">
-                                <small
-                                    class="form-text text-muted mt-1">{{ translate('API key provided by Droploo') }}</small>
-                            </div>
-                        </div>
-
-                        <div class="form-group row align-items-center">
-                            <label
-                                class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('Droploo App Secret') }}</label>
-                            <div class="col-md-9">
-                                <input type="hidden" name="types[]" value="droploo_app_secret">
-                                <div class="input-group shadow-sm-none">
-                                    <input type="password" name="droploo_app_secret" class="form-control border-right-0"
-                                        value="{{ get_setting('droploo_app_secret') }}"
-                                        placeholder="Enter Droploo App Secret" id="droploo_app_secret">
-                                    <div class="input-group-append">
-                                        <button type="button" class="btn btn-outline-light border-left-0 text-muted"
-                                            style="border: 1px solid #ced4da;"
-                                            onclick="togglePasswordVisibility('droploo_app_secret', 'toggleIconDroploo')">
-                                            <i class="lar la-eye" id="toggleIconDroploo"></i>
-                                        </button>
+                            <div class="card-body">
+                                {{-- App Key --}}
+                                <div class="form-group row">
+                                    <label
+                                        class="col-sm-3 col-from-label font-weight-bold">{{ translate('App Key') }}</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input type="hidden" name="types[]" value="DROPLOO_APP_KEY">
+                                            <input type="text" name="DROPLOO_APP_KEY" class="form-control"
+                                                id="droploo_app_key" value="{{ get_setting('DROPLOO_APP_KEY') }}"
+                                                placeholder="{{ translate('Enter Droploo App Key') }}">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary copy-btn" type="button"
+                                                    data-target="#droploo_app_key" title="{{ translate('Copy') }}">
+                                                    <i class="las la-copy"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ translate('Your Droploo application key.') }}</small>
                                     </div>
                                 </div>
-                                <small
-                                    class="form-text text-muted mt-1">{{ translate('API secret provided by Droploo') }}</small>
+
+                                {{-- App Secret (with show/hide) --}}
+                                <div class="form-group row">
+                                    <label
+                                        class="col-sm-3 col-from-label font-weight-bold">{{ translate('App Secret') }}</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input type="hidden" name="types[]" value="DROPLOO_APP_SECRET">
+                                            <input type="password" name="DROPLOO_APP_SECRET" class="form-control"
+                                                id="droploo_app_secret" value="{{ get_setting('DROPLOO_APP_SECRET') }}"
+                                                placeholder="{{ translate('Enter Droploo App Secret') }}">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary toggle-password" type="button"
+                                                    data-target="#droploo_app_secret" title="{{ translate('Show/Hide') }}">
+                                                    <i class="las la-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary copy-btn" type="button"
+                                                    data-target="#droploo_app_secret" title="{{ translate('Copy') }}">
+                                                    <i class="las la-copy"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small
+                                            class="text-muted">{{ translate('Your Droploo application secret. Keep this secure.') }}</small>
+                                    </div>
+                                </div>
+
+                                {{-- Username --}}
+                                <div class="form-group row">
+                                    <label
+                                        class="col-sm-3 col-from-label font-weight-bold">{{ translate('Username') }}</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input type="hidden" name="types[]" value="DROPLOO_USERNAME">
+                                            <input type="text" name="DROPLOO_USERNAME" class="form-control"
+                                                id="droploo_username" value="{{ get_setting('DROPLOO_USERNAME') }}"
+                                                placeholder="{{ translate('Enter Droploo Username') }}">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary copy-btn" type="button"
+                                                    data-target="#droploo_username" title="{{ translate('Copy') }}">
+                                                    <i class="las la-copy"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ translate('Your Droploo account username.') }}</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -96,7 +126,8 @@
                             <i class="las la-truck font-medium-3"></i>
                         </div>
                         <div>
-                            <h5 class="mb-0 h5 text-dark font-weight-bold">{{ translate('Steadfast Courier Credentials') }}
+                            <h5 class="mb-0 h5 text-dark font-weight-bold">
+                                {{ translate('Steadfast Courier Credentials') }}
                             </h5>
                             <p class="text-muted mb-0 small">
                                 {{ translate('Configure your Steadfast Courier API connection settings') }}</p>
@@ -349,5 +380,77 @@
                 toggleIcon.classList.add('lar', 'la-eye');
             }
         }
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            // ---- Toggle password visibility ----
+            $(document).on('click', '.toggle-password', function() {
+                let input = $($(this).data('target'));
+                let icon = $(this).find('i');
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text');
+                    icon.removeClass('la-eye').addClass('la-eye-slash');
+                } else {
+                    input.attr('type', 'password');
+                    icon.removeClass('la-eye-slash').addClass('la-eye');
+                }
+            });
+
+            // ---- Copy to clipboard (modern + fallback) ----
+            $(document).on('click', '.copy-btn', function() {
+                let target = $(this).data('target');
+                let input = $(target);
+                if (!input.length) return;
+
+                let value = input.val();
+                if (!value || value.trim() === '') {
+                    if (typeof AIZ !== 'undefined' && AIZ.plugins && AIZ.plugins.notify) {
+                        AIZ.plugins.notify('warning', '{{ translate('Nothing to copy') }}');
+                    } else {
+                        alert('{{ translate('Nothing to copy') }}');
+                    }
+                    return;
+                }
+
+                // Temporarily reveal if password field
+                let wasPassword = false;
+                if (input.attr('type') === 'password') {
+                    wasPassword = true;
+                    input.attr('type', 'text');
+                }
+
+                // Try using the modern Clipboard API first
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(value).then(function() {
+                        input.blur();
+                        if (wasPassword) input.attr('type', 'password');
+                        if (typeof AIZ !== 'undefined' && AIZ.plugins && AIZ.plugins.notify) {
+                            AIZ.plugins.notify('success',
+                                '{{ translate('Copied to clipboard!') }}');
+                        }
+                    }).catch(function() {
+                        // fallback to execCommand
+                        input.select();
+                        document.execCommand('copy');
+                        input.blur();
+                        if (wasPassword) input.attr('type', 'password');
+                        if (typeof AIZ !== 'undefined' && AIZ.plugins && AIZ.plugins.notify) {
+                            AIZ.plugins.notify('success',
+                                '{{ translate('Copied to clipboard!') }}');
+                        }
+                    });
+                } else {
+                    // fallback for older browsers
+                    input.select();
+                    document.execCommand('copy');
+                    input.blur();
+                    if (wasPassword) input.attr('type', 'password');
+                    if (typeof AIZ !== 'undefined' && AIZ.plugins && AIZ.plugins.notify) {
+                        AIZ.plugins.notify('success', '{{ translate('Copied to clipboard!') }}');
+                    }
+                }
+            });
+        });
     </script>
 @endsection

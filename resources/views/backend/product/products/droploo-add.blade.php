@@ -52,7 +52,7 @@
                                 <div class="form-group row">
                                     <label class="col-md-3 col-from-label">{{ translate('Slug') }}</label>
                                     <div class="col-md-8">
-                                        <input type="text" class="form-control" name="slug" id="slug"
+                                        <input type="text" class="form-control" name="slug" id="slug" readonly
                                             placeholder="{{ translate('Product URL Slug (auto-generated if empty)') }}"
                                             value="{{ $product->slug }}">
                                         <small
@@ -251,7 +251,7 @@
                                     <div class="col-md-8">
                                         <input type="text" class="form-control" name="video_link"
                                             placeholder="{{ translate('YouTube or Vimeo video link') }}"
-                                            value="{{ $product->video_link }}">
+                                            value="{{ $product->yt_video_id }}">
                                         <small class="text-muted">{{ translate('Use proper video URL') }}</small>
                                     </div>
                                 </div>
@@ -319,7 +319,7 @@
                                 <div class="form-group row">
                                     <label class="col-md-3 col-from-label">{{ translate('SKU') }}</label>
                                     <div class="col-md-8">
-                                        <input type="text" placeholder="{{ translate('SKU (unique)') }}"
+                                        <input type="text" placeholder="{{ translate('SKU (unique)') }}" readonly
                                             name="sku" class="form-control"
                                             value="{{ $product->inventory->sku ?? '' }}">
                                     </div>

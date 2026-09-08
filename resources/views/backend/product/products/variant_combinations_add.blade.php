@@ -9,13 +9,12 @@
                     <th>{{ translate('SKU') }}</th>
                     <th>{{ translate('Quantity') }}</th>
                     <th>{{ translate('Image') }}</th>
-                    <th>{{ translate('Action') }}</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($combinations as $key => $combination)
                     <tr class="variant">
-                        <td style="width: 10%">
+                        <td style="width: 20%">
                             {{ $combination['attribute_value_text'] }}
                             <input type="hidden" name="variant_attributes[{{ $key }}][attributes]"
                                 value="{{ $combination['attributes_json'] ?? '{}' }}">
@@ -26,18 +25,18 @@
                         </td>
                         <td style="width: 10%">
                             <input type="number" name="variant_attributes[{{ $key }}][wholesale_price]"
-                                value="{{ $combination['wholesale_price'] }}" step="0.01" class="form-control"
-                                required>
+                                readonly value="{{ $combination['wholesale_price'] }}" step="0.01"
+                                class="form-control" required>
                         </td>
                         <td style="width: 10%">
                             <input type="text" name="variant_attributes[{{ $key }}][sku]"
-                                value="{{ $combination['sku'] }}" class="form-control" required>
+                                value="{{ $combination['sku'] }}" class="form-control" readonly>
                         </td>
                         <td style="width: 10%">
                             <input type="number" name="variant_attributes[{{ $key }}][quantity]"
                                 value="120" min="0" class="form-control" required>
                         </td>
-                        <td>
+                        <td style="width: 30%">
                             <div class="input-group" data-toggle="aizuploader" data-type="image">
                                 <div class="input-group-prepend">
                                     <div class="input-group-text bg-soft-secondary font-weight-medium">
@@ -54,11 +53,6 @@
                             </div>
 
                             <div class="file-preview box sm"></div>
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="delete_variant(this)">
-                                <i class="las la-trash"></i>
-                            </button>
                         </td>
                     </tr>
                 @endforeach

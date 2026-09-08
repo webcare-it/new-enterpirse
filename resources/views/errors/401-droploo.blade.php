@@ -2,6 +2,38 @@
 
 @section('content')
     <div class="row gutters-5 justify-content-center">
+
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0 h6">API Connection Information</h5>
+
+                    <a href="/admin/credentials" class="btn btn-light btn-sm shadow-sm">
+                        <i class="las la-external-link-alt mr-1"></i>
+                        Configure API Credentials
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Username:</strong>
+                                Not configured</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>App Key:</strong>
+                                Not configured</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>App Secret:</strong>
+                                Not configured</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning">
+                        Please configure your Droploo API credentials in Business Settings
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="col-md-8 col-lg-6">
             <div class="card">
                 <div class="card-body text-center p-5">
