@@ -29,7 +29,8 @@
                         </div>
                     </div>
                     <div class="alert alert-warning">
-                        Please configure your Droploo API credentials in Business Settings
+                        connect your API credentials to access the product data. Please configure your API credentials by
+                        clicking the "Configure API Credentials" button above.
                     </div>
                 </div>
             </div>
@@ -42,7 +43,7 @@
                     </div>
                     <h3 class="h3 mb-3">{{ translate('Product Not Found') }}</h3>
                     <p class="text-muted mb-4">
-                        {{ translate('The product you are trying to access does not exist or may have been removed.') }}
+                        {{ translate('Api Credentials Not Configured') }}
                     </p>
                     <div class="d-flex justify-content-center gap-2">
                     </div>
