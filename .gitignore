@@ -17,3 +17,4 @@ composer.lock
 package-lock.json
 *.lock
 resources/lang/en.json
+/public/uploads
