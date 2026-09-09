@@ -116,6 +116,45 @@
         .mm-card-orange {
             background: linear-gradient(135deg, #ff9f1c, #ff6b00);
         }
+
+        .btn-xs {
+            padding: 3px 8px;
+            font-size: 12px;
+            line-height: 1.4;
+            border-radius: 4px;
+        }
+
+        .btn-soft-primary {
+            color: #377dff;
+            background-color: rgba(55, 125, 255, 0.1);
+        }
+
+        .btn-soft-primary:hover {
+            color: #fff;
+            background-color: #377dff;
+        }
+
+        .btn-soft-secondary {
+            color: #6c757d;
+            background-color: rgba(108, 117, 125, 0.1);
+        }
+
+        .btn-soft-secondary:hover {
+            color: #fff;
+            background-color: #6c757d;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .fs-40 {
+            font-size: 40px;
+        }
+
+        .fs-60 {
+            font-size: 60px;
+        }
     </style>
 
     <div class="row mb-4">
@@ -311,16 +350,21 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div>
-                                        <span class="d-block">{{ $page->slug }}</span>
-                                        <small class="text-muted">
-                                            <a href="{{ route('landing.product.preview', $page->slug) }}"
-                                                target="_blank">
-                                                {{ translate('Website View') }}
-                                            </a>
-                                        </small>
+                                    <div class="d-flex flex-column"> <span class="font-weight-600 text-dark mb-1">
+                                            {{ $page->slug }} </span>
+                                        <div class="d-flex align-items-center"> <a
+                                                href="{{ route('landing.product.preview', $page->slug) }}"
+                                                target="_blank" class="btn btn-xs btn-soft-primary mr-2"
+                                                title="{{ translate('Website View') }}"> <i
+                                                    class="las la-external-link-alt mr-1"></i>
+                                                {{ translate('Website View') }} </a> <button type="button"
+                                                class="btn btn-xs btn-soft-secondary"
+                                                onclick="copyPageLink('{{ route('landing.product.preview', $page->slug) }}')"
+                                                title="{{ translate('Copy Link') }}"> <i class="las la-copy mr-1"></i>
+                                                {{ translate('Copy Link') }} </button> </div>
                                     </div>
                                 </td>
+
                                 <td>
                                     <div class="form-group mb-0">
                                         <label class="aiz-switch aiz-switch-success mb-0">
@@ -452,197 +496,301 @@
         let bulkSelectedIds = [];
 
         $(document).ready(function() {
+
+            // Select all
             $('#select-all').on('change', function() {
-                $('.landingpage-checkbox').prop('checked', $(this).is(':checked'));
+                $('.landingpage-checkbox').prop('checked', this.checked);
                 updateBulkActionBar();
             });
 
+            // Individual selection
             $(document).on('change', '.landingpage-checkbox', function() {
                 updateBulkActionBar();
             });
 
             // Toggle status
-            $('.toggle-status').on('change', function() {
-                var pageId = $(this).data('id');
-                var $checkbox = $(this);
-                var currentState = $checkbox.is(':checked');
+            $(document).on('change', '.toggle-status', function() {
+                const $checkbox = $(this);
+                const pageId = $checkbox.data('id');
+                const currentState = $checkbox.is(':checked');
 
                 $.ajax({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    type: "POST",
+                    headers: csrfHeaders(),
+                    type: 'POST',
                     url: "{{ route('landingpages.toggle-status', '') }}/" + pageId,
+
                     success: function(response) {
                         if (response.success) {
-                            AIZ.plugins.notify('success', response.message);
+                            notify('success', response.message);
                         } else {
-                            AIZ.plugins.notify('danger', response.message);
-                            $checkbox.prop('checked', currentState);
+                            notify('danger', response.message);
+                            $checkbox.prop('checked', !currentState);
                         }
                     },
-                    error: function(xhr) {
-                        AIZ.plugins.notify('danger',
-                            '{{ translate('Something went wrong') }}');
-                        $checkbox.prop('checked', currentState);
+
+                    error: function() {
+                        notify('danger', "{{ translate('Something went wrong') }}");
+                        $checkbox.prop('checked', !currentState);
                     }
                 });
             });
         });
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Common Helpers
+        |--------------------------------------------------------------------------
+        */
+
+        function csrfHeaders() {
+            return {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            };
+        }
+
+        function notify(type, message) {
+            AIZ.plugins.notify(type, message);
+        }
+
+        function reloadPage(delay = 1000) {
+            setTimeout(function() {
+                window.location.reload();
+            }, delay);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Form
+        |--------------------------------------------------------------------------
+        */
+
         function setDeleteForm(url) {
             $('#delete-single-form').attr('action', url);
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Selection
+        |--------------------------------------------------------------------------
+        */
+
+        function getSelectedIds() {
+            return $('.landingpage-checkbox:checked')
+                .map(function() {
+                    return $(this).val();
+                })
+                .get();
+        }
+
         function updateBulkActionBar() {
-            var selected = $('.landingpage-checkbox:checked').length;
-            if (selected > 0) {
-                $('#bulk-action-bar').show();
-                $('#selected-count').text(selected);
-            } else {
-                $('#bulk-action-bar').hide();
-            }
+            const selected = $('.landingpage-checkbox:checked').length;
+
+            $('#bulk-action-bar').toggle(selected > 0);
+            $('#selected-count').text(selected);
+
+            // Keep select-all checkbox synced
+            const total = $('.landingpage-checkbox').length;
+
+            $('#select-all').prop(
+                'checked',
+                total > 0 && selected === total
+            );
         }
 
         function clearSelection() {
-            $('.landingpage-checkbox').prop('checked', false);
-            $('#select-all').prop('checked', false);
+            $('.landingpage-checkbox, #select-all').prop('checked', false);
             updateBulkActionBar();
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Bulk Action Modal
+        |--------------------------------------------------------------------------
+        */
+
         function showBulkActionModal() {
-            bulkSelectedIds = [];
-            $('.landingpage-checkbox:checked').each(function() {
-                bulkSelectedIds.push($(this).val());
-            });
 
-            if (bulkSelectedIds.length > 0) {
-                bulkActionType = $('#bulk-action').val();
-                if (!bulkActionType) {
-                    AIZ.plugins.notify('warning', '{{ translate('Please select an action') }}');
-                    return;
-                }
+            bulkSelectedIds = getSelectedIds();
 
-                var title = '',
-                    message = '',
-                    btnClass = '',
-                    icon = '';
-
-                if (bulkActionType == 'delete') {
-                    title = '{{ translate('Delete Landing Pages') }}';
-                    message = '{{ translate('Are you sure you want to delete') }} ' + bulkSelectedIds.length +
-                        ' {{ translate('selected landing pages? This action cannot be undone.') }}';
-                    btnClass = 'btn-danger';
-                    icon = 'las la-trash text-danger';
-                } else if (bulkActionType == 'published') {
-                    title = '{{ translate('Publish Landing Pages') }}';
-                    message = '{{ translate('Are you sure you want to publish') }} ' + bulkSelectedIds.length +
-                        ' {{ translate('selected landing pages?') }}';
-                    btnClass = 'btn-success';
-                    icon = 'las la-check-circle text-success';
-                } else if (bulkActionType == 'draft') {
-                    title = '{{ translate('Move to Draft') }}';
-                    message = '{{ translate('Are you sure you want to move') }} ' + bulkSelectedIds.length +
-                        ' {{ translate('selected landing pages to draft?') }}';
-                    btnClass = 'btn-warning';
-                    icon = 'las la-pen-fancy text-warning';
-                }
-
-                $('#bulk-action-title').text(title);
-                $('#bulk-title').text(title);
-                $('#bulk-message').text(message);
-                $('#bulk-confirm-btn').removeClass('btn-success btn-danger btn-warning').addClass(btnClass);
-                $('#bulk-icon').removeClass().addClass(icon + ' fs-40');
-
-                $('#bulk-action-modal').modal('show');
-            } else {
-                AIZ.plugins.notify('warning', '{{ translate('Please select at least one landing page') }}');
+            if (!bulkSelectedIds.length) {
+                notify(
+                    'warning',
+                    "{{ translate('Please select at least one landing page') }}"
+                );
+                return;
             }
+
+            bulkActionType = $('#bulk-action').val();
+
+            if (!bulkActionType) {
+                notify(
+                    'warning',
+                    "{{ translate('Please select an action') }}"
+                );
+                return;
+            }
+
+            const actions = {
+                delete: {
+                    title: "{{ translate('Delete Landing Pages') }}",
+                    message: "{{ translate('Are you sure you want to delete') }} " +
+                        bulkSelectedIds.length +
+                        " {{ translate('selected landing pages? This action cannot be undone.') }}",
+                    button: 'btn-danger',
+                    icon: 'las la-trash text-danger'
+                },
+
+                published: {
+                    title: "{{ translate('Publish Landing Pages') }}",
+                    message: "{{ translate('Are you sure you want to publish') }} " +
+                        bulkSelectedIds.length +
+                        " {{ translate('selected landing pages?') }}",
+                    button: 'btn-success',
+                    icon: 'las la-check-circle text-success'
+                },
+
+                draft: {
+                    title: "{{ translate('Move to Draft') }}",
+                    message: "{{ translate('Are you sure you want to move') }} " +
+                        bulkSelectedIds.length +
+                        " {{ translate('selected landing pages to draft?') }}",
+                    button: 'btn-warning',
+                    icon: 'las la-pen-fancy text-warning'
+                }
+            };
+
+            const action = actions[bulkActionType];
+
+            if (!action) {
+                return;
+            }
+
+            $('#bulk-action-title').text(action.title);
+            $('#bulk-title').text(action.title);
+            $('#bulk-message').text(action.message);
+
+            $('#bulk-confirm-btn')
+                .removeClass('btn-success btn-danger btn-warning')
+                .addClass(action.button);
+
+            $('#bulk-icon')
+                .removeClass()
+                .addClass(action.icon + ' fs-40');
+
+            $('#bulk-action-modal').modal('show');
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Confirm Bulk Action
+        |--------------------------------------------------------------------------
+        */
 
         function confirmBulkAction() {
+
             $('#bulk-action-modal').modal('hide');
 
-            if (bulkActionType == 'delete') {
-                bulkDelete(bulkSelectedIds);
-            } else if (bulkActionType == 'published') {
-                bulkUpdateStatus(bulkSelectedIds, 'published');
-            } else if (bulkActionType == 'draft') {
-                bulkUpdateStatus(bulkSelectedIds, 'draft');
+            if (!bulkSelectedIds.length) {
+                return;
+            }
+
+            if (bulkActionType === 'delete') {
+                bulkRequest(
+                    "{{ route('landingpages.bulk-delete') }}", {}
+                );
+                return;
+            }
+
+            if (['published', 'draft'].includes(bulkActionType)) {
+                bulkRequest(
+                    "{{ route('landingpages.bulk-status') }}", {
+                        status: bulkActionType
+                    }
+                );
             }
         }
 
-        function bulkDelete(ids) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Common Bulk AJAX Request
+        |--------------------------------------------------------------------------
+        */
+
+        function bulkRequest(url, extraData = {}) {
+
             $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                type: "POST",
-                url: "{{ route('landingpages.bulk-delete') }}",
+                headers: csrfHeaders(),
+                type: 'POST',
+                url: url,
+
                 data: {
-                    ids: ids
+                    ids: bulkSelectedIds,
+                    ...extraData
                 },
+
                 beforeSend: function() {
-                    AIZ.plugins.notify('info', '{{ translate('Deleting...') }}');
+                    notify(
+                        'info',
+                        "{{ translate('Processing...') }}"
+                    );
                 },
+
                 success: function(response) {
-                    if (response.success) {
-                        AIZ.plugins.notify('success', response.message);
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1000);
-                    } else {
-                        AIZ.plugins.notify('danger', response.message);
+
+                    if (!response.success) {
+                        notify('danger', response.message);
+                        return;
                     }
+
+                    notify('success', response.message);
+                    reloadPage();
                 },
-                error: function(xhr) {
-                    AIZ.plugins.notify('danger', '{{ translate('Something went wrong') }}');
+
+                error: function() {
+                    notify(
+                        'danger',
+                        "{{ translate('Something went wrong') }}"
+                    );
                 }
             });
         }
 
-        function bulkUpdateStatus(ids, status) {
-            $.ajax({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                type: "POST",
-                url: "{{ route('landingpages.bulk-status') }}",
-                data: {
-                    ids: ids,
-                    status: status
-                },
-                beforeSend: function() {
-                    AIZ.plugins.notify('info', '{{ translate('Processing...') }}');
-                },
-                success: function(response) {
-                    if (response.success) {
-                        AIZ.plugins.notify('success', response.message);
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1000);
-                    } else {
-                        AIZ.plugins.notify('danger', response.message);
-                    }
-                },
-                error: function(xhr) {
-                    AIZ.plugins.notify('danger', '{{ translate('Something went wrong') }}');
-                }
-            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Copy Page Link
+        |--------------------------------------------------------------------------
+        */
+
+        function copyPageLink(url) {
+
+            if (!navigator.clipboard) {
+                notify(
+                    'danger',
+                    "{{ translate('Clipboard is not supported') }}"
+                );
+                return;
+            }
+
+            navigator.clipboard.writeText(url)
+                .then(function() {
+                    notify(
+                        'success',
+                        "{{ translate('Link copied successfully!') }}"
+                    );
+                })
+                .catch(function() {
+                    notify(
+                        'danger',
+                        "{{ translate('Failed to copy link') }}"
+                    );
+                });
         }
     </script>
-
-    <style>
-        .gap-2 {
-            gap: 0.5rem;
-        }
-
-        .fs-40 {
-            font-size: 40px;
-        }
-
-        .fs-60 {
-            font-size: 60px;
-        }
-    </style>
 @endsection
