@@ -871,33 +871,6 @@
         </section>
     @endif
 
-    <!-- ========================= CERTIFICATE ========================= -->
-    <section class="py-16 md:py-24" id="certificate">
-        <div class="max-w-6xl mx-auto px-5">
-            <div
-                class="bg-[var(--ink)] text-white rounded-3xl p-6 md:p-10 grid lg:grid-cols-[auto_1fr] gap-8 items-center">
-                <div
-                    class="w-28 h-36 md:w-32 md:h-40 bg-white/10 border border-white/15 rounded-xl flex items-center justify-center text-white/50 mx-auto lg:mx-0">
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M6 2a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5z" />
-                    </svg>
-                </div>
-                <div>
-                    <span
-                        class="num text-[11px] tracking-[0.2em] uppercase text-[var(--gold)] font-semibold">সনদপত্র</span>
-                    <h2 class="display text-xl md:text-2xl font-semibold mt-2 mb-3">গুণগত মান ও নিবন্ধন</h2>
-                    <p class="text-sm text-white/60 leading-relaxed mb-5 max-w-md">প্রতিটি ব্যাচ পরীক্ষাগারে গুণগত মান
-                        যাচাই করেই বাজারজাত করা হয়।</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="capsule bg-white/10 text-xs font-semibold px-3.5 py-1.5">BSTI অনুমোদিত</span>
-                        <span class="capsule bg-white/10 text-xs font-semibold px-3.5 py-1.5">GMP সার্টিফায়েড</span>
-                        <span class="capsule bg-white/10 text-xs font-semibold px-3.5 py-1.5">হালাল সনদপ্রাপ্ত</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- ========================= PRICING ========================= -->
     <section class="max-w-2xl mx-auto px-5 py-10 text-center">
         <div class="border-2 border-[var(--ink)]/10 rounded-3xl p-8 md:p-10 relative">

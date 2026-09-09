@@ -314,8 +314,9 @@
                                     <div>
                                         <span class="d-block">{{ $page->slug }}</span>
                                         <small class="text-muted">
-                                            <a href="{{ route('landingpages.show', $page->slug) }}" target="_blank">
-                                                {{ translate('View Page') }}
+                                            <a href="{{ route('landing.product.preview', $page->slug) }}"
+                                                target="_blank">
+                                                {{ translate('Website View') }}
                                             </a>
                                         </small>
                                     </div>
@@ -337,6 +338,13 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
+
+                                        <a href="{{ route('landing.product.preview', $page->slug) }}" target="_blank"
+                                            class="btn btn-sm btn-icon btn-success"
+                                            title="{{ translate('Website View') }}">
+                                            <i class="las la-hand-pointer"></i>
+                                        </a>
+
                                         <a href="{{ route('landingpages.preview', $page->id) }}"
                                             class="btn btn-sm btn-icon btn-info" target="_blank"
                                             title="{{ translate('Preview') }}">
@@ -346,6 +354,7 @@
                                             class="btn btn-sm btn-icon btn-primary" title="{{ translate('Edit') }}">
                                             <i class="las la-edit"></i>
                                         </a>
+
                                         <button type="button" class="btn btn-sm btn-icon btn-danger" data-toggle="modal"
                                             data-target="#delete-single-modal"
                                             onclick="setDeleteForm('{{ route('landingpages.destroy', $page->id) }}')"

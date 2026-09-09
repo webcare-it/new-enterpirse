@@ -23,9 +23,6 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0 h6">{{ translate('Order Items') }}</h5>
-                    <button class="btn btn-sm btn-primary" id="add-product-btn">
-                        <i class="las la-plus"></i> {{ translate('Add Product') }}
-                    </button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -37,7 +34,6 @@
                                     <th width="15%">{{ translate('Price') }}</th>
                                     <th width="10%">{{ translate('Qty') }}</th>
                                     <th width="15%">{{ translate('Total') }}</th>
-                                    <th width="10%">{{ translate('Action') }}</th>
                                 </tr>
                             </thead>
                             <tbody id="order-items">
@@ -60,11 +56,17 @@
                                                     <div>
                                                         <strong>{{ $detail->product->name ?? 'Product Not Found' }}</strong>
                                                         @php
-                                                            $variationData = json_decode($detail->variation ?? '', true);
+                                                            $variationData = json_decode(
+                                                                $detail->variation ?? '',
+                                                                true,
+                                                            );
                                                             $displayValue = '';
                                                             if (is_array($variationData)) {
                                                                 if (isset($variationData['attribute_value'])) {
-                                                                    $attr = json_decode($variationData['attribute_value'], true);
+                                                                    $attr = json_decode(
+                                                                        $variationData['attribute_value'],
+                                                                        true,
+                                                                    );
                                                                     $displayValue = is_array($attr)
                                                                         ? implode(' - ', array_values($attr))
                                                                         : $variationData['attribute_value'];
@@ -85,7 +87,7 @@
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control form-control-sm item-price"
-                                                    value="{{ $detail->price }}" step="0.01" min="0">
+                                                    readonly value="{{ $detail->price }}" step="0.01" min="0">
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
@@ -102,13 +104,6 @@
                                             </td>
                                             <td class="item-total">
                                                 ৳{{ number_format($detail->price * $detail->quantity, 2) }}
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-danger remove-item"
-                                                    data-id="{{ $detail->id }}"
-                                                    {{ $order->delivery_status == 'delivered' ? 'disabled' : '' }}>
-                                                    <i class="las la-trash"></i>
-                                                </button>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -160,129 +155,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Add Product Section - No Modal -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0 h6">{{ translate('Add Product to Order') }}</h5>
-                </div>
-                <div class="card-body">
-                    <!-- Search Bar -->
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text"><i class="las la-search"></i></span>
-                            </div>
-                            <input type="text" class="form-control" id="product-search-input"
-                                placeholder="{{ translate('Search product by name...') }}" autocomplete="off">
-                            <div class="input-group-append">
-                                <button class="btn btn-secondary" type="button" id="clear-search">
-                                    <i class="las la-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <small class="text-muted">{{ translate('Type at least 2 characters to search') }}</small>
-                    </div>
-
-                    <!-- Loading Spinner -->
-                    <div id="product-loading" style="display: none;" class="text-center py-3">
-                        <i class="las la-spinner la-spin fs-30 text-primary"></i>
-                        <p class="text-muted">{{ translate('Loading products...') }}</p>
-                    </div>
-
-                    <!-- Product List -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered aiz-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th width="5%">{{ translate('#') }}</th>
-                                    <th width="35%">{{ translate('Product') }}</th>
-                                    <th width="15%">{{ translate('Price') }}</th>
-                                    <th width="10%">{{ translate('Stock') }}</th>
-                                    <th width="10%">{{ translate('Qty') }}</th>
-                                    <th width="15%">{{ translate('Action') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody id="product-list">
-                                @php
-                                    $initialProducts = \App\Models\Admin\Product::with(['inventory'])
-                                        ->orderBy('name')
-                                        ->take(20)
-                                        ->get();
-                                @endphp
-                                @if ($initialProducts->count() > 0)
-                                    @foreach ($initialProducts as $index => $product)
-                                        <tr class="product-row" data-id="{{ $product->id }}">
-                                            <td>{{ $index + 1 }}</td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    @if ($product->thumbnail)
-                                                        <img src="{{ uploaded_asset($product->thumbnail) }}"
-                                                            class="size-50px mr-2"
-                                                            style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
-                                                    @else
-                                                        <div
-                                                            class="size-50px mr-2 bg-light d-flex align-items-center justify-content-center rounded">
-                                                            <i class="las la-image fs-20 text-muted"></i>
-                                                        </div>
-                                                    @endif
-                                                    <div>
-                                                        <strong>{{ $product->name }}</strong>
-                                                        <br>
-                                                        <small class="text-muted">{{ translate('SKU') }}:
-                                                            {{ $product->inventory->sku ?? 'N/A' }}</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <input type="number" class="form-control form-control-sm product-price"
-                                                    value="{{ $product->unit_price ?? ($product->regular_price ?? 0) }}"
-                                                    step="0.01" min="0">
-                                            </td>
-                                            <td class="text-center">
-                                                <span
-                                                    class="badge badge-{{ ($product->inventory->stock ?? 0) > 0 ? 'success' : 'danger' }}">
-                                                    {{ $product->inventory->stock ?? 0 }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <input type="number" class="form-control form-control-sm product-qty"
-                                                    value="1" min="1" style="width: 70px;">
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-primary add-product-to-order"
-                                                    data-id="{{ $product->id }}">
-                                                    <i class="las la-plus"></i> {{ translate('Add') }}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @else
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4">
-                                            <i class="las la-box fs-40 text-muted"></i>
-                                            <p class="text-muted mb-0">{{ translate('No products found') }}</p>
-                                        </td>
-                                    </tr>
-                                @endif
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Load More Button -->
-                    <div id="load-more-container" class="text-center mt-3" style="display: none;">
-                        <button class="btn btn-secondary" id="load-more-products">
-                            <i class="las la-spinner la-spin" style="display: none;"></i>
-                            <span class="load-more-text">{{ translate('Load More Products') }}</span>
-                        </button>
-                    </div>
-
-                    <!-- No More Products -->
-                    <div id="no-more-products" class="text-center mt-3" style="display: none;">
-                        <p class="text-muted">{{ translate('No more products to load') }}</p>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="col-lg-4">
@@ -301,30 +173,7 @@
                         <label>{{ translate('Delivery Status') }}</label>
                         <select class="form-control" id="order-status"
                             {{ in_array($order->delivery_status, ['delivered', 'transfer']) ? 'disabled' : '' }}>
-                            <option value="pending" {{ $order->delivery_status == 'pending' ? 'selected' : '' }}>
-                                {{ translate('Pending') }}
-                            </option>
-                            <option value="confirmed" {{ $order->delivery_status == 'confirmed' ? 'selected' : '' }}>
-                                {{ translate('Confirmed') }}
-                            </option>
-                            <option value="processing" {{ $order->delivery_status == 'processing' ? 'selected' : '' }}>
-                                {{ translate('Processing') }}
-                            </option>
-                            <option value="shipped" {{ $order->delivery_status == 'shipped' ? 'selected' : '' }}>
-                                {{ translate('Shipped') }}
-                            </option>
-                            <option value="delivered" {{ $order->delivery_status == 'delivered' ? 'selected' : '' }}>
-                                {{ translate('Delivered') }}
-                            </option>
-                            <option value="transfer" {{ $order->delivery_status == 'transfer' ? 'selected' : '' }}>
-                                {{ translate('Transfer') }}
-                            </option>
-                            <option value="cancelled" {{ $order->delivery_status == 'cancelled' ? 'selected' : '' }}>
-                                {{ translate('Cancelled') }}
-                            </option>
-                            <option value="refunded" {{ $order->delivery_status == 'refunded' ? 'selected' : '' }}>
-                                {{ translate('Refunded') }}
-                            </option>
+                            @include('backend.sales.all_orders._status')
                         </select>
                     </div>
 
@@ -433,21 +282,6 @@
                     <button class="btn btn-success btn-block btn-lg" id="update-order">
                         <i class="las la-save"></i> {{ translate('Update Order') }}
                     </button>
-                    <hr>
-                    <div class="row">
-                        <div class="col-6">
-                            <button class="btn btn-danger btn-block" id="cancel-order"
-                                {{ $order->delivery_status == 'cancelled' ? 'disabled' : '' }}>
-                                <i class="las la-times"></i> {{ translate('Cancel Order') }}
-                            </button>
-                        </div>
-                        <div class="col-6">
-                            <button class="btn btn-warning btn-block" id="print-order"
-                                {{ $order->delivery_status == 'delivered' ? 'disabled' : '' }}>
-                                <i class="las la-print"></i> {{ translate('Print') }}
-                            </button>
-                        </div>
-                    </div>
                     <div class="row mt-2">
                         <div class="col-12">
                             <button class="btn btn-danger btn-block" id="delete-order"
@@ -473,7 +307,8 @@
                 <div class="modal-body text-center">
                     <i class="las la-exchange-alt text-primary" style="font-size: 48px;"></i>
                     <h4 class="mt-2">{{ translate('Transfer this order?') }}</h4>
-                    <p>{{ translate('This will send the order to the external system and lock the delivery status.') }}</p>
+                    <p>{{ translate('This will send the order to the external system and lock the delivery status.') }}
+                    </p>
                     <input type="hidden" id="transfer-order-id">
                 </div>
                 <div class="modal-footer justify-content-center">
@@ -777,16 +612,7 @@
                 });
             });
 
-            // ============================================
-            // INITIAL LOAD - Show first 20 products
-            // ============================================
-            @if ($initialProducts->count() == 20)
-                $('#load-more-container').show();
-                hasMore = true;
-            @else
-                $('#load-more-container').hide();
-                hasMore = false;
-            @endif
+
 
             // ============================================
             // QUANTITY CONTROLS FOR ORDER ITEMS
@@ -1094,7 +920,8 @@
             $('#confirm-transfer-btn').on('click', function() {
                 var orderId = $('#transfer-order-id').val();
                 var $btn = $(this);
-                $btn.prop('disabled', true).html('<i class="las la-spinner la-spin"></i> {{ translate("Transferring...") }}');
+                $btn.prop('disabled', true).html(
+                    '<i class="las la-spinner la-spin"></i> {{ translate('Transferring...') }}');
 
                 $.ajax({
                     headers: {
@@ -1106,7 +933,9 @@
                         order_id: orderId
                     },
                     success: function(response) {
-                        $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                        $btn.prop('disabled', false).html(
+                            '<i class="las la-paper-plane"></i> {{ translate('Transfer') }}'
+                        );
                         $('#transfer-modal').modal('hide');
                         if (response.success) {
                             AIZ.plugins.notify('success', response.message);
@@ -1118,9 +947,12 @@
                         }
                     },
                     error: function(xhr) {
-                        $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                        $btn.prop('disabled', false).html(
+                            '<i class="las la-paper-plane"></i> {{ translate('Transfer') }}'
+                        );
                         $('#transfer-modal').modal('hide');
-                        var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Something went wrong';
+                        var msg = xhr.responseJSON ? xhr.responseJSON.message :
+                            'Something went wrong';
                         AIZ.plugins.notify('danger', msg);
                     }
                 });
