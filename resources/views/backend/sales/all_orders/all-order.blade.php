@@ -418,36 +418,12 @@
                                         class="font-weight-bold text-primary">৳{{ number_format($order->grand_total, 2) }}</span>
                                 </td>
                                 <td>
-                                    <select {{ in_array($order->delivery_status, ['delivered', 'transfer']) ? 'disabled' : '' }}
+                                    <select
+                                        {{ in_array($order->delivery_status, ['delivered', 'transfer']) ? 'disabled' : '' }}
                                         class="form-control form-control-sm delivery-status-select"
                                         data-order-id="{{ $order->id }}"
                                         data-current-status="{{ $order->delivery_status }}">
-                                        <option value="pending"
-                                            {{ $order->delivery_status == 'pending' ? 'selected' : '' }}>
-                                            {{ translate('Pending') }}</option>
-                                        <option value="confirmed"
-                                            {{ $order->delivery_status == 'confirmed' ? 'selected' : '' }}>
-                                            {{ translate('Confirmed') }}</option>
-
-                                        <option value="picked_up"
-                                            {{ $order->delivery_status == 'picked_up' ? 'selected' : '' }}>
-                                            {{ translate('Picked Up') }}</option>
-
-                                        <option value="on_the_way"
-                                            {{ $order->delivery_status == 'on_the_way' ? 'selected' : '' }}>
-                                            {{ translate('On The Way') }}</option>
-
-                                        <option value="delivered"
-                                            {{ $order->delivery_status == 'delivered' ? 'selected' : '' }}>
-                                            {{ translate('Delivered') }}</option>
-
-                                        <option value="transfer"
-                                            {{ $order->delivery_status == 'transfer' ? 'selected' : '' }}>
-                                            {{ translate('Transfer') }}</option>
-
-                                        <option value="cancelled"
-                                            {{ $order->delivery_status == 'cancelled' ? 'selected' : '' }}>
-                                            {{ translate('Cancelled') }}</option>
+                                        @include('backend.sales.all_orders._status')
                                     </select>
                                 </td>
                                 <td>
@@ -455,8 +431,7 @@
                                         class="form-control form-control-sm payment-status-select"
                                         data-order-id="{{ $order->id }}"
                                         data-current-status="{{ $order->payment_status }}">
-                                        <option value="unpaid"
-                                            {{ $order->payment_status == 'unpaid' ? 'selected' : '' }}>
+                                        <option value="unpaid" {{ $order->payment_status == 'unpaid' ? 'selected' : '' }}>
                                             {{ translate('Unpaid') }}</option>
                                         <option value="paid" {{ $order->payment_status == 'paid' ? 'selected' : '' }}>
                                             {{ translate('Paid') }}</option>
@@ -559,7 +534,8 @@
                     <i class="las la-exchange-alt text-primary" style="font-size: 48px;"></i>
                     <h4 class="mt-2">{{ translate('Are you sure?') }}</h4>
                     <h5 class="mt-2">{{ translate('Is this Dropshipping Product order?') }}</h5>
-                    <p>{{ translate('This will send the order to the external system and lock the delivery status.') }}</p>
+                    <p>{{ translate('This will send the order to the external system and lock the delivery status.') }}
+                    </p>
                     <input type="hidden" id="transfer-order-id">
                 </div>
                 <div class="modal-footer justify-content-center">
@@ -658,7 +634,8 @@
         $('#confirm-transfer-btn').on('click', function() {
             var orderId = $('#transfer-order-id').val();
             var $btn = $(this);
-            $btn.prop('disabled', true).html('<i class="las la-spinner la-spin"></i> {{ translate("Transferring...") }}');
+            $btn.prop('disabled', true).html(
+                '<i class="las la-spinner la-spin"></i> {{ translate('Transferring...') }}');
 
             $.ajax({
                 headers: {
@@ -670,7 +647,8 @@
                     order_id: orderId
                 },
                 success: function(response) {
-                    $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                    $btn.prop('disabled', false).html(
+                        '<i class="las la-paper-plane"></i> {{ translate('Transfer') }}');
                     $('#transfer-modal').modal('hide');
                     if (response.success) {
                         AIZ.plugins.notify('success', response.message);
@@ -682,7 +660,8 @@
                     }
                 },
                 error: function(xhr) {
-                    $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                    $btn.prop('disabled', false).html(
+                        '<i class="las la-paper-plane"></i> {{ translate('Transfer') }}');
                     $('#transfer-modal').modal('hide');
                     var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Something went wrong';
                     AIZ.plugins.notify('danger', msg);

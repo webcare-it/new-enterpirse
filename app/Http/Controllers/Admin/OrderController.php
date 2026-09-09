@@ -1461,7 +1461,6 @@ class OrderController extends Controller
                 'success' => true,
                 'message' => 'Order transferred successfully!',
             ]);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,

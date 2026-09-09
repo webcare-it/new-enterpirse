@@ -491,7 +491,7 @@
                             <label class="aiz-switch aiz-switch-success mb-0">
                                 <input type="checkbox" name="is_published" value="1"
                                     {{ $landingPage->is_published ? 'checked' : '' }}>
-                                <span class="ml-2">{{ translate('Publish this landing page') }}</span>
+                                <span class="ml-2"></span>
                             </label>
                         </div>
                         <div class="alert alert-info mt-2">
