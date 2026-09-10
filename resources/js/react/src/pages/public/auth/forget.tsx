@@ -27,6 +27,8 @@ import {
     useVerifyForgotOtpMutation,
     useResetPasswordMutation,
 } from "@/api/forgot-password";
+import { setCookie } from "@/helper";
+import { TOKEN, USER_ID } from "@/constant";
 import toast from "react-hot-toast";
 
 type Step = "phone" | "otp" | "reset";
@@ -129,9 +131,13 @@ const Form = () => {
                 password_confirmation: confirmPassword,
             },
             {
-                onSuccess: () => {
-                    toast.success("Password reset successfully.");
-                    window.location.assign("/signin");
+                onSuccess: (res) => {
+                    if (res?.data?.token && res?.data?.user) {
+                        setCookie(TOKEN, res?.data?.token);
+                        setCookie(USER_ID, String(res?.data?.user?.id));
+                        toast.success("Password reset successfully.");
+                        window.location.assign("/");
+                    }
                 },
             },
         );

@@ -242,9 +242,16 @@ class AuthenticationController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
 
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         return response()->json([
             'success' => true,
             'message' => 'Password reset successfully.',
+            'data'    => [
+                'user'       => $user,
+                'token'      => $token,
+                'token_type' => 'Bearer',
+            ],
         ]);
     }
 
@@ -310,7 +317,7 @@ class AuthenticationController extends Controller
         ]);
     }
 
-    public function google(Request $request)
+     public function google(Request $request)
     {
         try {
             $googleClientId     = env('GOOGLE_CLIENT_ID');
