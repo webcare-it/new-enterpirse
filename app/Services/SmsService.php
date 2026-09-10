@@ -29,6 +29,7 @@ class SmsService
 
         $sms_body = $sms_template->sms_body;
         $sms_body = str_replace('[[code]]', $user->verification_code, $sms_body);
+        $sms_body = str_replace('[[site_name]]', env('APP_NAME', 'Enterprise'), $sms_body);
 
         try {
             sendSMS($user->phone, env('APP_NAME'), $sms_body, $sms_template->template_id);
