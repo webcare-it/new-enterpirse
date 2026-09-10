@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Auth;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Cart;
@@ -9,6 +9,7 @@ use App\Models\Admin\Order;
 use App\Models\Admin\Wishlist;
 use App\Models\BusinessSetting;
 use App\Models\User;
+use App\Services\SmsService;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -31,6 +32,62 @@ class AuthenticationController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $otp_enabled = get_setting('phone_verification_otp') == 1;
+
+        $user = User::create([
+            'user_type'         => 'customer',
+            'name'              => $request->name,
+            'email'             => $request->email,
+            'phone'             => $request->phone,
+            'password'          => Hash::make($request->password),
+            'referral_code'     => $this->generateReferralCode(),
+            'banned'            => 0,
+            'verification_code' => $otp_enabled ? rand(100000, 999999) : null,
+        ]);
+
+        if ($otp_enabled) {
+            SmsService::phone_number_verification($user);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP sent to your phone.',
+                'data'    => [
+                    'otp_sent'  => true,
+                    'user_id'   => $user->id,
+                    'phone'     => $request->phone,
+                ],
+            ], 201);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registration successful.',
+            'data'    => [
+                'user'       => $user,
+                'token'      => $token,
+                'token_type' => 'Bearer',
+            ],
+        ], 201);
+    }
+
+    /**
+     * Verify OTP after registration.
+     */
+    public function verifyOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer|exists:users,id',
+            'otp'     => 'required|string|size:6',
+        ]);
 
         if ($validator->fails()) {
             return response()->json([
@@ -39,28 +96,58 @@ class AuthenticationController extends Controller
             ], 422);
         }
 
-        $user = User::create([
-            'user_type'     => 'customer',
-            'name'          => $request->name,
-            'email'         => $request->email,
-            'phone'         => $request->phone,
-            'password'      => Hash::make($request->password),
-            'referral_code' => $this->generateReferralCode(),
-            'banned'        => 0,
-        ]);
+        $user = User::find($request->user_id);
 
-        // Generate Sanctum token
+        if ($user->verification_code != $request->otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP code.',
+            ], 422);
+        }
+
+        $user->verification_code = null;
+        $user->email_verified_at = now();
+        $user->save();
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'message' => 'Registration successful.',
+            'message' => 'Phone verified successfully.',
             'data'    => [
-                'user'  => $user,
-                'token' => $token,
+                'user'       => $user,
+                'token'      => $token,
                 'token_type' => 'Bearer',
             ],
-        ], 201);
+        ]);
+    }
+
+    /**
+     * Resend OTP to phone.
+     */
+    public function resendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::find($request->user_id);
+        $user->verification_code = rand(100000, 999999);
+        $user->save();
+
+        SmsService::phone_number_verification($user);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP resent successfully.',
+        ]);
     }
 
     /**
