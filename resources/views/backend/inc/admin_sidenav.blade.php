@@ -818,6 +818,32 @@
                     </li>
                 @endif
 
+                @if (Auth::user()->user_type == 'admin' || in_array('14', json_decode(Auth::user()->staff->role->permissions)))
+                    <li
+                        class="aiz-side-nav-item {{ request()->routeIs('otp_configurations.*', 'sms-templates.*') ? 'mm-active' : '' }}">
+                        <a href="#"
+                            class="aiz-side-nav-link {{ areActiveRoutes(['otp_configurations.*', 'sms-templates.*']) }}">
+                            <i class="las la-mobile aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('OTP Configuration') }}</span>
+                            <span class="aiz-side-nav-arrow"></span>
+                        </a>
+                        <ul class="aiz-side-nav-list level-2">
+                            <li class="aiz-side-nav-item">
+                                <a href="{{ route('otp_configurations.activation') }}"
+                                    class="aiz-side-nav-link {{ areActiveRoutes(['otp_configurations.activation']) }}">
+                                    <span class="aiz-side-nav-text">{{ translate('Activation') }}</span>
+                                </a>
+                            </li>
+                            <li class="aiz-side-nav-item">
+                                <a href="{{ route('sms-templates.index') }}"
+                                    class="aiz-side-nav-link {{ areActiveRoutes(['sms-templates.*']) }}">
+                                    <span class="aiz-side-nav-text">{{ translate('SMS Templates') }}</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                @endif
+
                 @if (Auth::user()->user_type == 'admin' || in_array('20', json_decode(Auth::user()->staff->role->permissions)))
                     <li class="aiz-side-nav-item {{ request()->routeIs('staffs.*', 'roles.*') ? 'mm-active' : '' }}">
                         <a href="#" class="aiz-side-nav-link {{ areActiveRoutes(['staffs.*', 'roles.*']) }}">

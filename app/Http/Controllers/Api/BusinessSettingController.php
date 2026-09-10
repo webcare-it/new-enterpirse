@@ -48,7 +48,10 @@ class BusinessSettingController extends Controller
             'b_closing_hour',
             'n_sub_title',
             'fb_page_username',
-            'whatsapp_number'
+            'whatsapp_number',
+            'otp_for_order',
+            'forget_password_otp',
+            'phone_verification_otp'
         ];
 
         // Keys that store image IDs (will be converted to URLs)

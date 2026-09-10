@@ -43,6 +43,13 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::post('/facebook_pixel', '\App\Http\Controllers\Admin\BusinessSettingsController@facebook_pixel_update')->name('facebook_pixel.update');
     Route::post('/env_key_update', '\App\Http\Controllers\Admin\BusinessSettingsController@env_key_update')->name('env_key_update.update');
 
+    // OTP Configuration Routes
+    Route::get('/otp/activation', '\App\Http\Controllers\Admin\OtpController@activation')->name('otp_configurations.activation');
+    Route::post('/otp/update-activation', '\App\Http\Controllers\Admin\OtpController@update_activation')->name('otp_configurations.update.activation');
+    Route::get('/otp/sms-templates', '\App\Http\Controllers\Admin\OtpController@sms_templates')->name('sms-templates.index');
+    Route::post('/otp/sms-templates', '\App\Http\Controllers\Admin\OtpController@sms_template_store')->name('sms-templates.store');
+    Route::patch('/otp/sms-templates/{id}', '\App\Http\Controllers\Admin\OtpController@sms_template_update')->name('sms-templates.update');
+    Route::delete('/otp/sms-templates/{id}', '\App\Http\Controllers\Admin\OtpController@sms_template_destroy')->name('sms-templates.destroy');
 
     // website setting
     Route::group(['prefix' => 'website'], function () {

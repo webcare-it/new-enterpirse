@@ -19,8 +19,13 @@ import { SocialLogin } from "./social";
 import { HeaderLogo } from "@/components/common/logo";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
 import { BaseLayout, LayoutContainer } from "../_components/layout/base-layout";
+import { useConfig } from "@/hooks/useConfig";
 
 export const SignUpPage = () => {
+    const config = useConfig();
+    const isVerification = (config?.phone_verification_otp as string) === "1";
+    console.log({ isVerification });
+
     return (
         <>
             <SeoWrapper title="Sign Up" description="Create a new account" />
