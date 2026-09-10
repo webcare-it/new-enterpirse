@@ -78,15 +78,17 @@ Route::group(['prefix' => 'v1'], function () {
     Route::get('pages', [\App\Http\Controllers\Api\BusinessSettingController::class, 'policy']);
 
     Route::prefix('auth')->group(function () {
-        Route::post('register', [\App\Http\Controllers\Api\Auth\AuthenticationController::class, 'register']);
-        Route::post('login', [\App\Http\Controllers\Api\Auth\AuthenticationController::class, 'login']);
-        Route::get('oauth', [\App\Http\Controllers\Api\Auth\AuthenticationController::class, 'oauth']);
+        Route::post('register', [\App\Http\Controllers\Api\AuthenticationController::class, 'register']);
+        Route::post('verify-otp', [\App\Http\Controllers\Api\AuthenticationController::class, 'verifyOtp']);
+        Route::post('resend-otp', [\App\Http\Controllers\Api\AuthenticationController::class, 'resendOtp']);
+        Route::post('login', [\App\Http\Controllers\Api\AuthenticationController::class, 'login']);
+        Route::get('oauth', [\App\Http\Controllers\Api\AuthenticationController::class, 'oauth']);
         Route::middleware(['auth:sanctum'])->group(function () {
-            Route::post('logout', [\App\Http\Controllers\Api\Auth\AuthenticationController::class, 'logout']);
-            Route::get('profile', [\App\Http\Controllers\Api\Auth\AuthenticationController::class, 'profile']);
-            Route::get('dashboard', [\App\Http\Controllers\Api\Auth\AuthenticationController::class, 'dashboard']);
-            Route::put('change-password', [\App\Http\Controllers\Api\Auth\AuthenticationController::class, 'changePassword']);
-            Route::put('profile-update', [\App\Http\Controllers\Api\Auth\AuthenticationController::class, 'profileUpdate']);
+            Route::post('logout', [\App\Http\Controllers\Api\AuthenticationController::class, 'logout']);
+            Route::get('profile', [\App\Http\Controllers\Api\AuthenticationController::class, 'profile']);
+            Route::get('dashboard', [\App\Http\Controllers\Api\AuthenticationController::class, 'dashboard']);
+            Route::put('change-password', [\App\Http\Controllers\Api\AuthenticationController::class, 'changePassword']);
+            Route::put('profile-update', [\App\Http\Controllers\Api\AuthenticationController::class, 'profileUpdate']);
 
             // Profile Order
             Route::post('review-store', [\App\Http\Controllers\Api\ApiReviewController::class, 'reviewStore']);

@@ -1324,7 +1324,7 @@ class OrderController extends Controller
                 'order_id' => 'required|exists:orders,id',
             ]);
 
-            $order = Order::with(['orderDetails', 'orderDetails.product', 'user'])->findOrFail($request->order_id);
+            $order = Order::with(['orderDetails', 'orderDetails.product'])->findOrFail($request->order_id);
 
             if ($order->delivery_status === 'transfer') {
                 return response()->json([
@@ -1336,6 +1336,13 @@ class OrderController extends Controller
             $appKey = env('DROPLOO_APP_KEY');
             $appSecret = env('DROPLOO_APP_SECRET');
             $userName = env('DROPLOO_USERNAME');
+
+            if (empty($appKey) || empty($appSecret) || empty($userName)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dropshipping credentials are not configured. Please set credentials!',
+                ], 400);
+            }
 
             $productQuantity = $order->orderDetails->sum('quantity');
 
@@ -1349,7 +1356,14 @@ class OrderController extends Controller
                     }
                 }
 
-                $externalProductId = $detail->product->droploo_product_id ?? $detail->product_id;
+                if (empty($detail->product) || empty($detail->product->droploo_product_id)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot transfer: "' . ($detail->product->name ?? 'Unknown Product') . '" is not a dropshipping product.',
+                    ], 400);
+                }
+
+                $externalProductId = $detail->product->droploo_product_id;
 
                 $productsArray[] = [
                     'id' => (int) $externalProductId,
@@ -1361,8 +1375,8 @@ class OrderController extends Controller
 
             $apiData = [
                 'invoice_number' => $order->code,
-                'customer_name' => $order->user->name ?? 'Guest',
-                'customer_phone' => $order->phone_number ?? ($order->user->phone ?? ''),
+                'customer_name' => $order->name ?? 'Guest',
+                'customer_phone' => $order->phone_number ?? ($order->phone ?? ''),
                 'customer_address' => $order->shipping_address ?? '',
                 'delivery_cost' => (float) $order->shipping_cost,
                 'price' => (float) $order->grand_total,
@@ -1447,7 +1461,6 @@ class OrderController extends Controller
                 'success' => true,
                 'message' => 'Order transferred successfully!',
             ]);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,

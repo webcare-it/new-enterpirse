@@ -285,6 +285,92 @@
             <div class="card shadow-sm border-0 rounded-lg">
                 <div class="card-header bg-white py-3 border-bottom-0">
                     <div class="d-flex align-items-center">
+                        <div class="icon-shape bg-soft-success text-success mr-3 rounded-circle p-2"
+                            style="background: rgba(25,135,84,0.1);">
+                            <i class="las la-sms font-medium-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 h5 text-dark font-weight-bold">{{ translate('BulkSMSBD Credentials') }}</h5>
+                            <p class="text-muted mb-0 small">
+                                {{ translate('API credentials for BulkSMSBD SMS gateway') }}</p>
+                        </div>
+                    </div>
+                    <a href="https://bulksmsbd.com/bulksms-price.php" target="_blank"
+                        class="btn btn-light btn-sm shadow-sm">
+                        <i class="las la-external-link-alt mr-1"></i>
+                        {{ translate('View Pricing') }}
+                    </a>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <form action="{{ route('env_key_update.update') }}" method="POST">
+                        @csrf
+
+                        {{-- Sender ID --}}
+                        <div class="form-group row align-items-center">
+                            <label
+                                class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('Sender ID') }}</label>
+                            <div class="col-md-9">
+                                <input type="hidden" name="types[]" value="BULKSMSBD_SENDER_ID">
+                                <div class="input-group">
+                                    <input type="text" name="BULKSMSBD_SENDER_ID" class="form-control"
+                                        id="bulksmsbd_sender_id" value="{{ env('BULKSMSBD_SENDER_ID') }}"
+                                        placeholder="Enter approved Sender ID">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#bulksmsbd_sender_id" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <small
+                                    class="form-text text-muted mt-1">{{ translate('Your approved Sender ID from BulkSMSBD') }}</small>
+                            </div>
+                        </div>
+
+                        {{-- API Key --}}
+                        <div class="form-group row align-items-center">
+                            <label
+                                class="col-md-3 col-form-label font-weight-medium text-muted">{{ translate('API Key') }}</label>
+                            <div class="col-md-9">
+                                <input type="hidden" name="types[]" value="BULKSMSBD_API_KEY">
+                                <div class="input-group">
+                                    <input type="password" name="BULKSMSBD_API_KEY" class="form-control"
+                                        id="bulksmsbd_api_key" value="{{ env('BULKSMSBD_API_KEY') }}"
+                                        placeholder="Enter BulkSMSBD API Key">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                            onclick="togglePasswordVisibility('bulksmsbd_api_key', 'toggleIconApiKey')">
+                                            <i class="lar la-eye" id="toggleIconApiKey"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary copy-btn" type="button"
+                                            data-target="#bulksmsbd_api_key" title="{{ translate('Copy') }}">
+                                            <i class="las la-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted mt-1">{{ translate('Your BulkSMSBD API key') }}</small>
+                            </div>
+                        </div>
+
+
+
+                        <div class="text-right mt-3">
+                            <button type="submit"
+                                class="btn btn-primary px-4 shadow-sm">{{ translate('Update BulkSMSBD') }}</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row mt-4">
+        <div class="col-lg-9 mx-auto">
+            <div class="card shadow-sm border-0 rounded-lg">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <div class="d-flex align-items-center">
                         <div class="icon-shape bg-soft-primary text-primary mr-3 rounded-circle p-2"
                             style="background: rgba(0,123,255,0.1);">
                             <i class="las la-shipping-fast font-medium-3"></i>

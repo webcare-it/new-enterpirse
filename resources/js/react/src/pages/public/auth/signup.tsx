@@ -13,12 +13,13 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { sessionRemove, useRegisterMutation } from "@/api/auth";
+import { sessionStore, useRegisterMutation } from "@/api/auth";
 import { usePhoneValidation } from "@/hooks/usePhoneValidation";
 import { SocialLogin } from "./social";
 import { HeaderLogo } from "@/components/common/logo";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
 import { BaseLayout, LayoutContainer } from "../_components/layout/base-layout";
+import { OtpVerification } from "./otp-verification";
 
 export const SignUpPage = () => {
     return (
@@ -42,6 +43,10 @@ const Form = () => {
         password: "",
         password_confirmation: "",
     });
+    const [otpData, setOtpData] = useState<{
+        userId: number;
+        phone: string;
+    } | null>(null);
     const {
         phone,
         error: phoneError,
@@ -75,14 +80,41 @@ const Form = () => {
         if (form.password !== form.password_confirmation) {
             return;
         }
-        sessionRemove();
-        mutate({
-            name: form.name,
-            phone: validation.formattedNumber,
-            password: form.password,
-            password_confirmation: form.password_confirmation,
-        });
+
+        mutate(
+            {
+                name: form.name,
+                phone: validation.formattedNumber,
+                password: form.password,
+                password_confirmation: form.password_confirmation,
+            },
+            {
+                onSuccess: (res) => {
+                    if (res?.data?.otp_sent) {
+                        setOtpData({
+                            userId: res.data.user_id,
+                            phone: res.data.phone,
+                        });
+                    } else {
+                        sessionStore(res?.data?.token, res?.data?.user?.id);
+                    }
+                },
+            },
+        );
     };
+
+    if (otpData) {
+        return (
+            <OtpVerification
+                userId={otpData.userId}
+                phone={otpData.phone}
+                onVerified={(token, userId) => {
+                    sessionStore(token, userId);
+                }}
+                onBack={() => setOtpData(null)}
+            />
+        );
+    }
 
     return (
         <div className="flex-1 flex items-center justify-center  bg-white">

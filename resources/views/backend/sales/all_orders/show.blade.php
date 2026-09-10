@@ -166,20 +166,7 @@
                         <label>{{ translate('Delivery Status') }}</label>
                         <select class="form-control" id="delivery_status" data-order-id="{{ $order->id }}"
                             {{ in_array($order->delivery_status, ['delivered', 'transfer']) ? 'disabled' : '' }}>
-                            <option value="pending" {{ $order->delivery_status == 'pending' ? 'selected' : '' }}>
-                                {{ translate('Pending') }}</option>
-                            <option value="confirmed" {{ $order->delivery_status == 'confirmed' ? 'selected' : '' }}>
-                                {{ translate('Confirmed') }}</option>
-                            <option value="processing" {{ $order->delivery_status == 'processing' ? 'selected' : '' }}>
-                                {{ translate('Processing') }}</option>
-                            <option value="shipped" {{ $order->delivery_status == 'shipped' ? 'selected' : '' }}>
-                                {{ translate('Shipped') }}</option>
-                            <option value="delivered" {{ $order->delivery_status == 'delivered' ? 'selected' : '' }}>
-                                {{ translate('Delivered') }}</option>
-                            <option value="transfer" {{ $order->delivery_status == 'transfer' ? 'selected' : '' }}>
-                                {{ translate('Transfer') }}</option>
-                            <option value="cancelled" {{ $order->delivery_status == 'cancelled' ? 'selected' : '' }}>
-                                {{ translate('Cancelled') }}</option>
+                            @include('backend.sales.all_orders._status')
                         </select>
                     </div>
                     <div class="print-only">
@@ -489,7 +476,8 @@
                 <div class="modal-body text-center">
                     <i class="las la-exchange-alt text-primary" style="font-size: 48px;"></i>
                     <h4 class="mt-2">{{ translate('Transfer this order?') }}</h4>
-                    <p>{{ translate('This will send the order to the external system and lock the delivery status.') }}</p>
+                    <p>{{ translate('This will send the order to the external system and lock the delivery status.') }}
+                    </p>
                     <input type="hidden" id="transfer-order-id">
                 </div>
                 <div class="modal-footer justify-content-center">
@@ -576,7 +564,8 @@
         $('#confirm-transfer-btn').on('click', function() {
             var orderId = $('#transfer-order-id').val();
             var $btn = $(this);
-            $btn.prop('disabled', true).html('<i class="las la-spinner la-spin"></i> {{ translate("Transferring...") }}');
+            $btn.prop('disabled', true).html(
+                '<i class="las la-spinner la-spin"></i> {{ translate('Transferring...') }}');
 
             $.ajax({
                 headers: {
@@ -588,7 +577,8 @@
                     order_id: orderId
                 },
                 success: function(response) {
-                    $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                    $btn.prop('disabled', false).html(
+                        '<i class="las la-paper-plane"></i> {{ translate('Transfer') }}');
                     $('#transfer-modal').modal('hide');
                     if (response.success) {
                         AIZ.plugins.notify('success', response.message);
@@ -600,7 +590,8 @@
                     }
                 },
                 error: function(xhr) {
-                    $btn.prop('disabled', false).html('<i class="las la-paper-plane"></i> {{ translate("Transfer") }}');
+                    $btn.prop('disabled', false).html(
+                        '<i class="las la-paper-plane"></i> {{ translate('Transfer') }}');
                     $('#transfer-modal').modal('hide');
                     var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Something went wrong';
                     AIZ.plugins.notify('danger', msg);
