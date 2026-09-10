@@ -23,6 +23,7 @@ class CreateOrdersTable extends Migration
             $table->longText('shipping_address')->nullable();
             $table->string('delivery_status')->default('pending');
 
+            $table->string('is_otp_verified')->nullable();
             $table->string('payment_type')->nullable();
             $table->boolean('manual_payment')->default(false);
             $table->longText('manual_payment_data')->nullable();

@@ -184,7 +184,43 @@ class ApiOrderController extends Controller
             // Load order details with product
             $order->load('details.product');
 
-            // Send order receive SMS to admin
+            // Check if OTP for order is enabled
+            $otpForOrder = get_setting('otp_for_order') == 1;
+            $otpCode = null;
+
+            if ($otpForOrder) {
+                $otpCode = rand(100000, 999999);
+                $order->is_otp_verified = $otpCode;
+                $order->save();
+
+                // Send OTP to customer
+                $smsTemplate = \App\Models\SmsTemplate::where('identifier', 'order_otp')->first();
+                if ($smsTemplate) {
+                    $smsBody = str_replace('[[code]]', $otpCode, $smsTemplate->sms_body);
+                    $smsBody = str_replace('[[site_name]]', env('APP_NAME', 'Enterprise'), $smsBody);
+                    try {
+                        sendSMS($order->phone_number, env('APP_NAME'), $smsBody, $smsTemplate->template_id);
+                    } catch (\Exception $e) {
+                        \Log::error('SMS order_otp failed: ' . $e->getMessage());
+                    }
+                }
+            }
+
+
+
+            // If OTP for order is enabled, return simple response
+            if ($otpForOrder) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order placed. Please verify OTP.',
+                    'data' => [
+                        'otp_sent'   => true,
+                        'order_code' => $order->code,
+                    ],
+                ]);
+            }
+
+             // Send order receive SMS to admin
             if (get_setting('is_order_receive') == 1) {
                 SmsService::order_receive($order);
             }
@@ -648,5 +684,78 @@ class ApiOrderController extends Controller
     private function generateOrderCode()
     {
         return 'INC-ORD-' . date('Ymd') . '-' . strtoupper(uniqid());
+    }
+
+    /**
+     * Verify order OTP.
+     */
+    public function verifyOrderOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_code' => 'required|string|exists:orders,code',
+            'otp'        => 'required|string|size:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $order = Order::where('code', $request->order_code)->first();
+
+        if ($order->is_otp_verified != $request->otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP code.',
+            ], 422);
+        }
+
+        $order->is_otp_verified = 'verified';
+        $order->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order verified successfully.',
+        ]);
+    }
+
+    /**
+     * Resend order OTP.
+     */
+    public function resendOrderOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_code' => 'required|string|exists:orders,code',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $order = Order::where('code', $request->order_code)->first();
+        $otpCode = rand(100000, 999999);
+        $order->is_otp_verified = $otpCode;
+        $order->save();
+
+        $smsTemplate = \App\Models\SmsTemplate::where('identifier', 'order_otp')->first();
+        if ($smsTemplate) {
+            $smsBody = str_replace('[[code]]', $otpCode, $smsTemplate->sms_body);
+            $smsBody = str_replace('[[site_name]]', env('APP_NAME', 'Enterprise'), $smsBody);
+            try {
+                sendSMS($order->phone_number, env('APP_NAME'), $smsBody, $smsTemplate->template_id);
+            } catch (\Exception $e) {
+                \Log::error('SMS order_otp failed: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP resent successfully.',
+        ]);
     }
 }
