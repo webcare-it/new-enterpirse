@@ -356,6 +356,238 @@ if (!function_exists('get_images')) {
     }
 }
 
+if (!function_exists('sendSMS')) {
+    function sendSMS($number, $sendername, $message, $template_id = '')
+    {
+        $active_provider = \App\Models\OtpConfiguration::where('type', 'active_provider')->value('value');
+
+        if ($active_provider == null) {
+            return false;
+        }
+
+        // Ensure number starts with 88
+        $number = ltrim($number, '+');
+        if (strpos($number, '88') !== 0) {
+            $number = '88' . $number;
+        }
+
+        try {
+            if ($active_provider == 'bulksmsbd') {
+                return sendBulkSmsBD($number, $message);
+            } elseif ($active_provider == 'nexmo') {
+                return sendNexmo($number, $message);
+            } elseif ($active_provider == 'twillo') {
+                return sendTwillo($number, $message);
+            } elseif ($active_provider == 'ssl_wireless') {
+                return sendSSLWireless($number, $message, $template_id);
+            } elseif ($active_provider == 'fast2sms') {
+                return sendFast2SMS($number, $message, $template_id);
+            } elseif ($active_provider == 'mimo') {
+                return sendMIMO($number, $message);
+            }
+        } catch (\Exception $e) {
+            \Log::error('SMS sending failed: ' . $e->getMessage());
+            return false;
+        }
+
+        return false;
+    }
+}
+
+if (!function_exists('sendBulkSmsBD')) {
+    function sendBulkSmsBD($number, $message)
+    {
+        $api_key = env('BULKSMSBD_API_KEY');
+        $sender_id = env('BULKSMSBD_SENDER_ID');
+
+        if (empty($api_key) || empty($sender_id)) {
+            \Log::error('BulkSMSBD credentials not configured');
+            return false;
+        }
+
+        $url = "https://bulksmsbd.net/api/smsapi";
+        $data = [
+            "api_key"  => $api_key,
+            "senderid" => $sender_id,
+            "number"   => $number,
+            "message"  => $message,
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        return $response;
+    }
+}
+
+if (!function_exists('sendNexmo')) {
+    function sendNexmo($number, $message)
+    {
+        $nexmo_key = env('NEXMO_KEY');
+        $nexmo_secret = env('NEXMO_SECRET');
+
+        $number = ltrim($number, '+');
+
+        $url = "https://rest.nexmo.com/sms/json?" . http_build_query([
+            'api_key'    => $nexmo_key,
+            'api_secret' => $nexmo_secret,
+            'to'         => $number,
+            'from'       => env('APP_NAME', 'Enterprise'),
+            'text'       => $message,
+        ]);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        return $response;
+    }
+}
+
+if (!function_exists('sendTwillo')) {
+    function sendTwillo($number, $message)
+    {
+        $sid = env('TWILIO_SID');
+        $token = env('TWILIO_AUTH_TOKEN');
+        $from = env('VALID_TWILLO_NUMBER');
+
+        $number = ltrim($number, '+');
+
+        $url = "https://api.twilio.com/2010-04-01/Accounts/{$sid}/Messages.json";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+            'To'   => '+' . $number,
+            'From' => $from,
+            'Body' => $message,
+        ]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERPWD, "{$sid}:{$token}");
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        return $response;
+    }
+}
+
+if (!function_exists('sendSSLWireless')) {
+    function sendSSLWireless($number, $message, $template_id = '')
+    {
+        $token = env('SSL_SMS_API_TOKEN');
+        $sid = env('SSL_SMS_SID');
+        $url = env('SSL_SMS_URL', 'https://smsapi.sslwireless.com');
+
+        $number = ltrim($number, '+');
+
+        $data = [
+            'token'       => $token,
+            'sid'         => $sid,
+            'msisdn'      => $number,
+            'sms'         => $message,
+            'msg_id'      => $template_id,
+            'user_id'     => '',
+            'route_id'    => '',
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        return $response;
+    }
+}
+
+if (!function_exists('sendFast2SMS')) {
+    function sendFast2SMS($number, $message, $template_id = '')
+    {
+        $auth_key = env('AUTH_KEY');
+        $sender_id = env('SENDER_ID');
+        $route = env('ROUTE', 'p');
+
+        $number = ltrim($number, '88');
+
+        $url = "https://www.fast2sms.com/dev/bulkV2";
+
+        $data = [
+            'authorization' => $auth_key,
+            'sender_id'     => $sender_id,
+            'message'       => $message,
+            'variables_values' => $message,
+            'route'         => $route,
+            'numbers'       => $number,
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'authorization:' . $auth_key,
+        ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        return $response;
+    }
+}
+
+if (!function_exists('sendMIMO')) {
+    function sendMIMO($number, $message)
+    {
+        $username = env('MIMO_USERNAME');
+        $password = env('MIMO_PASSWORD');
+        $sender_id = env('MIMO_SENDER_ID');
+
+        $number = ltrim($number, '+');
+
+        $url = "https://smsapi.telemong.com/api/sms/send?" . http_build_query([
+            'username' => $username,
+            'password' => $password,
+            'from'     => $sender_id,
+            'to'       => $number,
+            'text'     => $message,
+        ]);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        return $response;
+    }
+}
+
+if (!function_exists('addon_is_activated')) {
+    function addon_is_activated($addon_identifier)
+    {
+        $addon = \App\Models\Addon::where('identifier', $addon_identifier)->first();
+        return $addon && $addon->activated == 1;
+    }
+}
+
 //for api
 if (!function_exists('get_images_path')) {
     function get_images_path($given_ids, $with_trashed = false)

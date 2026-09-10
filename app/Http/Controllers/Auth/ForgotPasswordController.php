@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use App\Models\User;
 use App\Mail\SecondEmailVerifyMailManager;
-use App\Utility\SmsUtility;
+use App\Services\SmsService;
 use Mail;
 
 class ForgotPasswordController extends Controller
@@ -70,7 +70,7 @@ class ForgotPasswordController extends Controller
             if ($user != null) {
                 $user->verification_code = rand(100000,999999);
                 $user->save();
-                SmsUtility::password_reset($user);
+                SmsService::password_reset($user);
                 return view('otp_systems.frontend.auth.passwords.reset_with_phone');
             }
             else {
