@@ -107,6 +107,11 @@ const SignUpPage = lazy(() =>
         default: m.SignUpPage,
     })),
 );
+const ForgetPasswordPage = lazy(() =>
+    import("./public/auth/forget").then((m) => ({
+        default: m.ForgetPasswordPage,
+    })),
+);
 const RedirectPage = lazy(() =>
     import("./public/auth/redirect").then((m) => ({
         default: m.RedirectPage,
@@ -175,6 +180,7 @@ export const AppRoutes = () => {
                     {/*  Auth Routes */}
                     <Route path="/signin" element={<SignInPage />} />
                     <Route path="/signup" element={<SignUpPage />} />
+                    <Route path="/forgotten-password" element={<ForgetPasswordPage />} />
                     <Route path="/redirect" element={<RedirectPage />} />
 
                     {/* Private Routes */}

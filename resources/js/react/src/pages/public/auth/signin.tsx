@@ -143,6 +143,12 @@ const Form = () => {
                         >
                             Forgot password?
                         </Link> */}
+                        <Link
+                            to="/forgotten-password"
+                            className="text-sm text-primary font-medium hover:underline"
+                        >
+                            Forgot password?
+                        </Link>
                     </div>
 
                     <Button

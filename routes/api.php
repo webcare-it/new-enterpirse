@@ -81,6 +81,9 @@ Route::group(['prefix' => 'v1'], function () {
         Route::post('register', [\App\Http\Controllers\Api\AuthenticationController::class, 'register']);
         Route::post('verify-otp', [\App\Http\Controllers\Api\AuthenticationController::class, 'verifyOtp']);
         Route::post('resend-otp', [\App\Http\Controllers\Api\AuthenticationController::class, 'resendOtp']);
+        Route::post('forgot-password', [\App\Http\Controllers\Api\AuthenticationController::class, 'forgotPassword']);
+        Route::post('verify-forgot-otp', [\App\Http\Controllers\Api\AuthenticationController::class, 'verifyForgotOtp']);
+        Route::post('reset-password', [\App\Http\Controllers\Api\AuthenticationController::class, 'resetPassword']);
         Route::post('login', [\App\Http\Controllers\Api\AuthenticationController::class, 'login']);
         Route::get('oauth', [\App\Http\Controllers\Api\AuthenticationController::class, 'oauth']);
         Route::middleware(['auth:sanctum'])->group(function () {

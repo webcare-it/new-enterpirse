@@ -107,6 +107,7 @@ class AuthenticationController extends Controller
 
         $user->verification_code = null;
         $user->email_verified_at = now();
+        $user->is_verified_phone = 1;
         $user->save();
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -147,6 +148,103 @@ class AuthenticationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'OTP resent successfully.',
+        ]);
+    }
+
+    /**
+     * Send forgot password OTP to phone.
+     */
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|string|exists:users,phone',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::where('phone', $request->phone)->first();
+        $user->verification_code = rand(100000, 999999);
+        $user->save();
+
+        SmsService::password_reset($user);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP sent to your phone.',
+            'data'    => [
+                'user_id' => $user->id,
+                'phone'   => $user->phone,
+            ],
+        ]);
+    }
+
+    /**
+     * Verify forgot password OTP.
+     */
+    public function verifyForgotOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer|exists:users,id',
+            'otp'     => 'required|string|size:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::find($request->user_id);
+
+        if ($user->verification_code != $request->otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP code.',
+            ], 422);
+        }
+
+        $user->verification_code = null;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP verified. You can now reset your password.',
+            'data'    => [
+                'user_id' => $user->id,
+            ],
+        ]);
+    }
+
+    /**
+     * Reset password after OTP verification.
+     */
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id'              => 'required|integer|exists:users,id',
+            'password'             => 'required|string|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::find($request->user_id);
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password reset successfully.',
         ]);
     }
 
