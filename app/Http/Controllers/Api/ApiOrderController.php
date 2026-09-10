@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\SmsService;
 
 class ApiOrderController extends Controller
 {
@@ -182,6 +183,11 @@ class ApiOrderController extends Controller
 
             // Load order details with product
             $order->load('details.product');
+
+            // Send order receive SMS to admin
+            if (get_setting('is_order_receive') == 1) {
+                SmsService::order_receive($order);
+            }
 
             // Build items with required fields
             $items = $order->details->map(function ($detail) {

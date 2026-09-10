@@ -41,7 +41,7 @@ export const ForgetPasswordPage = () => {
                 description="Reset your password"
             />
             <BaseLayout>
-                <LayoutContainer className="mt-4 mb-10">
+                <LayoutContainer className="mt-4 mb-24">
                     <Form />
                 </LayoutContainer>
             </BaseLayout>

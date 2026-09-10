@@ -67,6 +67,35 @@
                 </div>
             </div>
         </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0 h6">{{ translate('Order Receive SMS (Admin)') }}</h3>
+                </div>
+                <div class="card-body text-center">
+                    <label class="aiz-switch aiz-switch-success mb-0">
+                        <input type="checkbox" onchange="updateSettings(this, 'is_order_receive')"
+                            @if (get_setting('is_order_receive') == 1) checked @endif>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <form action="{{ route('business_settings.update') }}" method="POST">
+                    @csrf
+                    <div class="px-4 pb-3">
+                        <label class="form-label fw-semibold">{{ translate('Admin Phone Number') }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="las la-phone"></i></span>
+                            <input type="hidden" name="types[]" value="order_receive_sms">
+                            <input type="text" name="order_receive_sms" class="form-control" placeholder="01XXXXXXXXX"
+                                value="{{ get_setting('order_receive_sms') }}">
+                        </div>
+                    </div>
+                    <div class="card-footer text-end bg-transparent">
+                        <button type="submit" class="btn btn-sm btn-primary">{{ translate('Save') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <div class="col-lg-4">
             <div class="card">
