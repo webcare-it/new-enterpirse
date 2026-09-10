@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\SmsTemplate;
+use App\Models\SmsTemplate;
 
 class SmsService
 {
