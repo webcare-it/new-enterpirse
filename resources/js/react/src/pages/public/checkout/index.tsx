@@ -31,11 +31,9 @@ import { apiClient } from "@/lib/axios";
 import toast from "react-hot-toast";
 
 interface ApiError {
-    error: {
-        response: {
-            data: {
-                message?: string;
-            };
+    response?: {
+        data?: {
+            message?: string;
         };
     };
 }
@@ -169,7 +167,7 @@ const Form = () => {
                                     },
                                 },
                             );
-                            const orderData = response.data?.data?.details;
+                            const orderData = response?.data?.data?.details;
                             if (orderData) {
                                 const params = new URLSearchParams({
                                     order: JSON.stringify({
@@ -221,10 +219,14 @@ const Form = () => {
                         }
                     }
                 },
-                onError: (error: ApiError) => {
-                    toast.error(
-                        error?.response?.data?.message || "Invalid OTP",
-                    );
+                onError: (error: unknown) => {
+                    const err =
+                        typeof error === "object" &&
+                        error !== null &&
+                        "response" in error
+                            ? (error as ApiError)
+                            : null;
+                    toast.error(err?.response?.data?.message || "Invalid OTP");
                 },
             },
         );

@@ -2,7 +2,7 @@ import { apiClient } from "@/lib/axios";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-interface ApiError {
+export interface ApiError {
     response: {
         data: {
             message?: string;
