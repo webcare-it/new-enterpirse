@@ -51,7 +51,8 @@ class BusinessSettingController extends Controller
             'whatsapp_number',
             'otp_for_order',
             'forget_password_otp',
-            'phone_verification_otp'
+            'phone_verification_otp',
+            'is_active_in_co_oder',
         ];
 
         // Keys that store image IDs (will be converted to URLs)

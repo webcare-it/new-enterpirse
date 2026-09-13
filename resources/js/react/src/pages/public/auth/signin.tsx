@@ -12,6 +12,7 @@ import { SocialLogin } from "./social";
 import { HeaderLogo } from "@/components/common/logo";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
 import { BaseLayout, LayoutContainer } from "../_components/layout/base-layout";
+import { useConfig } from "@/hooks/useConfig";
 
 export const SignInPage = () => {
     return (
@@ -27,6 +28,8 @@ export const SignInPage = () => {
 };
 
 const Form = () => {
+    const config = useConfig();
+    const isShowForgotten = (config?.forget_password_otp as string) === "1";
     const [showPassword, setShowPassword] = useState(false);
     const [form, setForm] = useState({ password: "" });
     const {
@@ -137,18 +140,14 @@ const Form = () => {
                                 Remember me
                             </Label>
                         </div>
-                        {/* <Link
-                            to="#"
-                            className="text-sm text-primary font-medium hover:underline"
-                        >
-                            Forgot password?
-                        </Link> */}
-                        <Link
-                            to="/forgotten-password"
-                            className="text-sm text-primary font-medium hover:underline"
-                        >
-                            Forgot password?
-                        </Link>
+                        {isShowForgotten && (
+                            <Link
+                                to="/forgotten-password"
+                                className="text-sm text-primary font-medium hover:underline"
+                            >
+                                Forgot password?
+                            </Link>
+                        )}
                     </div>
 
                     <Button

@@ -73,7 +73,7 @@ export type IOrderSuccess = ICompleteSummary & {
 export const useCheckoutMutation = () => {
     const navigate = useNavigate();
 
-    const { mutate, isPending } = useMutation({
+    const mutation = useMutation({
         mutationKey: ["complete_order_store_checkout"],
         mutationFn: async (data: unknown) => {
             const response = await apiClient.post("/orders/place", data, {
@@ -84,8 +84,17 @@ export const useCheckoutMutation = () => {
             return response.data;
         },
         onSuccess: (data) => {
+            const res =
+                (data?.data as ICompleteOrder & {
+                    otp_sent?: boolean;
+                    order_code?: string;
+                }) || {};
+
+            if (res?.otp_sent) {
+                return;
+            }
+
             removeCookie(TEMP_USER_ID);
-            const res = (data?.data as ICompleteOrder) || {};
             revalidateQueryFn("get_cart");
             removeLocalStorage(CHECKOUT_DRAFT_KEY);
             setCookie(USER_ID, String(res?.customer?.user_id));
@@ -127,6 +136,40 @@ export const useCheckoutMutation = () => {
             });
 
             navigate(`/checkout/success?${params.toString()}`);
+        },
+    });
+
+    return {
+        mutate: mutation.mutate,
+        isPending: mutation.isPending,
+        data: mutation.data,
+    };
+};
+
+export const useVerifyOrderOtpMutation = () => {
+    const { mutate, isPending } = useMutation({
+        mutationKey: ["verify_order_otp"],
+        mutationFn: async (data: { order_code: string; otp: string }) => {
+            const response = await apiClient.post(
+                "/orders/verify-order-otp",
+                data,
+            );
+            return response.data;
+        },
+    });
+
+    return { mutate, isPending };
+};
+
+export const useResendOrderOtpMutation = () => {
+    const { mutate, isPending } = useMutation({
+        mutationKey: ["resend_order_otp"],
+        mutationFn: async (data: { order_code: string }) => {
+            const response = await apiClient.post(
+                "/orders/resend-order-otp",
+                data,
+            );
+            return response.data;
         },
     });
 

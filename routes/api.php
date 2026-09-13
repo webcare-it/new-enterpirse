@@ -67,6 +67,8 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('/order-tracking/{code}', [\App\Http\Controllers\Api\ApiOrderController::class, 'orderTracking']);
         Route::get('/{code}', [\App\Http\Controllers\Api\ApiOrderController::class, 'show']);
         Route::post('/place', [\App\Http\Controllers\Api\ApiOrderController::class, 'place']);
+        Route::post('/verify-order-otp', [\App\Http\Controllers\Api\ApiOrderController::class, 'verifyOrderOtp']);
+        Route::post('/resend-order-otp', [\App\Http\Controllers\Api\ApiOrderController::class, 'resendOrderOtp']);
         Route::post('incomplete-order', [App\Http\Controllers\Api\ApiOrderController::class, 'incompleteOrder']);
         Route::get('invoice/{id}', [App\Http\Controllers\Api\ApiOrderController::class, 'invoice']);
     });

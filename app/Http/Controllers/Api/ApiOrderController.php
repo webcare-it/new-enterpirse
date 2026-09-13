@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\SmsService;
 
 class ApiOrderController extends Controller
 {
@@ -183,6 +184,47 @@ class ApiOrderController extends Controller
             // Load order details with product
             $order->load('details.product');
 
+            // Check if OTP for order is enabled
+            $otpForOrder = get_setting('otp_for_order') == 1;
+            $otpCode = null;
+
+            if ($otpForOrder) {
+                $otpCode = rand(100000, 999999);
+                $order->is_otp_verified = $otpCode;
+                $order->save();
+
+                // Send OTP to customer
+                $smsTemplate = \App\Models\SmsTemplate::where('identifier', 'order_otp')->first();
+                if ($smsTemplate) {
+                    $smsBody = str_replace('[[code]]', $otpCode, $smsTemplate->sms_body);
+                    $smsBody = str_replace('[[site_name]]', env('APP_NAME', 'Enterprise'), $smsBody);
+                    try {
+                        sendSMS($order->phone_number, env('APP_NAME'), $smsBody, $smsTemplate->template_id);
+                    } catch (\Exception $e) {
+                        \Log::error('SMS order_otp failed: ' . $e->getMessage());
+                    }
+                }
+            }
+
+
+
+            // If OTP for order is enabled, return simple response
+            if ($otpForOrder) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order placed. Please verify OTP.',
+                    'data' => [
+                        'otp_sent'   => true,
+                        'order_code' => $order->code,
+                    ],
+                ]);
+            }
+
+             // Send order receive SMS to admin
+            if (get_setting('is_order_receive') == 1) {
+                SmsService::order_receive($order);
+            }
+
             // Build items with required fields
             $items = $order->details->map(function ($detail) {
                 $product = $detail->product;
@@ -287,26 +329,8 @@ class ApiOrderController extends Controller
      */
     public function show(Request $request, $code)
     {
-        $requestedUserId = $request->header('User-Id');
-        if (!$requestedUserId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User-Id header is required'
-            ], 401);
-        }
-
-        $user = User::where('id', $requestedUserId)->first();
-        $userId = $user ? $user->id : null;
-        $guestId = $user ? null : $requestedUserId;
-
         $order = Order::with('details.product')
             ->where('code', $code)
-            ->when($userId, function ($query) use ($userId) {
-                return $query->where('user_id', $userId);
-            })
-            ->when($guestId, function ($query) use ($guestId) {
-                return $query->where('guest_id', $guestId);
-            })
             ->first();
 
         if (!$order) {
@@ -545,6 +569,10 @@ class ApiOrderController extends Controller
 
     public function incompleteOrder(Request $request)
     {
+        if (get_setting('is_active_in_co_oder') != 1) {
+            return response()->json(['success' => true]);
+        }
+
         $requestedUserId = $request->header('User-Id');
         $user = User::find($requestedUserId);
 
@@ -642,5 +670,125 @@ class ApiOrderController extends Controller
     private function generateOrderCode()
     {
         return 'INC-ORD-' . date('Ymd') . '-' . strtoupper(uniqid());
+    }
+
+    /**
+     * Verify order OTP.
+     */
+    public function verifyOrderOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_code' => 'required|string|exists:orders,code',
+            'otp'        => 'required|string|size:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $order = Order::where('code', $request->order_code)->first();
+
+        if ($order->is_otp_verified != $request->otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP code.',
+            ], 422);
+        }
+
+        $order->is_otp_verified = 'verified';
+        $order->save();
+
+        $order->load('details.product');
+
+        $items = $order->details->map(function ($detail) {
+            $product = $detail->product;
+            return [
+                'id' => $detail->id,
+                'product' => $product ? [
+                    'id'        => $product->id,
+                    'name'      => $product->name,
+                    'slug'      => $product->slug,
+                    'price'     => (float) $detail->price,
+                    'image'     => (string) (uploaded_asset($product->thumbnail) ?? ''),
+                    'quantity'  => (int) $detail->quantity,
+                    'variation' => json_decode($detail->variation, true) ?? null,
+                ] : null,
+            ];
+        });
+
+        $subtotal = $order->details->sum(fn($d) => $d->price * $d->quantity);
+        $taxTotal = $order->details->sum('tax');
+        $discountTotal = $order->discount ?? 0;
+        $shippingCost = (int) $order->shipping_cost;
+        $couponDiscount = $order->coupon_discount ?? 0;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order verified successfully.',
+            'data' => [
+                'summary' => [
+                    'subtotal'        => (float) $subtotal,
+                    'shipping_cost'   => $shippingCost,
+                    'coupon_discount' => (float) $couponDiscount,
+                    'coupon_code'     => null,
+                    'discount'        => (float) $discountTotal,
+                    'tax'             => (float) $taxTotal,
+                    'grand_total'     => (float) $order->grand_total,
+                ],
+                'customer' => [
+                    'user_id' => $order->user_id,
+                    'customer_type' => 'returning',
+                    'name'    => $order->name,
+                    'email'   => $order->email_address,
+                    'phone'   => $order->phone_number,
+                    'address' => $order->shipping_address,
+                ],
+                'date'  => $order->date,
+                'code'  => $order->code,
+                'id'    => $order->id,
+                'items' => $items,
+            ],
+        ]);
+    }
+
+    /**
+     * Resend order OTP.
+     */
+    public function resendOrderOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_code' => 'required|string|exists:orders,code',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $order = Order::where('code', $request->order_code)->first();
+        $otpCode = rand(100000, 999999);
+        $order->is_otp_verified = $otpCode;
+        $order->save();
+
+        $smsTemplate = \App\Models\SmsTemplate::where('identifier', 'order_otp')->first();
+        if ($smsTemplate) {
+            $smsBody = str_replace('[[code]]', $otpCode, $smsTemplate->sms_body);
+            $smsBody = str_replace('[[site_name]]', env('APP_NAME', 'Enterprise'), $smsBody);
+            try {
+                sendSMS($order->phone_number, env('APP_NAME'), $smsBody, $smsTemplate->template_id);
+            } catch (\Exception $e) {
+                \Log::error('SMS order_otp failed: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP resent successfully.',
+        ]);
     }
 }

@@ -85,4 +85,26 @@ class SmsService
         }
     }
 
+    public static function order_receive($order = '')
+    {
+        $adminPhone = get_setting('order_receive_sms');
+        if (!$adminPhone) return false;
+
+        $sms_template = SmsTemplate::where('identifier', 'order_receive')->first();
+        if (!$sms_template) return false;
+
+        $sms_body = $sms_template->sms_body;
+        $sms_body = str_replace('[[order_code]]', $order->code, $sms_body);
+        $sms_body = str_replace('[[site_name]]', env('APP_NAME', 'Enterprise'), $sms_body);
+        $sms_body = str_replace('[[customer_name]]', $order->name ?? '', $sms_body);
+        $sms_body = str_replace('[[customer_phone]]', $order->phone_number ?? '', $sms_body);
+        $sms_body = str_replace('[[total]]', number_format($order->grand_total, 2), $sms_body);
+
+        try {
+            sendSMS($adminPhone, env('APP_NAME'), $sms_body, $sms_template->template_id);
+        } catch (\Exception $e) {
+            \Log::error('SMS order_receive failed: ' . $e->getMessage());
+        }
+    }
+
 }
