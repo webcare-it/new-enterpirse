@@ -50,7 +50,7 @@ export const OrderOtpVerification = ({
     };
 
     return (
-        <div className="flex-1 flex items-center justify-center bg-white">
+        <div className="flex-1 flex items-center justify-center bg-white mt-10">
             <div className="w-full max-w-md space-y-8 border p-4 md:p-6 rounded-3xl">
                 <div className="flex flex-col items-center justify-between">
                     <HeaderLogo />

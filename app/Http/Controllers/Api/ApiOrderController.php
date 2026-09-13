@@ -587,6 +587,10 @@ class ApiOrderController extends Controller
 
     public function incompleteOrder(Request $request)
     {
+        if (get_setting('is_active_in_co_oder') != 1) {
+            return response()->json(['success' => true]);
+        }
+
         $requestedUserId = $request->header('User-Id');
         $user = User::find($requestedUserId);
 

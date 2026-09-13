@@ -12,6 +12,7 @@ import {
     setLocalStorage,
 } from "@/helper";
 import { CHECKOUT_DRAFT_KEY } from "@/constant";
+import { useConfig } from "@/hooks/useConfig";
 
 const loadDraft = (): Partial<IOrderFrom> | null => {
     try {
@@ -59,6 +60,9 @@ export const OrderFrom = ({ form, setForm }: Props) => {
         Partial<Record<keyof IOrderFrom, boolean>>
     >({});
 
+    const config = useConfig();
+    const isActive = String(config?.is_active_in_co_oder) === "1";
+
     const onChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
@@ -96,14 +100,15 @@ export const OrderFrom = ({ form, setForm }: Props) => {
 
     useEffect(() => {
         if (isFirstRender.current) return;
+        if (!config) return;
         const timer = setTimeout(() => {
             setLocalStorage(CHECKOUT_DRAFT_KEY, JSON.stringify(form));
-            if (isValid(form)) {
+            if (isActive && isValid(form)) {
                 mutate(form);
             }
         }, 500);
         return () => clearTimeout(timer);
-    }, [form, mutate]);
+    }, [form, mutate, isActive, config]);
 
     return (
         <form className="space-y-2 ">
