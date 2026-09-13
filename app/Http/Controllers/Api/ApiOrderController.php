@@ -329,26 +329,8 @@ class ApiOrderController extends Controller
      */
     public function show(Request $request, $code)
     {
-        $requestedUserId = $request->header('User-Id');
-        if (!$requestedUserId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User-Id header is required'
-            ], 401);
-        }
-
-        $user = User::where('id', $requestedUserId)->first();
-        $userId = $user ? $user->id : null;
-        $guestId = $user ? null : $requestedUserId;
-
         $order = Order::with('details.product')
             ->where('code', $code)
-            ->when($userId, function ($query) use ($userId) {
-                return $query->where('user_id', $userId);
-            })
-            ->when($guestId, function ($query) use ($guestId) {
-                return $query->where('guest_id', $guestId);
-            })
             ->first();
 
         if (!$order) {
@@ -719,9 +701,56 @@ class ApiOrderController extends Controller
         $order->is_otp_verified = 'verified';
         $order->save();
 
+        $order->load('details.product');
+
+        $items = $order->details->map(function ($detail) {
+            $product = $detail->product;
+            return [
+                'id' => $detail->id,
+                'product' => $product ? [
+                    'id'        => $product->id,
+                    'name'      => $product->name,
+                    'slug'      => $product->slug,
+                    'price'     => (float) $detail->price,
+                    'image'     => (string) (uploaded_asset($product->thumbnail) ?? ''),
+                    'quantity'  => (int) $detail->quantity,
+                    'variation' => json_decode($detail->variation, true) ?? null,
+                ] : null,
+            ];
+        });
+
+        $subtotal = $order->details->sum(fn($d) => $d->price * $d->quantity);
+        $taxTotal = $order->details->sum('tax');
+        $discountTotal = $order->discount ?? 0;
+        $shippingCost = (int) $order->shipping_cost;
+        $couponDiscount = $order->coupon_discount ?? 0;
+
         return response()->json([
             'success' => true,
             'message' => 'Order verified successfully.',
+            'data' => [
+                'summary' => [
+                    'subtotal'        => (float) $subtotal,
+                    'shipping_cost'   => $shippingCost,
+                    'coupon_discount' => (float) $couponDiscount,
+                    'coupon_code'     => null,
+                    'discount'        => (float) $discountTotal,
+                    'tax'             => (float) $taxTotal,
+                    'grand_total'     => (float) $order->grand_total,
+                ],
+                'customer' => [
+                    'user_id' => $order->user_id,
+                    'customer_type' => 'returning',
+                    'name'    => $order->name,
+                    'email'   => $order->email_address,
+                    'phone'   => $order->phone_number,
+                    'address' => $order->shipping_address,
+                ],
+                'date'  => $order->date,
+                'code'  => $order->code,
+                'id'    => $order->id,
+                'items' => $items,
+            ],
         ]);
     }
 

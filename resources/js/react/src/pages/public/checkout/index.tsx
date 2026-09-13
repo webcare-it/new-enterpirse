@@ -19,15 +19,12 @@ import { BreadcrumbWrapper } from "@/components/common/breadcrumb-wrapper";
 import {
     removeLocalStorage,
     renderVariation,
-    getAuthUserId,
-    getTempUserId,
 } from "@/helper";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
 import { EmptyCart } from "../_components/common/empty-cart";
 import { useGtmTracker, type IPurchaseTracker } from "@/hooks/useGtmTracker";
 import { GTM_PURCHASE_TRACKED } from "@/constant";
 import { OrderOtpVerification } from "./order-otp-modal";
-import { apiClient } from "@/lib/axios";
 import toast from "react-hot-toast";
 
 interface ApiError {
@@ -149,73 +146,58 @@ const Form = () => {
             },
         );
     };
-
     const handleVerifyOtp = (code: string, otp: string) => {
         verifyOtp(
             { order_code: code, otp },
             {
-                onSuccess: async (res) => {
+                onSuccess: (res) => {
                     if (res?.success) {
                         toast.success("Order verified successfully.");
-                        try {
-                            const response = await apiClient.get(
-                                `/orders/${code}`,
-                                {
-                                    headers: {
-                                        "User-Id":
-                                            getAuthUserId() || getTempUserId(),
-                                    },
-                                },
+                        const data = res?.data;
+                        if (data) {
+                            const params = new URLSearchParams({
+                                order: JSON.stringify({
+                                    code: data.code || "",
+                                    date: data.date || "",
+                                    ...data.summary,
+                                }),
+                                user: JSON.stringify(
+                                    data.customer || {},
+                                ),
+                                tracker: JSON.stringify({
+                                    transaction_id: data.code || "",
+                                    value: data.summary?.grand_total || 0,
+                                    shipping:
+                                        data.summary?.shipping_cost || 0,
+                                    coupon: "",
+                                    tax: data.summary?.tax || 0,
+                                    customer_type: "returning",
+                                    items:
+                                        data.items?.map(
+                                            (
+                                                item: IOrderProduct,
+                                                i: number,
+                                            ) => ({
+                                                item_id:
+                                                    item?.id?.toString() ||
+                                                    "",
+                                                item_name: item?.name || "",
+                                                item_price:
+                                                    item?.price || 0,
+                                                item_quantity:
+                                                    item?.quantity || 0,
+                                                item_variant:
+                                                    renderVariation(
+                                                        item?.variation,
+                                                    ) || "",
+                                                index: i || 0,
+                                            }),
+                                        ) || [],
+                                }),
+                            });
+                            navigate(
+                                `/checkout/success?${params.toString()}`,
                             );
-                            const orderData = response?.data?.data?.details;
-                            if (orderData) {
-                                const params = new URLSearchParams({
-                                    order: JSON.stringify({
-                                        code: orderData.code || "",
-                                        date: orderData.date || "",
-                                        ...orderData.summary,
-                                    }),
-                                    user: JSON.stringify(
-                                        orderData.shipping || {},
-                                    ),
-                                    tracker: JSON.stringify({
-                                        transaction_id: orderData.code || "",
-                                        value: orderData.summary?.total || 0,
-                                        shipping:
-                                            orderData.summary?.shipping_cost ||
-                                            0,
-                                        coupon: "",
-                                        tax: orderData.summary?.tax || 0,
-                                        customer_type: "returning",
-                                        items:
-                                            orderData.products?.map(
-                                                (
-                                                    item: IOrderProduct,
-                                                    i: number,
-                                                ) => ({
-                                                    item_id:
-                                                        item?.id?.toString() ||
-                                                        "",
-                                                    item_name: item?.name || "",
-                                                    item_price:
-                                                        item?.price || 0,
-                                                    item_quantity:
-                                                        item?.quantity || 0,
-                                                    item_variant:
-                                                        renderVariation(
-                                                            item?.variation,
-                                                        ) || "",
-                                                    index: i || 0,
-                                                }),
-                                            ) || [],
-                                    }),
-                                });
-                                navigate(
-                                    `/checkout/success?${params.toString()}`,
-                                );
-                            }
-                        } catch {
-                            navigate("/");
                         }
                     }
                 },
