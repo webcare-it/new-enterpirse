@@ -351,7 +351,8 @@ class BusinessSettingsController extends Controller
                     $business_settings = BusinessSetting::where('type', $type)->first();
                 }
 
-                $value = trim($request[$type]); // Trim to avoid accidental spaces
+                $raw = $request[$type];
+                $value = is_array($raw) ? $raw : trim($raw);
 
                 // Save to database
                 if ($business_settings != null) {
