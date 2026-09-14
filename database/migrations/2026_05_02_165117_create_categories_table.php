@@ -17,13 +17,9 @@ class CreateCategoriesTable extends Migration
             $table->id();
             $table->string('category_name');
             $table->string('category_image');
-            $table->string('hero_image')->nullable();
+            $table->string('icon')->nullable();
             $table->string('slug')->unique();
-            $table->string('title');
-            $table->string('sub_title');
-            $table->string('description');
-            $table->string('button_name');
-            $table->string('button_link');
+            $table->integer('position')->nullable();
             $table->timestamps();
         });
     }

@@ -607,6 +607,17 @@ class ApiProductController extends Controller
             ],
         ]);
     }
+    public function categories()
+    {
+        $category = \App\Models\Admin\Category::orderBy('position', 'asc')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'categories' => $category
+            ],
+        ]);
+    }
 
 
     /**

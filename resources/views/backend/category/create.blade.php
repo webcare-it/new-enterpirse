@@ -4,7 +4,7 @@
     <div class="aiz-titlebar text-left mt-2 mb-3">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <h1 class="h3">{{ translate('Create Dropshipping Category') }}</h1>
+                <h1 class="h3">{{ translate('Create Category') }}</h1>
             </div>
         </div>
     </div>
@@ -33,9 +33,8 @@
                         <div class="form-group row">
                             <label class="col-md-3 col-form-label">
                                 {{ translate('Category Image') }}
-                                <small>({{ translate('200x200') }})</small>
+                                <small>({{ translate('400z400') }})</small>
                             </label>
-
                             <div class="col-md-9">
                                 <div class="input-group" data-toggle="aizuploader" data-type="image">
                                     <div class="input-group-prepend">
@@ -55,10 +54,9 @@
                         </div>
                         <div class="form-group row">
                             <label class="col-md-3 col-form-label">
-                                {{ translate('Hero Image') }}
-                                <small>({{ translate('200x200') }})</small>
+                                {{ translate('Category Icon') }}
+                                <small>({{ translate('200X200') }})</small>
                             </label>
-
                             <div class="col-md-9">
                                 <div class="input-group" data-toggle="aizuploader" data-type="image">
                                     <div class="input-group-prepend">
@@ -69,49 +67,20 @@
                                     <div class="form-control file-amount">
                                         {{ translate('Choose File') }}
                                     </div>
-                                    <input type="hidden" name="hero_image" value="{{ old('hero_image') }}"
+                                    <input type="hidden" name="icon" value="{{ old('icon') }}"
                                         class="selected-files">
                                 </div>
-
                                 <div class="file-preview box sm mt-2"></div>
                             </div>
+
+
                         </div>
 
                         <div class="form-group row">
-                            <label class="col-md-3 col-form-label">{{ translate('Title') }}</label>
+                            <label class="col-md-3 col-form-label">{{ translate('Position') }}</label>
                             <div class="col-md-9">
-                                <input type="text" name="title" value="{{ old('title') }}" class="form-control"
-                                    required>
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label class="col-md-3 col-form-label">{{ translate('Sub Title') }}</label>
-                            <div class="col-md-9">
-                                <input type="text" name="sub_title" value="{{ old('sub_title') }}" class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label class="col-md-3 col-form-label">{{ translate('Description') }}</label>
-                            <div class="col-md-9">
-                                <textarea name="description" class="form-control" rows="4">{{ old('description') }}</textarea>
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label class="col-md-3 col-form-label">{{ translate('Button Name') }}</label>
-                            <div class="col-md-9">
-                                <input type="text" name="button_name" value="{{ old('button_name') }}"
-                                    class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label class="col-md-3 col-form-label">{{ translate('Button Link') }}</label>
-                            <div class="col-md-9">
-                                <input type="text" name="button_link" value="{{ old('button_link') }}"
-                                    class="form-control">
+                                <input type="number" name="position" value="{{ old('position', 0) }}" class="form-control"
+                                    min="0">
                             </div>
                         </div>
 

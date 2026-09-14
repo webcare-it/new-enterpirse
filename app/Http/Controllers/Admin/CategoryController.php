@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 
-class DropshippingCategoryController extends Controller
+class CategoryController extends Controller
 {
     public function index()
     {
@@ -27,13 +27,8 @@ class DropshippingCategoryController extends Controller
     {
         $request->validate([
             'category_name'   => 'required',
+            'icon'            => 'nullable',
             'category_image'  => 'nullable',
-            'hero_image'      => 'nullable',
-            'title'           => 'required',
-            'sub_title'       => 'required',
-            'description'     => 'required',
-            'button_name'     => 'required',
-            'button_link'     => 'required|url'
         ]);
 
         $category = new \App\Models\Admin\Category();
@@ -44,17 +39,13 @@ class DropshippingCategoryController extends Controller
         $count = \App\Models\Admin\Category::where('slug', 'LIKE', "{$slug}%")->count();
         $category->slug = $count ? $slug . '-' . ($count + 1) : $slug;
 
-        $category->title = $request->title;
         $category->category_image = $request->category_image;
-        $category->hero_image = $request->hero_image;
-        $category->sub_title = $request->sub_title;
-        $category->description = $request->description;
-        $category->button_name = $request->button_name;
-        $category->button_link = $request->button_link;
+        $category->icon = $request->icon;
+        $category->position = $request->position;
 
         $category->save();
 
-        flash(translate('Dropshipping Category created successfully.'))->success();
+        flash(translate('Category created successfully.'))->success();
         return redirect()->route('dropshipping-category.index');
     }
 
@@ -67,9 +58,8 @@ class DropshippingCategoryController extends Controller
     {
         $request->validate([
             'category_name'   => 'required',
+            'icon'            => 'nullable',
             'category_image'  => 'nullable',
-            'hero_image'      => 'nullable',
-            'title'           => 'required'
         ]);
 
         $category = \App\Models\Admin\Category::findOrFail($id);
@@ -78,13 +68,9 @@ class DropshippingCategoryController extends Controller
         $count = \App\Models\Admin\Category::where('slug', 'LIKE', "{$slug}%")->where('id', '!=', $id)->count();
         $category->slug = $count ? $slug . '-' . ($count + 1) : $slug;
 
-        $category->title = $request->title;
         $category->category_image = $request->category_image;
-        $category->hero_image = $request->hero_image;
-        $category->sub_title = $request->sub_title;
-        $category->description = $request->description;
-        $category->button_name = $request->button_name;
-        $category->button_link = $request->button_link;
+        $category->icon = $request->icon;
+        $category->position = $request->position;
 
         $category->save();
 
