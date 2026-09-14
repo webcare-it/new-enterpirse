@@ -12,9 +12,11 @@ class CategoryResource extends JsonResource
     {
         return [
             'id' => (int) ($this->id ?? 0),
-            'name' => (string) ($this->name ?? ''),
-            'image' => (string) (uploaded_asset($this->brand_image) ?? ''),
+            'category_name' => (string) ($this->category_name ?? ''),
+            'category_image' => (string) (uploaded_asset($this->category_image) ?? ''),
+            'icon' => (string) ($this->icon ?? ''),
             'slug' => (string) ($this->slug ?? ''),
+            'position' => (int) ($this->position ?? 0),
         ];
     }
 }

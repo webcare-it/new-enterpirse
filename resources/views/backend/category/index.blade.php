@@ -4,7 +4,7 @@
     <div class="aiz-titlebar text-left mt-2 mb-3">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <h1 class="h3">{{ translate('Dropshipping Categories') }}</h1>
+                <h1 class="h3">{{ translate('Categories') }}</h1>
             </div>
 
             <div class="col-md-6 text-md-right">
@@ -53,10 +53,8 @@
                                     <th width="50">#</th>
                                     <th>{{ translate('Image') }}</th>
                                     <th>{{ translate('Category Name') }}</th>
-                                    <th>{{ translate('Hero Name') }}</th>
+                                    <th>{{ translate('Icon') }}</th>
                                     <th>{{ translate('Slug') }}</th>
-                                    <th>{{ translate('Title') }}</th>
-                                    <th>{{ translate('Button') }}</th>
                                     <th width="120" class="text-right">
                                         {{ translate('Action') }}
                                     </th>
@@ -87,11 +85,8 @@
                                                 @php
                                                     $image = $category->category_image;
 
-                                                    if (Str::startsWith($image, ['http://', 'https://'])) {
-                                                        $imageUrl = $image;
-                                                    } else {
-                                                        $imageUrl = uploaded_asset($image);
-                                                    }
+                                                    $imageUrl = uploaded_asset($image);
+
                                                 @endphp
 
                                                 <img src="{{ $imageUrl }}" alt="{{ $category->category_name }}"
@@ -103,20 +98,20 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td>
-                                            @if ($category->hero_image)
-                                                <img src="{{ uploaded_asset($category->hero_image) }}"
-                                                    style="height:50px; width:120px; object-fit:cover; border-radius:6px;">
-                                            @else
-                                                <span class="badge badge-secondary">
-                                                    {{ translate('No Image') }}
-                                                </span>
-                                            @endif
-                                        </td>
-
                                         {{-- Name --}}
                                         <td>
                                             <strong>{{ $category->category_name }}</strong>
+                                        </td>
+
+                                        {{-- Icon --}}
+                                        <td>
+                                            @if ($category->icon)
+                                                <img src=" {{ uploaded_asset($category->icon) }}"
+                                                    alt="{{ $category->category_name }}" class="img-fluid rounded"
+                                                    style="height:50px;width:50px;object-fit:cover;">
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
                                         </td>
 
                                         {{-- Slug --}}
@@ -124,23 +119,6 @@
                                             <small class="text-muted">
                                                 {{ $category->slug }}
                                             </small>
-                                        </td>
-
-                                        {{-- Title --}}
-                                        <td>
-                                            {{ \Illuminate\Support\Str::limit($category->title, 40) }}
-                                        </td>
-
-                                        {{-- Button --}}
-                                        <td>
-                                            @if ($category->button_name)
-                                                <a href="{{ $category->button_link }}" target="_blank"
-                                                    class="badge badge-primary">
-                                                    {{ $category->button_name }}
-                                                </a>
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
                                         </td>
 
                                         {{-- Action --}}
@@ -165,11 +143,6 @@
                                     </tr>
 
                                 @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">
-                                            {{ translate('No categories found') }}
-                                        </td>
-                                    </tr>
                                 @endforelse
 
                             </tbody>

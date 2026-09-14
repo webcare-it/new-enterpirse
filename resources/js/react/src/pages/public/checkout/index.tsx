@@ -16,16 +16,14 @@ import { useCart } from "@/hooks/useCart";
 import { TrustedBadge } from "./trusted-badge";
 import { Lock } from "lucide-react";
 import { BreadcrumbWrapper } from "@/components/common/breadcrumb-wrapper";
-import {
-    removeLocalStorage,
-    renderVariation,
-} from "@/helper";
+import { removeLocalStorage, renderVariation } from "@/helper";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
 import { EmptyCart } from "../_components/common/empty-cart";
 import { useGtmTracker, type IPurchaseTracker } from "@/hooks/useGtmTracker";
 import { GTM_PURCHASE_TRACKED } from "@/constant";
 import { OrderOtpVerification } from "./order-otp-modal";
 import toast from "react-hot-toast";
+import { revalidateQueryFn } from "@/lib/tanstack";
 
 interface ApiError {
     response?: {
@@ -152,6 +150,7 @@ const Form = () => {
             {
                 onSuccess: (res) => {
                     if (res?.success) {
+                        revalidateQueryFn("get_cart");
                         toast.success("Order verified successfully.");
                         const data = res?.data;
                         if (data) {
@@ -161,14 +160,11 @@ const Form = () => {
                                     date: data.date || "",
                                     ...data.summary,
                                 }),
-                                user: JSON.stringify(
-                                    data.customer || {},
-                                ),
+                                user: JSON.stringify(data.customer || {}),
                                 tracker: JSON.stringify({
                                     transaction_id: data.code || "",
                                     value: data.summary?.grand_total || 0,
-                                    shipping:
-                                        data.summary?.shipping_cost || 0,
+                                    shipping: data.summary?.shipping_cost || 0,
                                     coupon: "",
                                     tax: data.summary?.tax || 0,
                                     customer_type: "returning",
@@ -179,11 +175,9 @@ const Form = () => {
                                                 i: number,
                                             ) => ({
                                                 item_id:
-                                                    item?.id?.toString() ||
-                                                    "",
+                                                    item?.id?.toString() || "",
                                                 item_name: item?.name || "",
-                                                item_price:
-                                                    item?.price || 0,
+                                                item_price: item?.price || 0,
                                                 item_quantity:
                                                     item?.quantity || 0,
                                                 item_variant:
@@ -195,9 +189,7 @@ const Form = () => {
                                         ) || [],
                                 }),
                             });
-                            navigate(
-                                `/checkout/success?${params.toString()}`,
-                            );
+                            navigate(`/checkout/success?${params.toString()}`);
                         }
                     }
                 },

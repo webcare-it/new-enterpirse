@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::prefix('category')->name('dropshipping-category.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Admin\DropshippingCategoryController::class, 'index'])->name('index');
-    Route::get('/create', [\App\Http\Controllers\Admin\DropshippingCategoryController::class, 'create'])->name('create');
-    Route::post('/', [\App\Http\Controllers\Admin\DropshippingCategoryController::class, 'store'])->name('store');
-    Route::get('/{category}/edit', [\App\Http\Controllers\Admin\DropshippingCategoryController::class, 'edit'])->name('edit');
-    Route::put('/{category}', [\App\Http\Controllers\Admin\DropshippingCategoryController::class, 'update'])->name('update');
-    Route::delete('/{id}', [\App\Http\Controllers\Admin\DropshippingCategoryController::class, 'destroy'])->name('destroy');
-    Route::post('/team/sort', [\App\Http\Controllers\Admin\DropshippingCategoryController::class, 'sort'])->name('sort');
+    Route::get('/', [\App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('store');
+    Route::get('/{category}/edit', [\App\Http\Controllers\Admin\CategoryController::class, 'edit'])->name('edit');
+    Route::put('/{category}', [\App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('update');
+    Route::delete('/{id}', [\App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('destroy');
+    Route::post('/team/sort', [\App\Http\Controllers\Admin\CategoryController::class, 'sort'])->name('sort');
 });
 
 
