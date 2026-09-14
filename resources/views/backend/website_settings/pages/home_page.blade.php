@@ -73,7 +73,7 @@
                                     $saved_campaign = json_decode(get_setting('home_campaigns'), true) ?? [];
                                 @endphp
                                 <select class="form-control aiz-selectpicker" name="home_campaigns[]" id="campaigns"
-                                    data-live-search="true" data-selected-text-format="count" multiple required>
+                                    data-live-search="true" data-selected-text-format="count" multiple>
                                     @foreach ($campaigns as $c)
                                         <option value="{{ $c->id }}"
                                             {{ in_array($c->id, $saved_campaign) ? 'selected' : '' }}>
@@ -112,7 +112,7 @@
                                 @endphp
                                 <select class="form-control aiz-selectpicker" name="h_best_s_products[]"
                                     id="best_selling_products" data-live-search="true" data-selected-text-format="count"
-                                    multiple required>
+                                    multiple>
                                     @foreach ($products as $product)
                                         <option value="{{ $product->id }}"
                                             {{ in_array($product->id, $saved_best_selling) ? 'selected' : '' }}>
@@ -133,7 +133,7 @@
                                 @endphp
                                 <select class="form-control aiz-selectpicker" name="h_todays_d_products[]"
                                     id="todays_deal_products" data-live-search="true" data-selected-text-format="count"
-                                    multiple required>
+                                    multiple>
                                     @foreach ($products as $product)
                                         <option value="{{ $product->id }}"
                                             {{ in_array($product->id, $saved_today_deals) ? 'selected' : '' }}>
@@ -154,7 +154,7 @@
                                 @endphp
                                 <select class="form-control aiz-selectpicker" name="h_new_a_products[]"
                                     id="new_arrival_products" data-live-search="true" data-selected-text-format="count"
-                                    multiple required>
+                                    multiple>
                                     @foreach ($products as $product)
                                         <option value="{{ $product->id }}"
                                             {{ in_array($product->id, $saved_new_arrival) ? 'selected' : '' }}>
@@ -174,7 +174,7 @@
                                 @endphp
                                 <select class="form-control aiz-selectpicker" name="h_featured_products[]"
                                     id="featured_products" data-live-search="true" data-selected-text-format="count"
-                                    multiple required>
+                                    multiple>
                                     @foreach ($products as $product)
                                         <option value="{{ $product->id }}"
                                             {{ in_array($product->id, $saved_featured) ? 'selected' : '' }}>
@@ -209,7 +209,7 @@
                                     $saved_categories = json_decode(get_setting('home_categories'), true) ?? [];
                                 @endphp
                                 <select class="form-control aiz-selectpicker" name="home_categories[]" id="categories"
-                                    data-live-search="true" data-selected-text-format="count" multiple required>
+                                    data-live-search="true" data-selected-text-format="count" multiple>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}"
                                             {{ in_array($category->id, $saved_categories) ? 'selected' : '' }}>
@@ -256,7 +256,7 @@
                                     $saved_blogs = json_decode(get_setting('home_blogs'), true) ?? [];
                                 @endphp
                                 <select class="form-control aiz-selectpicker" name="home_blogs[]" id="home_blogs"
-                                    data-live-search="true" data-selected-text-format="count" multiple required>
+                                    data-live-search="true" data-selected-text-format="count" multiple>
                                     @foreach ($blogs as $blog)
                                         <option value="{{ $blog->id }}"
                                             {{ in_array($blog->id, $saved_blogs) ? 'selected' : '' }}>
