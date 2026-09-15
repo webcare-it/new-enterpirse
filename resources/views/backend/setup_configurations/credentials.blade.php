@@ -29,15 +29,36 @@
                                 <h5 class="mb-0">{{ translate('Droploo API Credentials') }}</h5>
                             </div>
                             <div class="card-body">
+
+                                {{-- Username --}}
+                                <div class="form-group row">
+                                    <label
+                                        class="col-sm-3 col-from-label font-weight-bold">{{ translate('Username') }}</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input type="hidden" name="types[]" value="droploo_username">
+                                            <input type="text" name="droploo_username" class="form-control"
+                                                id="droploo_username" value="{{ get_setting('droploo_username') }}"
+                                                placeholder="{{ translate('Enter Droploo Username') }}">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary copy-btn" type="button"
+                                                    data-target="#droploo_username" title="{{ translate('Copy') }}">
+                                                    <i class="las la-copy"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ translate('Your Droploo account username.') }}</small>
+                                    </div>
+                                </div>
                                 {{-- App Key --}}
                                 <div class="form-group row">
                                     <label
                                         class="col-sm-3 col-from-label font-weight-bold">{{ translate('App Key') }}</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input type="hidden" name="types[]" value="DROPLOO_APP_KEY">
-                                            <input type="text" name="DROPLOO_APP_KEY" class="form-control"
-                                                id="droploo_app_key" value="{{ get_setting('DROPLOO_APP_KEY') }}"
+                                            <input type="hidden" name="types[]" value="droploo_app_key">
+                                            <input type="text" name="droploo_app_key" class="form-control"
+                                                id="droploo_app_key" value="{{ get_setting('droploo_app_key') }}"
                                                 placeholder="{{ translate('Enter Droploo App Key') }}">
                                             <div class="input-group-append">
                                                 <button class="btn btn-outline-secondary copy-btn" type="button"
@@ -76,26 +97,7 @@
                                     </div>
                                 </div>
 
-                                {{-- Username --}}
-                                <div class="form-group row">
-                                    <label
-                                        class="col-sm-3 col-from-label font-weight-bold">{{ translate('Username') }}</label>
-                                    <div class="col-sm-9">
-                                        <div class="input-group">
-                                            <input type="hidden" name="types[]" value="DROPLOO_USERNAME">
-                                            <input type="text" name="DROPLOO_USERNAME" class="form-control"
-                                                id="droploo_username" value="{{ get_setting('DROPLOO_USERNAME') }}"
-                                                placeholder="{{ translate('Enter Droploo Username') }}">
-                                            <div class="input-group-append">
-                                                <button class="btn btn-outline-secondary copy-btn" type="button"
-                                                    data-target="#droploo_username" title="{{ translate('Copy') }}">
-                                                    <i class="las la-copy"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">{{ translate('Your Droploo account username.') }}</small>
-                                    </div>
-                                </div>
+
                             </div>
                         </div>
 

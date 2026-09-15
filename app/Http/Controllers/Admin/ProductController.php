@@ -131,9 +131,9 @@ class ProductController extends Controller
 
     public function droplooProductList(Request $request)
     {
-        $appKey = env('DROPLOO_APP_KEY');
-        $appSecret = env('DROPLOO_APP_SECRET');
-        $userName = env('DROPLOO_USERNAME');
+        $userName = get_setting('droploo_username');
+        $appKey = get_setting('droploo_app_key');
+        $appSecret = get_setting('droploo_app_secret');
 
         $addedProductIds = Product::whereNotNull('droploo_product_id')
             ->pluck('droploo_product_id')
@@ -227,9 +227,9 @@ class ProductController extends Controller
 
     public function droplooProductAdd($id)
     {
-        $appKey = env('DROPLOO_APP_KEY');
-        $appSecret = env('DROPLOO_APP_SECRET');
-        $userName = env('DROPLOO_USERNAME');
+        $userName = get_setting('droploo_username');
+        $appKey = get_setting('droploo_app_key');
+        $appSecret = get_setting('droploo_app_secret');
 
         $addedProductIds = Product::whereNotNull('droploo_product_id')
             ->pluck('droploo_product_id')
