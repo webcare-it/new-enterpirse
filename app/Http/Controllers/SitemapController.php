@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\Brand;
+use App\Models\Admin\Product;
+use App\Models\Admin\Category;
+use App\Models\Admin\Blog;
+use App\Models\Page;
 use Illuminate\Http\Response;
 
 class SitemapController extends Controller
@@ -13,60 +14,95 @@ class SitemapController extends Controller
     {
         $baseUrl = rtrim(config('app.url'), '/');
 
-        // Static routes
-        $staticUrls = [
-            ['loc' => $baseUrl . '/',             'priority' => '1.0', 'changefreq' => 'daily'],
-            ['loc' => $baseUrl . '/products',     'priority' => '0.9', 'changefreq' => 'daily'],
-            ['loc' => $baseUrl . '/categories',   'priority' => '0.9', 'changefreq' => 'weekly'],
-            ['loc' => $baseUrl . '/brands',       'priority' => '0.7', 'changefreq' => 'weekly'],
-            ['loc' => $baseUrl . '/flash-deal',   'priority' => '0.8', 'changefreq' => 'daily'],
-        ];
-
-        // Dynamic product URLs
-        $products = Product::select('slug', 'updated_at')
-            ->whereNotNull('slug')
-            ->where('published', 1)
-            ->get();
-
-        $productUrls = $products->map(fn($p) => [
-            'loc'        => $baseUrl . '/product/' . $p->slug,
-            'lastmod'    => $p->updated_at?->toAtomString(),
-            'priority'   => '0.8',
-            'changefreq' => 'weekly',
-        ])->toArray();
-
-        // Dynamic category URLs
-        $categories = Category::select('slug', 'updated_at')
-            ->whereNotNull('slug')
-            ->get();
-
-        $categoryUrls = $categories->map(fn($c) => [
-            'loc'        => $baseUrl . '/categories/' . $c->slug,
-            'lastmod'    => $c->updated_at?->toAtomString(),
-            'priority'   => '0.7',
-            'changefreq' => 'weekly',
-        ])->toArray();
-
-        // Dynamic brand URLs
-        $brands = Brand::select('slug', 'updated_at')
-            ->whereNotNull('slug')
-            ->get();
-
-        $brandUrls = $brands->map(fn($b) => [
-            'loc'        => $baseUrl . '/brands/' . $b->slug,
-            'lastmod'    => $b->updated_at?->toAtomString(),
-            'priority'   => '0.6',
-            'changefreq' => 'monthly',
-        ])->toArray();
-
-        $allUrls = array_merge($staticUrls, $productUrls, $categoryUrls, $brandUrls);
+        $allUrls = array_merge(
+            $this->getStaticUrls($baseUrl),
+            $this->getProductUrls($baseUrl),
+            $this->getCategoryUrls($baseUrl),
+            $this->getBlogUrls($baseUrl),
+            $this->getPageUrls($baseUrl),
+        );
 
         $xml = $this->buildXml($allUrls);
 
         return response($xml, 200, [
             'Content-Type' => 'application/xml',
-            'X-Robots-Tag' => 'noindex',
         ]);
+    }
+
+    private function getStaticUrls(string $baseUrl): array
+    {
+        return [
+            ['loc' => $baseUrl . '/',             'priority' => '1.0', 'changefreq' => 'daily'],
+            ['loc' => $baseUrl . '/products',     'priority' => '0.9', 'changefreq' => 'daily'],
+            ['loc' => $baseUrl . '/blogs',        'priority' => '0.8', 'changefreq' => 'weekly'],
+            ['loc' => $baseUrl . '/about-us',     'priority' => '0.6', 'changefreq' => 'monthly'],
+            ['loc' => $baseUrl . '/contact-us',   'priority' => '0.6', 'changefreq' => 'monthly'],
+            ['loc' => $baseUrl . '/faqs',         'priority' => '0.5', 'changefreq' => 'monthly'],
+        ];
+    }
+
+    private function getProductUrls(string $baseUrl): array
+    {
+        $products = Product::select('slug', 'updated_at')
+            ->whereNotNull('slug')
+            ->where('is_published', 1)
+            ->where('status', 1)
+            ->get();
+
+        return $products->map(fn($p) => [
+            'loc'        => $baseUrl . '/products/' . $p->slug,
+            'lastmod'    => $p->updated_at?->toAtomString(),
+            'priority'   => '0.8',
+            'changefreq' => 'weekly',
+        ])->toArray();
+    }
+
+    private function getCategoryUrls(string $baseUrl): array
+    {
+        $categories = Category::select('slug', 'updated_at')
+            ->whereNotNull('slug')
+            ->get();
+
+        return $categories->map(fn($c) => [
+            'loc'        => $baseUrl . '/categories/' . $c->slug,
+            'lastmod'    => $c->updated_at?->toAtomString(),
+            'priority'   => '0.7',
+            'changefreq' => 'weekly',
+        ])->toArray();
+    }
+
+    private function getBlogUrls(string $baseUrl): array
+    {
+        $blogs = Blog::select('slug', 'updated_at')
+            ->whereNotNull('slug')
+            ->get();
+
+        return $blogs->map(fn($b) => [
+            'loc'        => $baseUrl . '/blogs/' . $b->slug,
+            'lastmod'    => $b->updated_at?->toAtomString(),
+            'priority'   => '0.7',
+            'changefreq' => 'weekly',
+        ])->toArray();
+    }
+
+    private function getPageUrls(string $baseUrl): array
+    {
+        $excludedSlugs = [
+            'home', 'about-us', 'contact-us', 'blogs',
+            'return_policy', 'refund_policy',
+        ];
+
+        $pages = Page::select('slug', 'updated_at')
+            ->whereNotNull('slug')
+            ->whereNotIn('slug', $excludedSlugs)
+            ->get();
+
+        return $pages->map(fn($p) => [
+            'loc'        => $baseUrl . '/pages/' . $p->slug,
+            'lastmod'    => $p->updated_at?->toAtomString(),
+            'priority'   => '0.5',
+            'changefreq' => 'monthly',
+        ])->toArray();
     }
 
     private function buildXml(array $urls): string
