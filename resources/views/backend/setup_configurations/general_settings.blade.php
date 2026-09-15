@@ -173,7 +173,7 @@
                                 <div class="input-group">
                                     <input type="hidden" name="types[]" value="DROPLOO_APP_KEY">
                                     <input type="text" name="DROPLOO_APP_KEY" class="form-control"
-                                        id="droploo_app_key" value="{{ get_setting('DROPLOO_APP_KEY') }}"
+                                        id="droploo_app_key" value="{{ env('DROPLOO_APP_KEY') }}"
                                         placeholder="{{ translate('Enter Droploo App Key') }}">
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-secondary copy-btn" type="button"
@@ -193,7 +193,7 @@
                                 <div class="input-group">
                                     <input type="hidden" name="types[]" value="DROPLOO_APP_SECRET">
                                     <input type="password" name="DROPLOO_APP_SECRET" class="form-control"
-                                        id="droploo_app_secret" value="{{ get_setting('DROPLOO_APP_SECRET') }}"
+                                        id="droploo_app_secret" value="{{ env('DROPLOO_APP_SECRET') }}"
                                         placeholder="{{ translate('Enter Droploo App Secret') }}">
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-secondary toggle-password" type="button"
@@ -218,7 +218,7 @@
                                 <div class="input-group">
                                     <input type="hidden" name="types[]" value="DROPLOO_USERNAME">
                                     <input type="text" name="DROPLOO_USERNAME" class="form-control"
-                                        id="droploo_username" value="{{ get_setting('DROPLOO_USERNAME') }}"
+                                        id="droploo_username" value="{{ env('DROPLOO_USERNAME') }}"
                                         placeholder="{{ translate('Enter Droploo Username') }}">
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-secondary copy-btn" type="button"
