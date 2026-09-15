@@ -67,17 +67,14 @@ if (!function_exists('filter_products')) {
 if (!function_exists('serveReact')) {
     function serveReact(string $route = 'home', string $slug = ''): string
     {
-        // Dynamically resolve from live request — works across all domains with zero config changes
         $baseUrl  = rtrim(request()->getSchemeAndHttpHost(), '/');
         $appName  = get_setting('site_name') ?: config('app.name');
-        $imageUrl = $baseUrl . '/public/';
 
-        // Global SEO fallbacks from admin panel (appearance settings)
         $globalTitle       = get_setting('meta_title')       ?: $appName;
         $globalDescription = get_setting('meta_description') ?: 'Welcome to ' . $appName . '';
         $globalMetaImage   = get_setting('meta_image')       ? uploaded_asset(get_setting('meta_image')) : null;
-        $globalOgImage     = $globalMetaImage ? $globalMetaImage : ($baseUrl . '/assets/img/logo.png');
-        $globalFavicon     = get_setting('site_icon')        ? uploaded_asset(get_setting('site_icon'))  : null;
+        $globalOgImage     = $globalMetaImage ?: ($baseUrl . '/assets/img/logo.png');
+        $globalFavicon     = get_setting('site_icon')        ? uploaded_asset(get_setting('site_icon'))  : ($baseUrl . '/assets/img/logo.png');
 
         $meta = [
             'title'       => $globalTitle,
@@ -95,10 +92,7 @@ if (!function_exists('serveReact')) {
 
         $html = file_get_contents($htmlPath);
 
-        // Build meta tag block
-        $faviconTag = $meta['favicon']
-            ? '<link rel="icon" type="image/png" href="' . htmlspecialchars($meta['favicon']) . '" />'
-            : '';
+        $faviconTag = '<link rel="icon" type="image/png" href="' . htmlspecialchars($meta['favicon']) . '" />';
 
         $metaTags = '
         <title>' . htmlspecialchars($meta['title']) . '</title>
@@ -116,14 +110,13 @@ if (!function_exists('serveReact')) {
         <meta name="twitter:image" content="' . htmlspecialchars($meta['image']) . '" />
         ' . $faviconTag;
 
-        // Remove existing static meta from index.html and inject dynamic ones
         $html = preg_replace('/<title>.*?<\/title>/s', '', $html);
         $html = preg_replace('/<meta\s+name="description"[^>]*>/i', '', $html);
         $html = preg_replace('/<meta\s+name="keywords"[^>]*>/i', '', $html);
         $html = preg_replace('/<meta\s+property="og:[^"]*"[^>]*>/i', '', $html);
         $html = preg_replace('/<meta\s+name="twitter:[^"]*"[^>]*>/i', '', $html);
         $html = preg_replace('/<link\s+rel="canonical"[^>]*>/i', '', $html);
-        $html = preg_replace('/<link\s+rel="icon"[^>]*>/i', '', $html);
+        $html = preg_replace('/<link\s+rel="(shortcut\s+)?icon"[^>]*>/i', '', $html);
         $html = str_replace('</head>', $metaTags . "\n</head>", $html);
 
         return $html;
