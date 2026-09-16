@@ -77,9 +77,9 @@
                                         class="col-sm-3 col-from-label font-weight-bold">{{ translate('App Secret') }}</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input type="hidden" name="types[]" value="DROPLOO_APP_SECRET">
-                                            <input type="password" name="DROPLOO_APP_SECRET" class="form-control"
-                                                id="droploo_app_secret" value="{{ get_setting('DROPLOO_APP_SECRET') }}"
+                                            <input type="hidden" name="types[]" value="droploo_app_secret">
+                                            <input type="password" name="droploo_app_secret" class="form-control"
+                                                id="droploo_app_secret" value="{{ get_setting('droploo_app_secret') }}"
                                                 placeholder="{{ translate('Enter Droploo App Secret') }}">
                                             <div class="input-group-append">
                                                 <button type="button" class="btn btn-outline-secondary"
