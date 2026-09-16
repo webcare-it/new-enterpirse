@@ -252,13 +252,6 @@ class ProductController extends Controller
                 'Username'   => $userName,
             ])->get($apiUrl);
 
-                        return [
-                'data' => $response->json(),
-                'appKey' => $appKey,
-                'appSecret' => $appSecret,
-                'userName' => $userName
-            ];
-
             // 2. Check for successful response
             if (!$response->successful()) {
                 return view('errors.401-droploo');
@@ -266,8 +259,8 @@ class ProductController extends Controller
 
             $responseData = $response->json();
 
-            // 3. Extract the product – the API returns a single product in data.product
-            $apiProduct = $responseData['data']['product'] ?? null;
+            // 3. Extract the product – the API returns a single product in product.product
+            $apiProduct = $responseData['product']['product'] ?? $responseData['data']['product'] ?? null;
 
             if (!$apiProduct) {
                 abort(404, 'Droploo product not found.');
