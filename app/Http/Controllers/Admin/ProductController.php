@@ -158,9 +158,9 @@ class ProductController extends Controller
         try {
             // Make the API request (do NOT return here)
             $response = Http::withHeaders([
-                'api_secret' => $appSecret,
-                'api_key'    => $appKey,
-                'username'   => $userName,
+                'App-Secret' => $appSecret,
+                'App-Key'    => $appKey,
+                'Username'   => $userName,
             ])->get($apiUrl);
 
 
@@ -242,15 +242,22 @@ class ProductController extends Controller
             $isAdded = 0;
         }
 
-        $apiUrl = "https://nittoz.com/api/v1/dropshippers/products/$id";
+        $apiUrl = "https://dropshipper.nittoz.com/api/product/$id";
 
         try {
             // 1. Fetch product from API (do NOT return here)
             $response = Http::withHeaders([
-                'api_secret' => $appSecret,
-                'api_key'    => $appKey,
-                'username'   => $userName,
+                'App-Secret' => $appSecret,
+                'App-Key'    => $appKey,
+                'Username'   => $userName,
             ])->get($apiUrl);
+
+                        return [
+                'data' => $response->json(),
+                'appKey' => $appKey,
+                'appSecret' => $appSecret,
+                'userName' => $userName
+            ];
 
             // 2. Check for successful response
             if (!$response->successful()) {
