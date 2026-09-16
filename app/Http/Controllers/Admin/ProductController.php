@@ -141,7 +141,7 @@ class ProductController extends Controller
                 return (string) $id;
             })->toArray();
 
-        $apiUrl = 'https://nittoz.com/api/v1/dropshippers/products';
+        $apiUrl = 'https://dropshipper.nittoz.com/api/v1/dropshippers/products';
 
         // Default values (same as all_products)
         $col_name = null;
@@ -162,6 +162,7 @@ class ProductController extends Controller
                 'api_key'    => $appKey,
                 'username'   => $userName,
             ])->get($apiUrl);
+
 
             if ($response->successful()) {
                 $responseData = $response->json();
