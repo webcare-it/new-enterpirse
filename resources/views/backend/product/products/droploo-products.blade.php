@@ -283,13 +283,23 @@
                                             <span class="badge badge-inline badge-warning mb-2">
                                                 {{ translate('Not Added') }}
                                             </span>
-
-                                            <a href="{{ route('products.droploo.product.add', $product['id']) }}"
-                                                class="btn btn-sm btn-icon btn-info"
-                                                title="{{ translate('Add Product') }}">
-                                                <i class="las la-plus"></i>
-                                            </a>
                                         @endif
+
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="https://nittoz.com/api/v1/download/{{ $product['id'] }}"
+                                                class="btn btn-icon btn-info d-flex justify-content-center align-items-center"
+                                                title="{{ translate('Download Images') }}" download>
+                                                <i class="las la-cloud-download-alt"></i>
+                                            </a>
+
+                                            @if (!in_array((string) $product['id'], $addedProductIds))
+                                                <a href="{{ route('products.droploo.product.add', $product['id']) }}"
+                                                    class="btn btn-icon btn-success d-flex justify-content-center align-items-center"
+                                                    title="{{ translate('Add Product') }}">
+                                                    <i class="las la-plus"></i>
+                                                </a>
+                                            @endif
+                                        </div>
 
                                     </div>
                                 </td>
