@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -33,8 +34,13 @@ class FraudCheckerController extends Controller
 
         $result = null;
         $error = null;
+        $matchedOrders = collect();
 
         if ($phone) {
+            $matchedOrders = Order::where('phone_number', $phone)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
             $apiKey = get_setting('fraud_checker_api_key');
 
             try {
@@ -63,6 +69,28 @@ class FraudCheckerController extends Controller
             }
         }
 
-        return view('backend.fraud_checker.index', compact('phone', 'result', 'error'));
+        return view('backend.fraud_checker.index', compact('phone', 'result', 'error', 'matchedOrders'));
+    }
+
+    public function updateFraudStatus(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'is_verified_fraud' => 'required|in:fraud,not_verified,verified',
+        ]);
+
+        $order = Order::findOrFail($request->order_id);
+        $order->is_verified_fraud = $request->is_verified_fraud;
+        $order->save();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('Fraud status updated successfully.'),
+                'new_status' => $order->is_verified_fraud,
+            ]);
+        }
+
+        return redirect()->back()->with('success', __('Fraud status updated successfully.'));
     }
 }

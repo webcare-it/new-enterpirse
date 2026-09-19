@@ -383,6 +383,7 @@
                             <th width="12%">{{ translate('Delivery Status') }}</th>
                             <th width="12%">{{ translate('Payment Status') }}</th>
                             <th width="10%">{{ translate('Payment Method') }}</th>
+                            <th width="8%">{{ translate('Fraud Status') }}</th>
                             <th width="10%">{{ translate('Date') }}</th>
                             <th width="10%">{{ translate('Actions') }}</th>
                         </tr>
@@ -441,6 +442,19 @@
                                     </select>
                                 </td>
                                 <td>{{ ucfirst(str_replace('_', ' ', $order->payment_type)) }}</td>
+                                <td>
+                                    @php
+                                        $fraudStatus = $order->is_verified_fraud ?? 'not_verified';
+                                        $fraudBadge = match($fraudStatus) {
+                                            'verified' => ['bg' => '#d1fae5', 'color' => '#059669', 'icon' => 'la-check-circle', 'label' => translate('Verified')],
+                                            'fraud' => ['bg' => '#fee2e2', 'color' => '#dc2626', 'icon' => 'la-exclamation-triangle', 'label' => translate('Fraud')],
+                                            default => ['bg' => '#fef3c7', 'color' => '#d97706', 'icon' => 'la-question-circle', 'label' => translate('Not Verified')],
+                                        };
+                                    @endphp
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.72rem; font-weight: 600; background: {{ $fraudBadge['bg'] }}; color: {{ $fraudBadge['color'] }};">
+                                        <i class="las {{ $fraudBadge['icon'] }}"></i> {{ $fraudBadge['label'] }}
+                                    </span>
+                                </td>
                                 <td>
                                     <div>
                                         <span class="d-block">{{ $order->created_at->format('d M Y') }}</span>

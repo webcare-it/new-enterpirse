@@ -27,6 +27,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
     Route::resource('shipping_costs', '\App\Http\Controllers\Admin\ShippingCostController')->except(['show']);
     Route::get('/fraud_checker', '\App\Http\Controllers\Admin\FraudCheckerController@index')->name('fraud_checker');
+    Route::post('/fraud_checker/update-status', '\App\Http\Controllers\Admin\FraudCheckerController@updateFraudStatus')->name('fraud_checker.update_status');
 
 
 
