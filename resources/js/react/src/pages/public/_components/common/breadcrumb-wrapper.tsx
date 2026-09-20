@@ -58,7 +58,7 @@ export const BreadcrumbBackground = ({
                             key={index}
                         >
                             {isLast || item.path === "#" ? (
-                                <span className="font-medium flex items-center text-white/80 capitalize">
+                                <span className="font-medium flex items-center text-white/80 capitalize line-clamp-1">
                                     {item.title}
                                 </span>
                             ) : (
@@ -102,7 +102,7 @@ export const BreadcrumbBackground = ({
             />
 
             <div className="relative mx-auto px-6 w-full">
-                <h1 className="text-4xl uppercase md:text-7xl font-bold text-white tracking-tighter mb-4 text-center">
+                <h1 className="text-4xl uppercase md:text-7xl font-bold line-clamp-1 text-white tracking-tighter mb-4 text-center">
                     {title}
                 </h1>
                 <div className="mb-6 flex justify-center">
