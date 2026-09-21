@@ -27,7 +27,7 @@ class ApiOrderController extends Controller
      * Place an order from the current cart.
      * $tempUserId = session()->get('temp_user_id');
      */
-    public function place(Request $request)
+    public function place11(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'shipping_address' => 'required|string',
@@ -221,7 +221,7 @@ class ApiOrderController extends Controller
                 ]);
             }
 
-             // Send order receive SMS to admin
+            // Send order receive SMS to admin
             if (get_setting('is_order_receive') == 1) {
                 SmsService::order_receive($order);
             }
@@ -273,6 +273,273 @@ class ApiOrderController extends Controller
                         'email'   => $order->email_address,
                         'phone'   => $order->phone_number,
                         'address' => $order->shipping_address,
+                    ],
+                    'date'  => $order->date,
+                    'code'  => $order->code,
+                    'id'    => $order->id,
+                    'items' => $items,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to place order: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function place(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'shipping_address' => 'required|string',
+            'payment_type'     => 'required|in:cod,card,bkash,nagad,rocket',
+            'notes'            => 'nullable|string',
+            'shipping_type'    => 'sometimes|in:flat_rate,free,pickup',
+            'shipping_area'    => 'required|exists:shipping_costs,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $incomingTempId = $request->header('User-Id');
+        $userId = null;
+        $tempUserId = null;
+
+        $createUserFromRequest = function () use ($request) {
+            if ($request->filled('name') && $request->filled('email') && $request->filled('phone')) {
+                $existing = User::where('email', $request->email)->first();
+                if ($existing) {
+                    return $existing->id;
+                }
+                $user = User::create([
+                    'name'  => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                ]);
+                return $user->id;
+            }
+            return null;
+        };
+
+        if ($incomingTempId) {
+            $user = User::where('id', $incomingTempId)->first();
+            if ($user) {
+                $userId = $user->id;
+            } else {
+                $tempUserId = $incomingTempId;
+                $createdId = $createUserFromRequest();
+                if ($createdId) {
+                    $userId = $createdId;
+                }
+            }
+        } else {
+            $createdId = $createUserFromRequest();
+            if ($createdId) {
+                $userId = $createdId;
+            } else {
+                $tempUserId = (string) Str::uuid();
+            }
+        }
+
+        $isorder = Order::where('user_id', $userId)->orWhere('guest_id', $tempUserId)->get();
+        $customer_type = $isorder->isEmpty() ? 'new' : 'returning';
+
+        // Eager load product + product_shippings so we can read per-product shipping cost
+        $cartItems = Cart::with(['product.shippings'])
+            ->where(function ($query) use ($userId, $tempUserId) {
+                if ($userId) {
+                    $query->orWhere('user_id', $userId);
+                }
+                if ($tempUserId) {
+                    $query->orWhere('temp_user_id', $tempUserId);
+                }
+            })
+            ->get();
+
+        if ($cartItems->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Cart is empty'], 400);
+        }
+
+        $shippingArea = ShippingCost::find($request->shipping_area);
+        if (!$shippingArea) {
+            return response()->json(['success' => false, 'message' => 'Invalid shipping area'], 400);
+        }
+
+        // ---- Calculate totals ----
+        $subtotal      = 0;
+        $taxTotal      = 0;
+        $discountTotal = 0;
+        $shippingCost  = 0;
+
+        $isFreeOrPickup    = in_array($request->shipping_type, ['free', 'pickup'], true);
+        $itemShippingCosts = []; // cart_item_id => per-item shipping cost
+
+        foreach ($cartItems as $item) {
+            $subtotal      += $item->price * $item->quantity;
+            $taxTotal      += $item->tax * $item->quantity;
+            $discountTotal += $item->discount * $item->quantity;
+
+            // ---- Per-product shipping logic ----
+            // 1) Product er product_shippings.shipping_cost > 0 hole -> setai use hobe
+            // 2) Na thakle (0 / null) -> shipping area (shipping_costs.amount) theke cost nibe
+            $productShipping = $item->product?->shippings?->first()?->shipping_cost;
+
+            if (!empty($productShipping) && $productShipping > 0) {
+                $itemShipping = (float) $productShipping;
+            } else {
+                $itemShipping = (float) $shippingArea->amount;
+            }
+
+            // Free / pickup hole shipping cost 0
+            if ($isFreeOrPickup) {
+                $itemShipping = 0;
+            }
+
+            // Per-quantity shipping chao hole ei line uncomment koro:
+            // $itemShipping *= $item->quantity;
+
+            $shippingCost += $itemShipping;
+            $itemShippingCosts[$item->id] = $itemShipping;
+        }
+
+        $couponDiscount = $cartItems->sum('coupon_discount');
+        $couponCode     = $cartItems->first()?->coupon_code;
+        $finalTotal     = $subtotal + $taxTotal - $discountTotal + $shippingCost - $couponDiscount;
+
+        $orderCode = 'ORD-' . strtoupper(Str::random(8)) . '-' . time();
+
+        DB::beginTransaction();
+
+        try {
+            $order = Order::create([
+                'user_id'               => $userId,
+                'guest_id'              => $userId ? null : $tempUserId,
+                'shipping_address'      => $request->shipping_address,
+                'shipping_type'         => $request->shipping_type ?? 'flat_rate',
+                'shipping_cost'         => $shippingCost,
+                'shipping_area_id'      => $shippingArea->id,
+                'coupon_discount'       => $couponDiscount,
+                'discount'              => $discountTotal,
+                'grand_total'           => $finalTotal,
+                'code'                  => $orderCode,
+                'notes'                 => $request->notes,
+                'name'                  => $request->name,
+                'email_address'         => $request->email,
+                'phone_number'          => $request->phone,
+                'payment_type'          => $request->payment_type,
+                'payment_status'        => 'unpaid',
+                'delivery_status'       => 'pending',
+                'date'                  => now(),
+                'viewed'                => 0,
+                'delivery_viewed'       => 0,
+                'payment_status_viewed' => 0,
+                'commission_calculated' => 0,
+                'order_type'            => 'normal',
+            ]);
+
+            foreach ($cartItems as $item) {
+                OrderDetail::create([
+                    'order_id'              => $order->id,
+                    'seller_id'             => $item->owner_id ?? null,
+                    'product_id'            => $item->product_id,
+                    'sku'                   => $item->sku,
+                    'variation'             => $item->variation,
+                    'price'                 => $item->price,
+                    'tax'                   => $item->tax,
+                    'shipping_cost'         => $itemShippingCosts[$item->id] ?? 0,
+                    'quantity'              => $item->quantity,
+                    'payment_status'        => 'unpaid',
+                    'delivery_status'       => 'pending',
+                    'shipping_type'         => $item->shipping_type,
+                    'product_referral_code' => $item->product_referral_code,
+                ]);
+            }
+
+            $cartItems->each->delete();
+
+            DB::commit();
+
+            $order->load('details.product');
+
+            $otpForOrder = get_setting('otp_for_order') == 1;
+            $otpCode = null;
+
+            if ($otpForOrder) {
+                $otpCode = rand(100000, 999999);
+                $order->is_otp_verified = $otpCode;
+                $order->save();
+
+                $smsTemplate = \App\Models\SmsTemplate::where('identifier', 'order_otp')->first();
+                if ($smsTemplate) {
+                    $smsBody = str_replace('[[code]]', $otpCode, $smsTemplate->sms_body);
+                    $smsBody = str_replace('[[site_name]]', env('APP_NAME', 'Enterprise'), $smsBody);
+                    try {
+                        sendSMS($order->phone_number, env('APP_NAME'), $smsBody, $smsTemplate->template_id);
+                    } catch (\Exception $e) {
+                        \Log::error('SMS order_otp failed: ' . $e->getMessage());
+                    }
+                }
+            }
+
+            if ($otpForOrder) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order placed. Please verify OTP.',
+                    'data' => [
+                        'otp_sent'   => true,
+                        'order_code' => $order->code,
+                    ],
+                ]);
+            }
+
+            if (get_setting('is_order_receive') == 1) {
+                SmsService::order_receive($order);
+            }
+            if (get_setting('email_order_placed_customer') == 1) {
+                MailService::order_placed_customer($order);
+            }
+            if (get_setting('email_order_placed_admin') == 1) {
+                MailService::order_receive($order);
+            }
+
+            $items = $order->details->map(function ($detail) {
+                $product = $detail->product;
+                return [
+                    'id' => $detail->id,
+                    'product' => $product ? [
+                        'id'        => $product->id,
+                        'name'      => $product->name,
+                        'slug'      => $product->slug,
+                        'price'     => (float) $detail->price,
+                        'image'     => (string) (uploaded_asset($product->thumbnail) ?? ''),
+                        'quantity'  => (int) $detail->quantity,
+                        'variation' => json_decode($detail->variation, true) ?? null,
+                    ] : null,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order placed successfully',
+                'data' => [
+                    'summary' => [
+                        'subtotal'        => $subtotal,
+                        'shipping_cost'   => (int) $shippingCost,
+                        'coupon_discount' => $couponDiscount,
+                        'coupon_code'     => $couponCode,
+                        'discount'        => $discountTotal,
+                        'tax'             => $taxTotal,
+                        'grand_total'     => $finalTotal,
+                    ],
+                    'customer' => [
+                        'user_id'       => $order->user_id,
+                        'customer_type' => $customer_type,
+                        'name'          => $order->name,
+                        'email'         => $order->email_address,
+                        'phone'         => $order->phone_number,
+                        'address'       => $order->shipping_address,
                     ],
                     'date'  => $order->date,
                     'code'  => $order->code,

@@ -107,4 +107,10 @@ class Product extends Model
     {
         return $this->hasMany(Attribute::class, 'product_id');
     }
+
+
+    public function shippings()
+    {
+        return $this->hasMany(ProductShipping::class, 'product_id');
+    }
 }
