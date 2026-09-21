@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\SmsService;
+use App\Services\MailService;
 
 class ApiOrderController extends Controller
 {
@@ -223,6 +224,16 @@ class ApiOrderController extends Controller
              // Send order receive SMS to admin
             if (get_setting('is_order_receive') == 1) {
                 SmsService::order_receive($order);
+            }
+
+            // Send order confirmation email to customer
+            if (get_setting('email_order_placed_customer') == 1) {
+                MailService::order_placed_customer($order);
+            }
+
+            // Send order receive email to admin
+            if (get_setting('email_order_placed_admin') == 1) {
+                MailService::order_receive($order);
             }
 
             // Build items with required fields
@@ -702,6 +713,14 @@ class ApiOrderController extends Controller
         $order->save();
 
         $order->load('details.product');
+
+        if (get_setting('email_order_placed_customer') == 1) {
+            MailService::order_placed_customer($order);
+        }
+
+        if (get_setting('email_order_placed_admin') == 1) {
+            MailService::order_receive($order);
+        }
 
         $items = $order->details->map(function ($detail) {
             $product = $detail->product;
