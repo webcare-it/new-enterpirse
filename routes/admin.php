@@ -43,6 +43,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::post('/google_analytics', '\App\Http\Controllers\Admin\BusinessSettingsController@google_analytics_update')->name('google_analytics.update');
     Route::post('/facebook_pixel', '\App\Http\Controllers\Admin\BusinessSettingsController@facebook_pixel_update')->name('facebook_pixel.update');
     Route::post('/env_key_update', '\App\Http\Controllers\Admin\BusinessSettingsController@env_key_update')->name('env_key_update.update');
+    Route::get('/smtp-settings', '\App\Http\Controllers\Admin\BusinessSettingsController@smtp_settings')->name('smtp_settings.index');
+    Route::post('/smtp-settings/test', '\App\Http\Controllers\Admin\BusinessSettingsController@testEmail')->name('test.smtp');
 
     // OTP Configuration Routes
     Route::get('/otp/activation', '\App\Http\Controllers\Admin\OtpController@activation')->name('otp_configurations.activation');

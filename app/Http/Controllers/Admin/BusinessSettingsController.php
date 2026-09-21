@@ -8,6 +8,7 @@ use App\Models\ShippingCost;
 use Illuminate\Http\Request;
 use App\Models\BusinessSetting;
 use App\Http\Controllers\Controller;
+use App\Services\MailService;
 use Artisan;
 
 class BusinessSettingsController extends Controller
@@ -35,6 +36,26 @@ class BusinessSettingsController extends Controller
     public function credentials(Request $request)
     {
         return view('backend.setup_configurations.credentials');
+    }
+
+    public function smtp_settings(Request $request)
+    {
+        return view('backend.setup_configurations.smtp_settings');
+    }
+
+    public function testEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        try {
+            MailService::test_email($request->email);
+        } catch (\Exception $e) {
+            flash($e->getMessage())->error();
+            return back();
+        }
+
+        flash(translate('An email has been sent.'))->success();
+        return back();
     }
 
 
@@ -245,6 +266,7 @@ class BusinessSettingsController extends Controller
         foreach ($request->types as $key => $type) {
             $this->overWriteEnvFile($type, $request[$type]);
         }
+        Artisan::call('config:clear');
 
         flash(translate("Settings updated successfully"))->success();
         return back();

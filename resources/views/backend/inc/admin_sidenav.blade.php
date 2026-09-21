@@ -776,9 +776,9 @@
 
                 @if (Auth::user()->user_type == 'admin' || in_array('14', json_decode(Auth::user()->staff->role->permissions)))
                     <li
-                        class="aiz-side-nav-item {{ request()->routeIs('general_setting.*', 'activation.*', 'social_login.*', 'google_analytics.*') ? 'mm-active' : '' }}">
+                        class="aiz-side-nav-item {{ request()->routeIs('general_setting.*', 'activation.*', 'smtp_settings.*', 'social_login.*', 'google_analytics.*') ? 'mm-active' : '' }}">
                         <a href="#"
-                            class="aiz-side-nav-link {{ areActiveRoutes(['general_setting.*', 'activation.*', 'social_login.*', 'google_analytics.*']) }}">
+                            class="aiz-side-nav-link {{ areActiveRoutes(['general_setting.*', 'activation.*', 'smtp_settings.*', 'social_login.*', 'google_analytics.*']) }}">
                             <i class="las la-cog aiz-side-nav-icon"></i>
                             <span class="aiz-side-nav-text">{{ translate('Settings') }}</span>
                             <span class="aiz-side-nav-arrow"></span>
@@ -800,6 +800,12 @@
                                 <a href="{{ route('credentials.index') }}"
                                     class="aiz-side-nav-link {{ areActiveRoutes(['credentials.*']) }}">
                                     <span class="aiz-side-nav-text">{{ translate('Credentials') }}</span>
+                                </a>
+                            </li>
+                            <li class="aiz-side-nav-item">
+                                <a href="{{ route('smtp_settings.index') }}"
+                                    class="aiz-side-nav-link {{ areActiveRoutes(['smtp_settings.*']) }}">
+                                    <span class="aiz-side-nav-text">{{ translate('SMTP Settings') }}</span>
                                 </a>
                             </li>
                             <li class="aiz-side-nav-item">
