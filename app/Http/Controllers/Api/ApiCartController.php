@@ -266,7 +266,6 @@ class ApiCartController extends Controller
 
     public function shipping_areas(Request $request)
     {
-        // 1. Identify user
         $requestedUserId = $request->header('User-Id');
 
         if ($user = User::find($requestedUserId)) {
@@ -275,7 +274,6 @@ class ApiCartController extends Controller
             $cartItems = Cart::where('temp_user_id', $requestedUserId)->get();
         }
 
-        // 2. Validate shipping area
         $shippingAreaId = $request->input('shipping_area');
 
         if (!$shippingAreaId) {
@@ -285,7 +283,6 @@ class ApiCartController extends Controller
             ], 422);
         }
 
-        // 3. Find shipping cost
         $shippingCost = ShippingCost::find($shippingAreaId);
 
         if (!$shippingCost) {
@@ -297,18 +294,14 @@ class ApiCartController extends Controller
 
         $totalShipping = (float) $shippingCost->amount;
 
-        // 4. Only get items whose shipping cost is 0 or NULL
         $itemsWithoutShipping = $cartItems->filter(function ($item) {
             return (float) $item->shipping_cost <= 0;
         });
 
         $itemCount = $itemsWithoutShipping->count();
 
-        // 5. Divide shipping cost only among items without shipping cost
         if ($itemCount > 0) {
-
             $perItemShipping = $totalShipping / $itemCount;
-
             foreach ($itemsWithoutShipping as $item) {
 
                 $item->shipping_cost = $perItemShipping;
@@ -316,8 +309,6 @@ class ApiCartController extends Controller
                 $item->save();
             }
         }
-
-        // 6. Return JSON
         return response()->json([
             'success' => true,
             'message' => 'Shipping area updated successfully.'
