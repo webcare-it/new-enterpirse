@@ -32,7 +32,7 @@ export const ProductImageSliderMobile = ({
 
     return (
         <div className="md:hidden flex flex-col gap-3">
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
+            <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white border border-gray-200">
                 <AnimatePresence custom={direction} mode="popLayout">
                     <motion.img
                         key={current}
@@ -67,13 +67,13 @@ export const ProductImageSliderMobile = ({
                         initial="enter"
                         animate="center"
                         exit="exit"
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-contain p-3"
                     />
                 </AnimatePresence>
                 <button
                     type="button"
                     onClick={() => onOpenModal(current)}
-                    className="absolute flex items-center justify-center right-2 top-2 bg-gray-100 rounded-full z-20 p-2 hover:bg-gray-200"
+                    className="absolute flex items-center justify-center right-2 top-2 bg-white/90 border border-gray-100 shadow-sm rounded-full z-20 p-2 hover:bg-white"
                 >
                     <Maximize2 className="size-4 text-gray-900" />
                 </button>
@@ -81,13 +81,13 @@ export const ProductImageSliderMobile = ({
                 {/* Arrow buttons */}
                 <button
                     onClick={prev}
-                    className="absolute left-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow hover:bg-white transition"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 border border-gray-100 flex items-center justify-center shadow-sm hover:bg-white transition"
                 >
                     <ChevronLeft className="size-5" />
                 </button>
                 <button
                     onClick={next}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow hover:bg-white transition"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 border border-gray-100 flex items-center justify-center shadow-sm hover:bg-white transition"
                 >
                     <ChevronRight className="size-5" />
                 </button>

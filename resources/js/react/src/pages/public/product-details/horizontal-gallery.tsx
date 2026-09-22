@@ -72,22 +72,22 @@ export const HorizontalGalleryStrip = ({
 
             <div
                 ref={scrollRef}
-                className="flex gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory px-1 py-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+                className="flex gap-2 lg:gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory px-1 py-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
             >
                 {images?.map((img, idx) => (
                     <button
                         key={img.id}
                         onClick={() => onOpenModal(idx)}
-                        className={`snap-start shrink-0 w-24 aspect-square rounded-2xl overflow-hidden bg-gray-50 border cursor-zoom-in transition-all ${
+                        className={`snap-start shrink-0 w-16 lg:w-20 xl:w-24 aspect-square rounded-xl overflow-hidden bg-white border cursor-zoom-in transition-all ${
                             idx === selectedImageIndex
                                 ? "ring-2 ring-primary border-primary"
-                                : "border-gray-200"
+                                : "border-gray-200 opacity-80 hover:opacity-100 hover:border-gray-400"
                         }`}
                     >
                         <OptimizedImage
                             src={img.src}
                             alt={img.alt}
-                            className="w-full h-full object-cover hover:scale-105 duration-300 transition-all"
+                            className="w-full h-full object-contain p-1 rounded-none bg-white"
                         />
                     </button>
                 ))}
