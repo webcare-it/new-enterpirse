@@ -3,6 +3,7 @@ import { CartItem } from "../_components/common/cart-item";
 import { Separator } from "@/components/ui/separator";
 import { usePrice } from "@/hooks/usePrice";
 import { Coupon } from "../_components/common/coupon";
+import { ShippingBreakdown } from "../_components/common/shipping-breakdown";
 
 export function OrderSummary({ children }: { children: React.ReactNode }) {
     const { items, summary } = useCart();
@@ -33,10 +34,8 @@ export function OrderSummary({ children }: { children: React.ReactNode }) {
                 />
                 <Separator />
 
-                <LabelValue
-                    label="Shipping Cost"
-                    value={getPriceWithCurrency(summary.shipping_cost || 0)}
-                />
+                <ShippingBreakdown />
+                <Separator />
                 <LabelValue
                     label="Total Discount"
                     value={getPriceWithCurrency(summary.total_discount || 0)}

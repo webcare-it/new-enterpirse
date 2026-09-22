@@ -12,6 +12,7 @@ use App\Models\Admin\Product;
 use App\Models\Admin\ProductVarient;
 use App\Models\ShippingCost;
 use App\Models\User;
+use App\Services\CartShippingService;
 use Auth;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -20,19 +21,22 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiCartController extends Controller
 {
-    public function index(Request $request)
+    public function index1(Request $request)
     {
         $requestedUserId = $request->header('User-Id');
 
         $user = User::where('id', $requestedUserId)->first();
 
+        // Eager load product + its shipping record to avoid N+1 and get correct shipping cost
+        $query = Cart::with(['product.shippings']);
+
         if ($user) {
-            $cartItems = Cart::where(function ($query) use ($user, $requestedUserId) {
-                $query->where('user_id', $user->id)
+            $cartItems = $query->where(function ($q) use ($user, $requestedUserId) {
+                $q->where('user_id', $user->id)
                     ->orWhere('temp_user_id', $requestedUserId);
             })->get();
         } else {
-            $cartItems = Cart::where('temp_user_id', $requestedUserId)->get();
+            $cartItems = $query->where('temp_user_id', $requestedUserId)->get();
         }
 
         // Coupon data (summed from all items)
@@ -42,6 +46,7 @@ class ApiCartController extends Controller
         $formatted = $cartItems->map(function ($item) {
             $product = $item->product;
 
+            // ---- Variation handling ----
             $variation = [];
             if ($item->variation) {
                 $variation = is_array($item->variation)
@@ -56,11 +61,17 @@ class ApiCartController extends Controller
                 }
             }
 
+            // ---- Shipping from product_shippings ----
+            // Assumes Product model has a `shippings` relation (hasMany).
+            $shipping     = $product?->shippings?->first();
+            $shippingCost = (float) ($shipping?->shipping_cost ?? 0);
+            $shippingArea = $shipping?->id; // this is product_shippings.id
+            // If you actually store a separate shipping "area"/zone id, use that column instead.
+
+            // ---- Totals per item ----
             $subtotal      = (float) ($item->price * $item->quantity);
             $totalTax      = (float) ($item->tax * $item->quantity);
             $totalDiscount = (float) ($item->discount * $item->quantity);
-            $shippingCost  = (float) $item->shipping_cost;
-            $shippingArea  = $item->shipping_area;
 
             return [
                 'id' => (int) $item->id,
@@ -71,7 +82,10 @@ class ApiCartController extends Controller
                     'price'     => (float) $item->price,
                     'image'     => $product?->thumbnail ? uploaded_asset($product->thumbnail) : null,
                     'quantity'  => (int) $item->quantity,
-                    'variation' => json_decode($variation['attribute_value'], true) ?? null,
+                    'variation' => isset($variation['attribute_value'])
+                        ? json_decode($variation['attribute_value'], true)
+                        : null,
+                    'shipping_cost' => $shippingCost,
                 ],
                 'subtotal'       => $subtotal,
                 'total_tax'      => $totalTax,
@@ -82,51 +96,173 @@ class ApiCartController extends Controller
             ];
         });
 
-        // Compute summary totals
-        $subtotal       = $formatted->sum('subtotal');
-        $totalTax       = $formatted->sum('total_tax');
+        // ---- Compute summary totals ----
+        $subtotal        = $formatted->sum('subtotal');
+        $totalTax        = $formatted->sum('total_tax');
         $productDiscount = $formatted->sum('total_discount');
-        $shippingCost   = $formatted->sum('shipping_cost');
-        $totalItems     = $formatted->sum('total_item');
+        $shippingCost    = $formatted->sum('shipping_cost'); // now correct
+        $productShipping = $formatted->sum('product.shipping_cost'); // now correct
+        $totalItems      = $formatted->sum('total_item');
 
-        // Total = subtotal + tax - product_discount - coupon_discount + shipping
+        // Total = subtotal + tax - product_discount - coupon_discount + shipping shipping_area
         $total = $subtotal + $totalTax - $productDiscount - $couponDiscount + $shippingCost;
 
-        // Determine shipping ID (or null if no items)
+        // Shipping id (product_shippings.id) of first item, or null
         $shippingId = $formatted->isNotEmpty() ? $formatted->first()['shipping_area'] : null;
 
         return response()->json([
             'success' => true,
-            'id' => $requestedUserId,
-            'data' => [
-                'items' => $formatted,
+            'id'      => $requestedUserId,
+            'data'    => [
+                'items'   => $formatted,
                 'summary' => [
-                    'total'             => round($total, 2),
-                    'subtotal'          => round($subtotal, 2),
-                    'total_tax'         => round($totalTax, 2),
-                    'total_discount'    => round($productDiscount, 2),
-                    'shipping_cost'     => round($shippingCost, 2),
-                    'total_item'        => $totalItems,
-                    'coupon_discount'   => $couponDiscount,
-                    'coupon_code'       => $couponCode,
-                    'shipping_id'       => $shippingId,
-                ]
-            ]
+                    'total'           => round($total, 2),
+                    'subtotal'        => round($subtotal, 2),
+                    'total_tax'       => round($totalTax, 2),
+                    'total_discount'  => round($productDiscount, 2),
+                    'shipping_cost'   => round($shippingCost, 2),
+                    'total_item'      => $totalItems,
+                    'coupon_discount' => $couponDiscount,
+                    'coupon_code'     => $couponCode,
+                    'shipping_id'     => $shippingId,
+                    'is_has_shipping'     => $shippingCost == 0 ? false : true,
+                ],
+            ],
+        ]);
+    }
+
+    public function index(Request $request)
+    {
+        $requestedUserId = $request->header('User-Id');
+
+        $user = User::where('id', $requestedUserId)->first();
+
+        // Eager load product + its shipping record
+        $query = Cart::with(['product.shippings']);
+
+        if ($user) {
+            $cartItems = $query->where(function ($q) use ($user, $requestedUserId) {
+                $q->where('user_id', $user->id)
+                    ->orWhere('temp_user_id', $requestedUserId);
+            })->get();
+        } else {
+            $cartItems = $query->where('temp_user_id', $requestedUserId)->get();
+        }
+
+        // ---- Shipping area: request first, otherwise the one saved on the cart (/cart/shipping) ----
+        $shippingAreaId = $request->input('shipping_area')
+            ?: $cartItems->pluck('shipping_area')->filter()->first();
+        $shippingArea = $shippingAreaId ? ShippingCost::find($shippingAreaId) : null;
+
+        $isFreeOrPickup = in_array($request->shipping_type, ['free', 'pickup'], true);
+
+        $shipping = CartShippingService::calculate($cartItems, $shippingArea, $isFreeOrPickup);
+
+        // Coupon data
+        $couponDiscount = round($cartItems->sum('coupon_discount'), 2);
+        $couponCode     = $cartItems->isNotEmpty() ? $cartItems->first()->coupon_code : null;
+
+        $formatted = $cartItems->map(function ($item) use ($shippingArea, $shipping) {
+            $product = $item->product;
+
+            // ---- Variation handling ----
+            $variation = [];
+            if ($item->variation) {
+                $variation = is_array($item->variation)
+                    ? $item->variation
+                    : json_decode($item->variation, true);
+            }
+
+            if (isset($variation['color']) && !isset($variation['color_name'])) {
+                $color = Color::find($variation['color']);
+                if ($color) {
+                    $variation['color_name'] = $color->name;
+                }
+            }
+
+            // ---- Shipping (same calculation as place()) ----
+            $itemShipping   = $shipping['items'][$item->id]['cost'] ?? 0.0;
+            $shippingSource = $shipping['items'][$item->id]['source'] ?? 'none';
+
+            // ---- Totals per item ----
+            $subtotal      = (float) ($item->price * $item->quantity);
+            $totalTax      = (float) ($item->tax * $item->quantity);
+            $totalDiscount = (float) ($item->discount * $item->quantity);
+
+            return [
+                'id' => (int) $item->id,
+                'product' => [
+                    'id'        => (int) $item->product_id,
+                    'name'      => $product?->name ?? 'Product not found',
+                    'slug'      => $product?->slug,
+                    'price'     => (float) $item->price,
+                    'image'     => $product?->thumbnail ? uploaded_asset($product->thumbnail) : null,
+                    'quantity'  => (int) $item->quantity,
+                    'variation' => isset($variation['attribute_value'])
+                        ? json_decode($variation['attribute_value'], true)
+                        : null,
+                    'shipping_cost' => $itemShipping,
+                ],
+                'subtotal'        => $subtotal,
+                'total_tax'       => $totalTax,
+                'total_discount'  => $totalDiscount,
+                'shipping_cost'   => $itemShipping,
+                'shipping_area'   => $shippingArea?->id,
+                'shipping_source' => $shippingSource,
+                'total_item'      => (int) $item->quantity,
+            ];
+        });
+
+        // ---- Summary ----
+        $subtotal        = $formatted->sum('subtotal');
+        $totalTax        = $formatted->sum('total_tax');
+        $productDiscount = $formatted->sum('total_discount');
+        $shippingCost    = $formatted->sum('shipping_cost');
+        $totalItems      = $formatted->sum('total_item');
+
+        $total = $subtotal + $totalTax - $productDiscount - $couponDiscount + $shippingCost;
+
+        $shippingId = $shippingArea?->id ?? null;
+
+        return response()->json([
+            'success' => true,
+            'id'      => $requestedUserId,
+            'data'    => [
+                'items'   => $formatted,
+                'summary' => [
+                    'total'           => round($total, 2),
+                    'subtotal'        => round($subtotal, 2),
+                    'total_tax'       => round($totalTax, 2),
+                    'total_discount'  => round($productDiscount, 2),
+                    'shipping_cost'   => round($shippingCost, 2),
+                    'total_item'      => $totalItems,
+                    'coupon_discount' => $couponDiscount,
+                    'coupon_code'     => $couponCode,
+                    'shipping_id'     => $shippingId,
+                    'is_has_shipping' => $shippingCost > 0,
+                    'needs_shipping_area' => $shipping['needs_area'],
+                ],
+            ],
         ]);
     }
 
     public function shipping_areas(Request $request)
     {
-        // 1. Identify user
         $requestedUserId = $request->header('User-Id');
+
+        $query = Cart::with(['product.shippings']);
+
         if ($user = User::find($requestedUserId)) {
-            $cartItems = Cart::where('user_id', $user->id)->get();
+            $cartItems = $query->where(function ($q) use ($user, $requestedUserId) {
+                $q->where('user_id', $user->id)
+                    ->orWhere('temp_user_id', $requestedUserId);
+            })->get();
         } else {
-            $cartItems = Cart::where('temp_user_id', $requestedUserId)->get();
+            $cartItems = $query->where('temp_user_id', $requestedUserId)->get();
         }
 
-        // 2. Validate shipping area
         $shippingAreaId = $request->input('shipping_area');
+
         if (!$shippingAreaId) {
             return response()->json([
                 'success' => false,
@@ -135,6 +271,7 @@ class ApiCartController extends Controller
         }
 
         $shippingCost = ShippingCost::find($shippingAreaId);
+
         if (!$shippingCost) {
             return response()->json([
                 'success' => false,
@@ -142,21 +279,16 @@ class ApiCartController extends Controller
             ], 404);
         }
 
-        $totalShipping = (float) $shippingCost->amount;
-        $itemCount = $cartItems->count();
+        // Save the selected area on every cart row (so switching area always works)
+        // and recalculate each row's shipping with the same rules as place().
+        $shipping = CartShippingService::calculate($cartItems, $shippingCost);
 
-        if ($itemCount > 0) {
-            $perItemShipping = $totalShipping / $itemCount;
-            foreach ($cartItems as $item) {
-                // Update the database column
-                $item->shipping_cost = $perItemShipping;
-                $item->shipping_area = $request->input('shipping_area');
-                $item->save();
-            }
+        foreach ($cartItems as $item) {
+            $item->shipping_area = $shippingCost->id;
+            $item->shipping_cost = $shipping['items'][$item->id]['cost'] ?? 0;
+            $item->save();
         }
 
-
-        // 6. Return JSON
         return response()->json([
             'success' => true,
             'message' => 'Shipping area updated successfully.'
@@ -191,7 +323,8 @@ class ApiCartController extends Controller
             }
         }
 
-        $product = Product::with('inventory')->find($request->product_id);
+        // Eager load inventory + shippings so we can read product-level shipping cost
+        $product = Product::with(['inventory', 'shippings'])->find($request->product_id);
         if (!$product) {
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
@@ -203,7 +336,12 @@ class ApiCartController extends Controller
         $productDiscount = (float) optional($product->price)->discount ?? 0;
         $salePrice = (float) optional($product->price)->sale_price ?? $regularPrice;
         $tax = (float) $product->tax ?? 0;
-        $shippingCost = (float) $product->shipping_cost ?? 0;
+
+        // ---- Shipping cost from product_shippings ----
+        // 0 hole cart e 0 save hobe; place() e area cost diye replace hobe.
+        $productShipping = $product->shippings->first()?->shipping_cost;
+        $shippingCost = (float) ($productShipping ?? 0);
+
         $sku = $variation['sku'] ?? $product->sku;
 
         $colorId = null;
@@ -288,6 +426,7 @@ class ApiCartController extends Controller
             $cartItem->quantity += $quantity;
             $cartItem->price = $finalPrice;
             $cartItem->discount = $discountToSave;
+            $cartItem->shipping_cost = $shippingCost; // refresh in case product shipping changed
             $cartItem->save();
             $message = 'Cart updated successfully';
         } else {
@@ -301,7 +440,7 @@ class ApiCartController extends Controller
                 'tax'           => $tax,
                 'discount'      => $discountToSave,
                 'shipping_cost' => $shippingCost,
-                'shipping_type' => $product->shipping_type ?? 'flat_rate',
+                'shipping_type' => $product->shippings->first()?->shipping_type ?? 'flat_rate',
                 'quantity'      => $quantity,
                 'owner_id'      => $product->vendor_id ?? null,
             ]);

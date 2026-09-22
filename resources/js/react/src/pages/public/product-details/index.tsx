@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { Maximize2 } from "lucide-react";
 import { BaseLayout, LayoutContainer } from "../_components/layout/base-layout";
 import { OptimizedImage } from "@/components/common/optimized-image";
 import { ProductInfo } from "./info";
@@ -87,101 +88,104 @@ export const ProductDetailPage = () => {
             />
             <BaseLayout>
                 <LayoutContainer>
-                    <BreadcrumbWrapper
-                        className="my-4"
-                        items={[
-                            {
-                                title: "Products",
-                                path: "/products",
-                            },
-                            { title: _product.name },
-                        ]}
-                    />
+                    <section className="mx-auto w-full max-w-7xl">
+                        <BreadcrumbWrapper
+                            className="my-3 md:my-5"
+                            items={[
+                                {
+                                    title: "Products",
+                                    path: "/products",
+                                },
+                                { title: _product.name },
+                            ]}
+                        />
 
-                    {isLoading ? (
-                        <div className="flex justify-center items-center h-screen">
-                            <Loading />
-                        </div>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 mb-6">
-                                {/* Left - Sticky Main Image Desktop */}
-                                <div className="hidden md:block md:col-span-1 lg:col-span-6 md:sticky md:top-28 lg:sticky lg:top-28 h-fit">
-                                    <div
-                                        className="relative aspect-square md:aspect-[16/17] xl:aspect-[3/3] 2xl:aspect-[3/2.5] bg-white border rounded-3xl overflow-hidden cursor-zoom-in"
-                                        onClick={() =>
-                                            openModal(selectedImageIndex)
-                                        }
-                                    >
-                                        <OptimizedImage
-                                            src={currentImage.src}
-                                            alt={currentImage.alt}
-                                            className="absolute w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                        {isLoading ? (
+                            <div className="flex justify-center items-center min-h-[60vh]">
+                                <Loading />
+                            </div>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 md:gap-8 lg:gap-10 xl:gap-14 mb-10 md:mb-14">
+                                    {/* Left - Sticky Main Image Desktop */}
+                                    <div className="hidden md:block md:col-span-1 lg:col-span-6 md:sticky md:top-28 h-fit">
+                                        <div
+                                            className="group relative aspect-square w-full bg-white border border-gray-200 rounded-2xl lg:rounded-3xl overflow-hidden cursor-zoom-in"
+                                            onClick={() =>
+                                                openModal(selectedImageIndex)
+                                            }
+                                        >
+                                            <OptimizedImage
+                                                src={currentImage.src}
+                                                alt={currentImage.alt}
+                                                priority
+                                                className="absolute inset-0 w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                            <span className="pointer-events-none absolute right-3 top-3 flex items-center justify-center size-9 rounded-full bg-white/90 shadow-sm border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Maximize2 className="size-4 text-gray-800" />
+                                            </span>
+                                        </div>
+
+                                        {/* md and lg: horizontal thumbnail strip below main image */}
+                                        <HorizontalGalleryStrip
+                                            images={allImages}
+                                            onOpenModal={openModal}
+                                            selectedImageIndex={
+                                                selectedImageIndex
+                                            }
                                         />
                                     </div>
 
-                                    {/* md and lg: horizontal thumbnail strip below main image */}
-                                    <HorizontalGalleryStrip
-                                        images={allImages}
+                                    {/* Main image Gallery for mobile */}
+                                    <ProductImageSliderMobile
+                                        productImages={allImages}
                                         onOpenModal={openModal}
                                         selectedImageIndex={selectedImageIndex}
+                                        setSelectedImageIndex={
+                                            setSelectedImageIndex
+                                        }
+                                    />
+
+                                    {/* Right - Sticky Product Info */}
+                                    <ProductInfo
+                                        onVariantImage={addVariantImage}
+                                        product={_product}
                                     />
                                 </div>
+                                {/* Tabs */}
+                                <ProductInfoTabs product={_product} />
+                                {/* You may also like */}
+                            </>
+                        )}
+                    </section>{" "}
+                    {products?.length > 0 && (
+                        <div className="mt-12 md:mt-16 mb-16 md:mb-20">
+                            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground capitalize text-center mb-6 md:mb-8">
+                                You may also like
+                            </h2>
 
-                                {/* Main image Gallery for mobile */}
-                                <ProductImageSliderMobile
-                                    productImages={allImages}
-                                    onOpenModal={openModal}
-                                    selectedImageIndex={selectedImageIndex}
-                                    setSelectedImageIndex={
-                                        setSelectedImageIndex
-                                    }
-                                />
-
-                                {/* Right - Sticky Product Info */}
-                                <ProductInfo
-                                    onVariantImage={addVariantImage}
-                                    product={_product}
-                                />
-                            </div>
-                            {/* Tabs */}
-                            <ProductInfoTabs product={_product} />
-                            {/* You may also like */}
-                            {products?.length > 0 && (
-                                <div className="mb-16: md:mb-20">
-                                    <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mt-1 transition-all duration-500 ease-out hover:tracking-wide hover:text-primary capitalize text-center mb-6 md:mb-8">
-                                        You may also like
-                                    </h2>
-
-                                    <ProductLayout>
-                                        {products?.map(
-                                            (p: IProduct, i: number) => (
-                                                <AnimationWrapper
-                                                    key={p.id}
-                                                    initial={{
-                                                        opacity: 0,
-                                                        y: 40,
-                                                    }}
-                                                    whileInView={{
-                                                        opacity: 1,
-                                                        y: 0,
-                                                    }}
-                                                    transition={{
-                                                        duration: 0.35,
-                                                        delay: i * 0.03,
-                                                    }}
-                                                >
-                                                    <ProductCard
-                                                        key={p.id}
-                                                        p={p}
-                                                    />
-                                                </AnimationWrapper>
-                                            ),
-                                        )}
-                                    </ProductLayout>
-                                </div>
-                            )}
-                        </>
+                            <ProductLayout>
+                                {products?.map((p: IProduct, i: number) => (
+                                    <AnimationWrapper
+                                        key={p.id}
+                                        initial={{
+                                            opacity: 0,
+                                            y: 40,
+                                        }}
+                                        whileInView={{
+                                            opacity: 1,
+                                            y: 0,
+                                        }}
+                                        transition={{
+                                            duration: 0.35,
+                                            delay: i * 0.03,
+                                        }}
+                                    >
+                                        <ProductCard key={p.id} p={p} />
+                                    </AnimationWrapper>
+                                ))}
+                            </ProductLayout>
+                        </div>
                     )}
                 </LayoutContainer>
             </BaseLayout>

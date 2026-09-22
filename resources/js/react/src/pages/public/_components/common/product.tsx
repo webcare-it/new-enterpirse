@@ -1,4 +1,3 @@
-import { ChartNoAxesCombined } from "lucide-react";
 import { OptimizedImage } from "@/components/common/optimized-image";
 import type { ICampaign, IProduct } from "@/type";
 import { Link } from "react-router-dom";
@@ -7,6 +6,7 @@ import { usePrice } from "@/hooks/usePrice";
 import type { IItemTracker } from "@/hooks/useGtmTracker";
 import { WishlistToggle } from "./wishlist-toggle";
 import { StockOutIcon } from "./icon";
+import { renderStars } from "./star-ratting";
 
 interface Props {
     p: IProduct;
@@ -51,31 +51,7 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
 
                 <div className="p-1.5 md:p-3 select-none">
                     <Link to={link}>
-                        <div className="flex items-center justify-between gap-2">
-                            <div
-                                aria-label={`Rating: ${p?.rating} out of 5`}
-                                className="flex items-center gap-0.5 md:gap-1.5 py-1 px-2 rounded-full bg-gray-100 text-xs font-medium text-yellow-400"
-                            >
-                                <svg
-                                    className="size-3 md:size-4"
-                                    viewBox="0 0 16 16"
-                                    stroke="none"
-                                    fill="currentColor"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    role="presentation"
-                                >
-                                    <path d="M8 0L9.88914 5.81283H16L11.056 9.40604L12.9452 15.2177L8 11.6245L3.05603 15.2177L4.94397 9.40484L0 5.81163H6.11086L8 0Z" />
-                                </svg>
-                                <span className="text-sm text-gray-900">
-                                    {p?.rating}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-0.5 md:gap-1.5 px-2 py-1 rounded-full bg-primary/10 text-xs font-medium text-primary">
-                                <ChartNoAxesCombined className="size-3 md:size-4" />
-                                <span className="font-semibold">{p?.sold}</span>
-                                sold
-                            </div>
-                        </div>
+                        <RatingRow p={p} />
                         <div className="relative inline-block max-w-full">
                             <h3 className="text-sm font-medium md:text-base md:font-semibold text-gray-900 truncate after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[1px] after:w-0 after:bg-gray-900 after:transition-all after:duration-300 hover:after:w-full mt-1">
                                 {p?.name}
@@ -103,6 +79,32 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
                 </div>
             </div>
         </>
+    );
+};
+
+const RatingRow = ({ p }: { p: IProduct }) => {
+    const rating = Number(p?.rating) || 0;
+    const count = Number(p?.reviews) || 0;
+
+    return (
+        <div
+            className="flex items-center gap-1"
+            aria-label={`Rating: ${rating} out of 5 from ${count} reviews`}
+        >
+            <div className="flex items-center gap-[1px]">
+                {renderStars(rating)}
+                <span className="hidden md:block text-[10px] text-gray-500 md:text-xs">
+                    Reviews
+                </span>
+                <span className="text-[10px] text-gray-500 md:text-xs">
+                    ({count})
+                </span>
+            </div>
+
+            <span className="ml-auto truncate text-gray-500 text-xs">
+                {`${p?.sold} ${p?.sold === 1 ? "sale" : "sales"}`}
+            </span>
+        </div>
     );
 };
 

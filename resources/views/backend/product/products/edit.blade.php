@@ -381,6 +381,9 @@
                                             {{ translate('Local Pickup') }}
                                         </option>
                                     </select>
+                                    <small class="text-muted">
+                                        {{ translate('Free Shipping / Local Pickup: no delivery charge for this product.') }}
+                                    </small>
                                 </div>
                             </div>
 
@@ -389,7 +392,10 @@
                                 <div class="col-md-8">
                                     <input type="number" lang="en" min="0" step="0.01"
                                         placeholder="{{ translate('Shipping Cost') }}" name="shipping_cost"
-                                        class="form-control" value="{{ $product->shipping->shipping_cost ?? 0 }}">
+                                        class="form-control" value="{{ $product->
+                                    <small class="text-muted">
+                                        {{ translate('Keep 0 to use the shipping area charge chosen by the customer (e.g. Inside / Outside Dhaka), charged once per order. Enter an amount to charge this product its own delivery cost instead of the area charge.') }}
+                                    </small>shipping->shipping_cost ?? 0 }}">
                                 </div>
                             </div>
 

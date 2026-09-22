@@ -7,6 +7,7 @@ import { usePrice } from "@/hooks/usePrice";
 import { revalidateQueryFn } from "@/lib/tanstack";
 import type { IOrderFrom } from "@/type";
 import { useEffect } from "react";
+import { Truck } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface IShippingArea {
@@ -22,19 +23,21 @@ interface Props {
 
 export const Shipping = ({ form, setForm }: Props) => {
     const config = useConfig();
-    const { summary } = useCart();
+    const { summary, items } = useCart();
+    const ownShippingItems = (items || []).filter(
+        (i) => i.shipping_source === "product" && Number(i.shipping_cost) > 0,
+    );
     const { getPriceWithCurrency } = usePrice();
     const selectedId = summary?.shipping_id || "";
     const { mutate, isPending } = useShippingMutation();
     const shippings = (config?.shippings as IShippingArea[]) || [];
+    const areaNotNeeded =
+        items?.length > 0 && summary?.needs_shipping_area === false;
 
     useEffect(() => {
-        setForm({
-            ...form,
-            shipping: String(selectedId),
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        if (!selectedId) return;
+        setForm((prev) => ({ ...prev, shipping: String(selectedId) }));
+    }, [selectedId, setForm]);
 
     const handleShipping = (id: string) => {
         mutate(
@@ -45,10 +48,7 @@ export const Shipping = ({ form, setForm }: Props) => {
                 onSuccess: () => {
                     revalidateQueryFn("get_cart");
                     toast.success("Shipping updated successfully");
-                    setForm({
-                        ...form,
-                        shipping: id,
-                    });
+                    setForm((prev) => ({ ...prev, shipping: id }));
                 },
             },
         );
@@ -76,33 +76,78 @@ export const Shipping = ({ form, setForm }: Props) => {
                         d="M11.03 16.25c-.97 0-1.76-.7-1.76-1.56 0-.87.79-1.57 1.76-1.57h14.83c.97 0 1.76.7 1.76 1.57 0 .87-.79 1.56-1.76 1.56H11.03zm22.59-6.4h7.44l-.4 3.38h-3.04l-.39 3.23h2.69l-.38 3.21h-2.69L36 26.76h-4.41l2.03-16.91zm16.24 0l.49 16.92h-4.49l.12-3.04h-1.59l-.6 3.04h-4.55l4.26-16.92h6.36zm-3.64 10.88c.02-1.92.08-4.29.19-7.13-.82 3.25-1.38 5.62-1.68 7.13h1.49zm16.16-5.75H58.3l.15-1.25c.07-.58.06-.96-.02-1.12-.08-.16-.25-.24-.49-.24-.26 0-.48.11-.64.32-.16.21-.27.54-.32.98-.07.56-.04.99.08 1.27.12.28.49.63 1.12 1.03 1.81 1.17 2.93 2.12 3.34 2.87.42.75.53 1.95.33 3.6-.14 1.21-.39 2.09-.74 2.67-.35.57-.95 1.05-1.8 1.43-.85.39-1.81.58-2.89.58-1.18 0-2.15-.22-2.93-.67-.78-.45-1.25-1.01-1.43-1.7-.17-.69-.18-1.67-.03-2.94l.13-1.11h4.08L56 22.77c-.08.63-.07 1.04.02 1.22.09.18.28.27.58.27.29 0 .52-.11.69-.35.17-.23.28-.57.34-1.02.12-.99.06-1.65-.17-1.95-.24-.31-.87-.82-1.87-1.54-1-.72-1.66-1.25-1.98-1.58-.31-.33-.56-.78-.72-1.36-.16-.58-.19-1.32-.08-2.21.15-1.29.43-2.24.84-2.84.4-.6.99-1.07 1.77-1.4.78-.34 1.69-.51 2.73-.51 1.14 0 2.09.19 2.85.55.76.37 1.23.83 1.43 1.4.19.56.21 1.51.05 2.85l-.14 1.17zm11.79-5.13l-.4 3.38h-2.59l-1.62 13.54h-4.41l1.62-13.54h-2.61l.4-3.38h9.61z"
                     />
                 </svg>
-                Shipping Area
+                {areaNotNeeded ? "Delivery" : "Shipping Area"}
             </h2>
 
-            <RadioGroup
-                value={String(form.shipping)}
-                disabled={isPending}
-                onValueChange={(v) => handleShipping(v)}
-                className={`grid grid-cols-1 md:grid-cols-2 gap-4  ${isPending ? "pointer-events-none" : ""}`}
-            >
-                {shippings?.map((p) => (
-                    <Label
-                        key={p.id}
-                        htmlFor={`shipping-${p.id}`}
-                        className="flex items-center gap-3 rounded-xl border border-border p-4 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5 cursor-pointer transition-colors md:col-span-1"
-                    >
-                        <RadioGroupItem
-                            value={String(p.id)}
-                            id={`shipping-${p.id}`}
-                        />
+            {areaNotNeeded ? (
+                <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Truck className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-sm font-semibold text-gray-900">
+                                {Number(summary?.shipping_cost) > 0
+                                    ? "Delivery charge included"
+                                    : "Free delivery"}
+                            </p>
+                            <span className="text-base font-semibold text-gray-900">
+                                {Number(summary?.shipping_cost) > 0
+                                    ? getPriceWithCurrency(
+                                          Number(summary?.shipping_cost),
+                                      )
+                                    : "Free"}
+                            </span>
+                        </div>
+                        <p className="mt-1 text-xs md:text-sm text-gray-500">
+                            {Number(summary?.shipping_cost) > 0
+                                ? `${items.length > 1 ? "Your items have" : "This item has"} a fixed delivery charge, so you don't need to choose a shipping area.`
+                                : "No delivery charge for your items, so you don't need to choose a shipping area."}
+                        </p>
+                    </div>
+                </div>
+            ) : (
+                <>
+                    {ownShippingItems?.length > 0 && (
+                        <p className="-mt-2 text-xs md:text-sm text-gray-500">
+                            {`The area charge is added once per order. ${ownShippingItems.length} ${ownShippingItems.length > 1 ? "items also have their" : "item also has its"} own delivery charge. See the order summary.`}
+                        </p>
+                    )}
 
-                        <span className="text-sm font-medium">{p?.name}</span>
-                        <span className="ml-auto text-base font-semibold text-gray-900">
-                            {getPriceWithCurrency(p?.amount)}
-                        </span>
-                    </Label>
-                ))}
-            </RadioGroup>
+                    <RadioGroup
+                        value={String(form.shipping)}
+                        disabled={isPending}
+                        onValueChange={(v) => handleShipping(v)}
+                        className={`grid grid-cols-1 md:grid-cols-2 gap-4  ${isPending ? "pointer-events-none" : ""}`}
+                    >
+                        {shippings?.map((p) => (
+                            <Label
+                                key={p.id}
+                                htmlFor={`shipping-${p.id}`}
+                                className="flex items-center gap-3 rounded-xl border border-border p-4 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5 cursor-pointer transition-colors md:col-span-1"
+                            >
+                                <RadioGroupItem
+                                    value={String(p.id)}
+                                    id={`shipping-${p.id}`}
+                                />
+
+                                <span className="text-sm font-medium">
+                                    {p?.name}
+                                </span>
+                                <span className="ml-auto text-base font-semibold text-gray-900">
+                                    {getPriceWithCurrency(p?.amount)}
+                                </span>
+                            </Label>
+                        ))}
+                    </RadioGroup>
+                    {!form.shipping && summary?.needs_shipping_area && (
+                        <p className="text-sm text-amber-600">
+                            Select a shipping area to see the final shipping
+                            cost.
+                        </p>
+                    )}
+                </>
+            )}
         </>
     );
 };

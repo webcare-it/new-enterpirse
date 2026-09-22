@@ -188,23 +188,23 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
     }, [product?.id]);
 
     return (
-        <div className="md:col-span-1 lg:col-span-6 md:sticky md:top-28 lg:sticky lg:top-28 h-fit space-y-4">
+        <div className="md:col-span-1 lg:col-span-6 h-fit space-y-4 md:space-y-5 min-w-0">
             <div>
-                <h1 className="flex-1 text-3xl md:text-4xl font-semibold leading-tight">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold leading-tight tracking-tight break-words">
                     {product?.name}
                 </h1>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex text-2xl">
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <div className="flex text-xl leading-none">
                         {renderStars(product?.review?.rating)}
                     </div>
-                    <span className="text-gray-700 text-base">
+                    <span className="text-gray-600 text-sm md:text-base">
                         {product?.review?.reviews_count || 0} • reviews
                     </span>
                 </div>
             </div>
-            <div className="flex items-center gap-3">
-                <div className="text-2xl md:text-3xl font-semibold">
+            <div className="flex flex-wrap items-baseline gap-3">
+                <div className="text-2xl md:text-3xl font-bold text-primary">
                     {getPriceWithCurrency(Number(displayPrice))}
                 </div>
                 {Number(discountPrice) > 0 &&
@@ -220,7 +220,7 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
             <Discount product={product} />
 
             {product?.short_description && (
-                <p className="text-base text-gray-700">
+                <p className="text-sm md:text-base leading-relaxed text-gray-600">
                     {product?.short_description}
                 </p>
             )}
@@ -254,7 +254,7 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
 
             <div className="pt-4 border-t border-gray-200 space-y-3">
                 <div className="flex items-center gap-2">
-                    <div className="flex items-center py-1.5  border border-gray-300 rounded-full gap-3">
+                    <div className="flex shrink-0 items-center py-1.5 border border-gray-300 rounded-full gap-3">
                         <button
                             type="button"
                             title="Decrease Quantity"

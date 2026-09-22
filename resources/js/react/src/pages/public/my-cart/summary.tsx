@@ -5,6 +5,7 @@ import { usePrice } from "@/hooks/usePrice";
 import { Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Coupon } from "../_components/common/coupon";
+import { ShippingBreakdown } from "../_components/common/shipping-breakdown";
 
 export const MyCartSummary = () => {
     const { summary, items } = useCart();
@@ -32,10 +33,7 @@ export const MyCartSummary = () => {
 
                     <Separator />
 
-                    <LabelValue
-                        label="Shipping Cost"
-                        value={getPriceWithCurrency(summary.shipping_cost || 0)}
-                    />
+                    <ShippingBreakdown />
                     <LabelValue
                         label="Total Discount"
                         value={getPriceWithCurrency(

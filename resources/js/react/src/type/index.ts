@@ -11,6 +11,7 @@ export interface IProduct {
     discount: number;
     discount_type: string; //flat or percent
     rating: number;
+    reviews: number;
     image: string;
     sold: number;
     has_variants: boolean;
@@ -61,6 +62,14 @@ export interface ICartItem {
         quantity: number;
         variation?: Record<string, string>;
     };
+    shipping_cost?: number;
+    shipping_source?:
+        | "product"
+        | "product_free"
+        | "pickup"
+        | "area"
+        | "none"
+        | "free";
 }
 export interface IWishlistItem {
     id: number;

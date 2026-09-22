@@ -20,6 +20,7 @@ use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\SmsService;
 use App\Services\MailService;
+use App\Services\CartShippingService;
 
 class ApiOrderController extends Controller
 {
@@ -27,14 +28,16 @@ class ApiOrderController extends Controller
      * Place an order from the current cart.
      * $tempUserId = session()->get('temp_user_id');
      */
+
     public function place(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'shipping_address' => 'required|string',
-            'payment_type'     => 'required|in:cod,card,bkash,nagad,rocket',
+            'payment_type'     => 'required',
             'notes'            => 'nullable|string',
             'shipping_type'    => 'sometimes|in:flat_rate,free,pickup',
-            'shipping_area'    => 'required|exists:shipping_costs,id',
+            // Only required when some item uses the area charge (checked below)
+            'shipping_area'    => 'nullable|exists:shipping_costs,id',
         ]);
 
         if ($validator->fails()) {
@@ -82,14 +85,10 @@ class ApiOrderController extends Controller
         }
 
         $isorder = Order::where('user_id', $userId)->orWhere('guest_id', $tempUserId)->get();
+        $customer_type = $isorder->isEmpty() ? 'new' : 'returning';
 
-        if ($isorder->isEmpty()) {
-            $customer_type = 'new';
-        } else {
-            $customer_type = 'returning';
-        }
-
-        $cartItems = Cart::query()
+        // Eager load product + product_shippings so we can read per-product shipping cost
+        $cartItems = Cart::with(['product.shippings'])
             ->where(function ($query) use ($userId, $tempUserId) {
                 if ($userId) {
                     $query->orWhere('user_id', $userId);
@@ -104,76 +103,84 @@ class ApiOrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Cart is empty'], 400);
         }
 
-        $shippingArea = ShippingCost::find($request->shipping_area);
-        if (!$shippingArea) {
-            return response()->json(['success' => false, 'message' => 'Invalid shipping area'], 400);
-        }
+        $shippingArea = $request->filled('shipping_area')
+            ? ShippingCost::find($request->shipping_area)
+            : null;
 
-        // Calculate totals
-        $subtotal = 0;
-        $taxTotal = 0;
+        // ---- Calculate totals ----
+        $subtotal      = 0;
+        $taxTotal      = 0;
         $discountTotal = 0;
+        $isFreeOrPickup = in_array($request->shipping_type, ['free', 'pickup'], true);
 
         foreach ($cartItems as $item) {
-            $subtotal += $item->price * $item->quantity;
-            $taxTotal += $item->tax * $item->quantity;
+            $subtotal      += $item->price * $item->quantity;
+            $taxTotal      += $item->tax * $item->quantity;
             $discountTotal += $item->discount * $item->quantity;
         }
 
-        $shippingCost = $shippingArea->amount;
-        if ($request->shipping_type === 'free' || $request->shipping_type === 'pickup') {
-            $shippingCost = 0;
+        // ---- Shipping (same calculation as the cart / checkout summary) ----
+        $shipping          = CartShippingService::calculate($cartItems, $shippingArea, $isFreeOrPickup);
+
+        // Area is only needed when an item has no own / free / pickup shipping
+        if ($shipping['needs_area'] && !$shippingArea && !$isFreeOrPickup) {
+            return response()->json(['success' => false, 'message' => 'Please select a shipping area'], 422);
         }
+        $shippingCost      = $shipping['total'];
+        $itemShippingCosts = array_map(fn ($row) => $row['cost'], $shipping['items']); // cart_item_id => cost
 
         $couponDiscount = $cartItems->sum('coupon_discount');
-        $couponCode = $cartItems->first()?->coupon_code;
-        $finalTotal = $subtotal + $taxTotal - $discountTotal + $shippingCost - $couponDiscount;
+        $couponCode     = $cartItems->first()?->coupon_code;
+        $finalTotal     = $subtotal + $taxTotal - $discountTotal + $shippingCost - $couponDiscount;
 
         $orderCode = 'ORD-' . strtoupper(Str::random(8)) . '-' . time();
 
         DB::beginTransaction();
 
         try {
-            $order = Order::create([
-                'user_id'         => $userId,
-                'guest_id'        => $userId ? null : $tempUserId,
-                'shipping_address' => $request->shipping_address,
-                'shipping_type'    => $request->shipping_type ?? 'flat_rate',
-                'shipping_cost'    => $shippingArea->amount,
-                'shipping_area_id' => $shippingArea->id,
-                'coupon_discount'  => $couponDiscount,
-                'discount'         => $discountTotal,
-                'grand_total'      => $finalTotal,
-                'code'             => $orderCode,
-                'notes'            => $request->notes,
-                'name'             => $request->name,
-                'email_address'    => $request->email,
-                'phone_number'     => $request->phone,
-                'payment_type'     => $request->payment_type,
-                'payment_status'   => 'unpaid',
-                'delivery_status'  => 'pending',
-                'date'             => now(),
-                'viewed'           => 0,
-                'delivery_viewed'  => 0,
+            $orderData = [
+                'user_id'               => $userId,
+                'guest_id'              => $userId ? null : $tempUserId,
+                'shipping_address'      => $request->shipping_address,
+                'shipping_type'         => $request->shipping_type ?? 'flat_rate',
+                'shipping_cost'         => $shippingCost,
+                'coupon_discount'       => $couponDiscount,
+                'discount'              => $discountTotal,
+                'grand_total'           => $finalTotal,
+                'code'                  => $orderCode,
+                'notes'                 => $request->notes,
+                'name'                  => $request->name,
+                'email_address'         => $request->email,
+                'phone_number'          => $request->phone,
+                'payment_type'          => $request->payment_type,
+                'payment_status'        => 'unpaid',
+                'delivery_status'       => 'pending',
+                'date'                  => now(),
+                'viewed'                => 0,
+                'delivery_viewed'       => 0,
                 'payment_status_viewed' => 0,
                 'commission_calculated' => 0,
-                'order_type'       => 'normal'
-            ]);
+                'order_type'            => 'normal',
+            ];
+            if ($shippingArea) {
+                $orderData['shipping_area_id'] = $shippingArea->id;
+            }
+            $order = Order::create($orderData);
 
             foreach ($cartItems as $item) {
                 OrderDetail::create([
-                    'order_id'            => $order->id,
-                    'seller_id'           => $item->owner_id ?? null,
-                    'product_id'          => $item->product_id,
-                    'sku'                 => $item->sku,
-                    'variation'           => $item->variation,
-                    'price'               => $item->price,
-                    'tax'                 => $item->tax,
-                    'shipping_cost'       => 0,
-                    'quantity'            => $item->quantity,
-                    'payment_status'      => 'unpaid',
-                    'delivery_status'     => 'pending',
-                    'shipping_type'       => $item->shipping_type,
+                    'order_id'              => $order->id,
+                    'seller_id'             => $item->owner_id ?? null,
+                    'product_id'            => $item->product_id,
+                    'sku'                   => $item->sku,
+                    'variation'             => $item->variation,
+                    'price'                 => $item->price,
+                    'tax'                   => $item->tax,
+                    'shipping_cost'         => $itemShippingCosts[$item->id] ?? 0,
+                    'quantity'              => $item->quantity,
+                    'payment_status'        => 'unpaid',
+                    'delivery_status'       => 'pending',
+                    'shipping_type'         => $item->shipping_type,
                     'product_referral_code' => $item->product_referral_code,
                 ]);
             }
@@ -182,10 +189,8 @@ class ApiOrderController extends Controller
 
             DB::commit();
 
-            // Load order details with product
             $order->load('details.product');
 
-            // Check if OTP for order is enabled
             $otpForOrder = get_setting('otp_for_order') == 1;
             $otpCode = null;
 
@@ -194,7 +199,6 @@ class ApiOrderController extends Controller
                 $order->is_otp_verified = $otpCode;
                 $order->save();
 
-                // Send OTP to customer
                 $smsTemplate = \App\Models\SmsTemplate::where('identifier', 'order_otp')->first();
                 if ($smsTemplate) {
                     $smsBody = str_replace('[[code]]', $otpCode, $smsTemplate->sms_body);
@@ -207,9 +211,6 @@ class ApiOrderController extends Controller
                 }
             }
 
-
-
-            // If OTP for order is enabled, return simple response
             if ($otpForOrder) {
                 return response()->json([
                     'success' => true,
@@ -221,22 +222,16 @@ class ApiOrderController extends Controller
                 ]);
             }
 
-             // Send order receive SMS to admin
             if (get_setting('is_order_receive') == 1) {
                 SmsService::order_receive($order);
             }
-
-            // Send order confirmation email to customer
             if (get_setting('email_order_placed_customer') == 1) {
                 MailService::order_placed_customer($order);
             }
-
-            // Send order receive email to admin
             if (get_setting('email_order_placed_admin') == 1) {
                 MailService::order_receive($order);
             }
 
-            // Build items with required fields
             $items = $order->details->map(function ($detail) {
                 $product = $detail->product;
                 return [
@@ -245,7 +240,7 @@ class ApiOrderController extends Controller
                         'id'        => $product->id,
                         'name'      => $product->name,
                         'slug'      => $product->slug,
-                        'price'     => (float) $detail->price, // price from detail (may differ from product price)
+                        'price'     => (float) $detail->price,
                         'image'     => (string) (uploaded_asset($product->thumbnail) ?? ''),
                         'quantity'  => (int) $detail->quantity,
                         'variation' => json_decode($detail->variation, true) ?? null,
@@ -267,12 +262,12 @@ class ApiOrderController extends Controller
                         'grand_total'     => $finalTotal,
                     ],
                     'customer' => [
-                        'user_id' => $order->user_id,
-                        "customer_type" => $customer_type,
-                        'name'    => $order->name,
-                        'email'   => $order->email_address,
-                        'phone'   => $order->phone_number,
-                        'address' => $order->shipping_address,
+                        'user_id'       => $order->user_id,
+                        'customer_type' => $customer_type,
+                        'name'          => $order->name,
+                        'email'         => $order->email_address,
+                        'phone'         => $order->phone_number,
+                        'address'       => $order->shipping_address,
                     ],
                     'date'  => $order->date,
                     'code'  => $order->code,
@@ -321,11 +316,11 @@ class ApiOrderController extends Controller
                 return $query->where('guest_id', $tempUserId);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(15); // Use pagination instead of get()
+            ->paginate(15);
 
         return response()->json([
             'success' => true,
-            'data' => $orders->items(), // or transform via resource
+            'data' => $orders->items(),
             'pagination' => [
                 'total' => $orders->total(),
                 'per_page' => $orders->perPage(),
