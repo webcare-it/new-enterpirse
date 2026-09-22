@@ -30,9 +30,8 @@ export const Coupon = () => {
                     placeholder={"Enter Coupon code"}
                     className={cn(
                         "h-10 md:h-11 bg-accent rounded-r-none",
-                        loading ||
-                            (summary?.coupon_code !== "" &&
-                                "cursor-not-allowed"),
+                        (loading || !!summary?.coupon_code?.trim()) &&
+                            "cursor-not-allowed",
                     )}
                     type="text"
                     readOnly={!!summary?.coupon_code}

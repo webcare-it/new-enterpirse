@@ -115,7 +115,11 @@ const Form = () => {
             toast.error("Shipping address is required");
             return;
         }
-        if (!form.shipping || form.shipping === "") {
+        // Area only matters when some item uses the area charge
+        if (
+            summary?.needs_shipping_area !== false &&
+            (!form.shipping || form.shipping === "")
+        ) {
             toast.error("Shipping method is required");
             return;
         }
@@ -129,7 +133,10 @@ const Form = () => {
                 shipping_address: form.address,
                 payment_type: form.payment,
                 notes: form.notes,
-                shipping_area: form.shipping,
+                shipping_area:
+                    summary?.needs_shipping_area === false
+                        ? null
+                        : form.shipping,
                 name: form.name,
                 email: form.email,
                 phone: form.phone,

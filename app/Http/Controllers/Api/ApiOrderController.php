@@ -20,6 +20,7 @@ use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\SmsService;
 use App\Services\MailService;
+use App\Services\CartShippingService;
 
 class ApiOrderController extends Controller
 {
@@ -35,7 +36,8 @@ class ApiOrderController extends Controller
             'payment_type'     => 'required',
             'notes'            => 'nullable|string',
             'shipping_type'    => 'sometimes|in:flat_rate,free,pickup',
-            'shipping_area'    => 'required|exists:shipping_costs,id',
+            // Only required when some item uses the area charge (checked below)
+            'shipping_area'    => 'nullable|exists:shipping_costs,id',
         ]);
 
         if ($validator->fails()) {
@@ -101,47 +103,31 @@ class ApiOrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Cart is empty'], 400);
         }
 
-        $shippingArea = ShippingCost::find($request->shipping_area);
-        if (!$shippingArea) {
-            return response()->json(['success' => false, 'message' => 'Invalid shipping area'], 400);
-        }
+        $shippingArea = $request->filled('shipping_area')
+            ? ShippingCost::find($request->shipping_area)
+            : null;
 
         // ---- Calculate totals ----
         $subtotal      = 0;
         $taxTotal      = 0;
         $discountTotal = 0;
-        $shippingCost  = 0;
-
-        $isFreeOrPickup    = in_array($request->shipping_type, ['free', 'pickup'], true);
-        $itemShippingCosts = []; // cart_item_id => per-item shipping cost
+        $isFreeOrPickup = in_array($request->shipping_type, ['free', 'pickup'], true);
 
         foreach ($cartItems as $item) {
             $subtotal      += $item->price * $item->quantity;
             $taxTotal      += $item->tax * $item->quantity;
             $discountTotal += $item->discount * $item->quantity;
-
-            // ---- Per-product shipping logic ----
-            // 1) Product er product_shippings.shipping_cost > 0 hole -> setai use hobe
-            // 2) Na thakle (0 / null) -> shipping area (shipping_costs.amount) theke cost nibe
-            $productShipping = $item->product?->shippings?->first()?->shipping_cost;
-
-            if (!empty($productShipping) && $productShipping > 0) {
-                $itemShipping = (float) $productShipping;
-            } else {
-                $itemShipping = (float) $shippingArea->amount;
-            }
-
-            // Free / pickup hole shipping cost 0
-            if ($isFreeOrPickup) {
-                $itemShipping = 0;
-            }
-
-            // Per-quantity shipping chao hole ei line uncomment koro:
-            // $itemShipping *= $item->quantity;
-
-            $shippingCost += $itemShipping;
-            $itemShippingCosts[$item->id] = $itemShipping;
         }
+
+        // ---- Shipping (same calculation as the cart / checkout summary) ----
+        $shipping          = CartShippingService::calculate($cartItems, $shippingArea, $isFreeOrPickup);
+
+        // Area is only needed when an item has no own / free / pickup shipping
+        if ($shipping['needs_area'] && !$shippingArea && !$isFreeOrPickup) {
+            return response()->json(['success' => false, 'message' => 'Please select a shipping area'], 422);
+        }
+        $shippingCost      = $shipping['total'];
+        $itemShippingCosts = array_map(fn ($row) => $row['cost'], $shipping['items']); // cart_item_id => cost
 
         $couponDiscount = $cartItems->sum('coupon_discount');
         $couponCode     = $cartItems->first()?->coupon_code;
@@ -152,13 +138,12 @@ class ApiOrderController extends Controller
         DB::beginTransaction();
 
         try {
-            $order = Order::create([
+            $orderData = [
                 'user_id'               => $userId,
                 'guest_id'              => $userId ? null : $tempUserId,
                 'shipping_address'      => $request->shipping_address,
                 'shipping_type'         => $request->shipping_type ?? 'flat_rate',
                 'shipping_cost'         => $shippingCost,
-                'shipping_area_id'      => $shippingArea->id,
                 'coupon_discount'       => $couponDiscount,
                 'discount'              => $discountTotal,
                 'grand_total'           => $finalTotal,
@@ -176,7 +161,11 @@ class ApiOrderController extends Controller
                 'payment_status_viewed' => 0,
                 'commission_calculated' => 0,
                 'order_type'            => 'normal',
-            ]);
+            ];
+            if ($shippingArea) {
+                $orderData['shipping_area_id'] = $shippingArea->id;
+            }
+            $order = Order::create($orderData);
 
             foreach ($cartItems as $item) {
                 OrderDetail::create([

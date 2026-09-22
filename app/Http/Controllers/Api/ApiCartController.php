@@ -12,6 +12,7 @@ use App\Models\Admin\Product;
 use App\Models\Admin\ProductVarient;
 use App\Models\ShippingCost;
 use App\Models\User;
+use App\Services\CartShippingService;
 use Auth;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -148,18 +149,20 @@ class ApiCartController extends Controller
             $cartItems = $query->where('temp_user_id', $requestedUserId)->get();
         }
 
-        // ---- Shipping area from request ----
-        $shippingArea = $request->filled('shipping_area')
-            ? ShippingCost::find($request->shipping_area)
-            : null;
+        // ---- Shipping area: request first, otherwise the one saved on the cart (/cart/shipping) ----
+        $shippingAreaId = $request->input('shipping_area')
+            ?: $cartItems->pluck('shipping_area')->filter()->first();
+        $shippingArea = $shippingAreaId ? ShippingCost::find($shippingAreaId) : null;
 
         $isFreeOrPickup = in_array($request->shipping_type, ['free', 'pickup'], true);
+
+        $shipping = CartShippingService::calculate($cartItems, $shippingArea, $isFreeOrPickup);
 
         // Coupon data
         $couponDiscount = round($cartItems->sum('coupon_discount'), 2);
         $couponCode     = $cartItems->isNotEmpty() ? $cartItems->first()->coupon_code : null;
 
-        $formatted = $cartItems->map(function ($item) use ($shippingArea, $isFreeOrPickup) {
+        $formatted = $cartItems->map(function ($item) use ($shippingArea, $shipping) {
             $product = $item->product;
 
             // ---- Variation handling ----
@@ -177,31 +180,9 @@ class ApiCartController extends Controller
                 }
             }
 
-            // ---- Shipping logic (place() er sathe same) ----
-            // 1) product_shippings.shipping_cost > 0 -> setai
-            // 2) 0 / null -> cart e saved shipping_cost
-            // 3) cart e o 0 -> shipping_costs.amount (area, jodi request e thake)
-            $productShipping = $product?->shippings?->first()?->shipping_cost;
-            $cartShipping    = (float) ($item->shipping_cost ?? 0);
-
-            if (!empty($productShipping) && $productShipping > 0) {
-                $itemShipping   = (float) $productShipping;
-                $shippingSource = 'product';
-            } elseif ($cartShipping > 0) {
-                $itemShipping   = $cartShipping;
-                $shippingSource = 'cart';
-            } elseif ($shippingArea) {
-                $itemShipping   = (float) $shippingArea->amount;
-                $shippingSource = 'area';
-            } else {
-                $itemShipping   = 0.0;
-                $shippingSource = 'none';
-            }
-
-            if ($isFreeOrPickup) {
-                $itemShipping   = 0.0;
-                $shippingSource = 'free';
-            }
+            // ---- Shipping (same calculation as place()) ----
+            $itemShipping   = $shipping['items'][$item->id]['cost'] ?? 0.0;
+            $shippingSource = $shipping['items'][$item->id]['source'] ?? 'none';
 
             // ---- Totals per item ----
             $subtotal      = (float) ($item->price * $item->quantity);
@@ -259,6 +240,7 @@ class ApiCartController extends Controller
                     'coupon_code'     => $couponCode,
                     'shipping_id'     => $shippingId,
                     'is_has_shipping' => $shippingCost > 0,
+                    'needs_shipping_area' => $shipping['needs_area'],
                 ],
             ],
         ]);
@@ -268,10 +250,15 @@ class ApiCartController extends Controller
     {
         $requestedUserId = $request->header('User-Id');
 
+        $query = Cart::with(['product.shippings']);
+
         if ($user = User::find($requestedUserId)) {
-            $cartItems = Cart::where('user_id', $user->id)->get();
+            $cartItems = $query->where(function ($q) use ($user, $requestedUserId) {
+                $q->where('user_id', $user->id)
+                    ->orWhere('temp_user_id', $requestedUserId);
+            })->get();
         } else {
-            $cartItems = Cart::where('temp_user_id', $requestedUserId)->get();
+            $cartItems = $query->where('temp_user_id', $requestedUserId)->get();
         }
 
         $shippingAreaId = $request->input('shipping_area');
@@ -292,23 +279,16 @@ class ApiCartController extends Controller
             ], 404);
         }
 
-        $totalShipping = (float) $shippingCost->amount;
+        // Save the selected area on every cart row (so switching area always works)
+        // and recalculate each row's shipping with the same rules as place().
+        $shipping = CartShippingService::calculate($cartItems, $shippingCost);
 
-        $itemsWithoutShipping = $cartItems->filter(function ($item) {
-            return (float) $item->shipping_cost <= 0;
-        });
-
-        $itemCount = $itemsWithoutShipping->count();
-
-        if ($itemCount > 0) {
-            $perItemShipping = $totalShipping / $itemCount;
-            foreach ($itemsWithoutShipping as $item) {
-
-                $item->shipping_cost = $perItemShipping;
-                $item->shipping_area = $shippingAreaId;
-                $item->save();
-            }
+        foreach ($cartItems as $item) {
+            $item->shipping_area = $shippingCost->id;
+            $item->shipping_cost = $shipping['items'][$item->id]['cost'] ?? 0;
+            $item->save();
         }
+
         return response()->json([
             'success' => true,
             'message' => 'Shipping area updated successfully.'
@@ -460,7 +440,7 @@ class ApiCartController extends Controller
                 'tax'           => $tax,
                 'discount'      => $discountToSave,
                 'shipping_cost' => $shippingCost,
-                'shipping_type' => $product->shipping_type ?? 'flat_rate',
+                'shipping_type' => $product->shippings->first()?->shipping_type ?? 'flat_rate',
                 'quantity'      => $quantity,
                 'owner_id'      => $product->vendor_id ?? null,
             ]);

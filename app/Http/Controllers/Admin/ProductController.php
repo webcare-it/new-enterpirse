@@ -674,7 +674,7 @@ class ProductController extends Controller
             if ($shipping) {
                 $shipping->update([
                     'shipping_type' => $request->shipping_type ?? 'flat_rate',
-                    'shipping_cost' => $request->shipping_cost ?? 0,
+                    'shipping_cost' => ($request->shipping_type ?? 'flat_rate') === 'flat_rate' ? ($request->shipping_cost ?? 0) : 0,
                     'weight' => $request->weight,
                     'length' => $request->length,
                     'width' => $request->width,
@@ -684,7 +684,7 @@ class ProductController extends Controller
                 ProductShipping::create([
                     'product_id' => $product->id,
                     'shipping_type' => $request->shipping_type ?? 'flat_rate',
-                    'shipping_cost' => $request->shipping_cost ?? 0,
+                    'shipping_cost' => ($request->shipping_type ?? 'flat_rate') === 'flat_rate' ? ($request->shipping_cost ?? 0) : 0,
                     'weight' => $request->weight,
                     'length' => $request->length,
                     'width' => $request->width,
@@ -1163,7 +1163,7 @@ class ProductController extends Controller
             ProductShipping::create([
                 'product_id' => $product->id,
                 'shipping_type' => $request->shipping_type ?? 'flat_rate',
-                'shipping_cost' => $request->shipping_cost ?? 0,
+                'shipping_cost' => ($request->shipping_type ?? 'flat_rate') === 'flat_rate' ? ($request->shipping_cost ?? 0) : 0,
                 'weight' => $request->weight,
                 'length' => $request->length,
                 'width' => $request->width,
@@ -1636,7 +1636,7 @@ class ProductController extends Controller
             if ($shipping) {
                 $shipping->update([
                     'shipping_type' => $request->shipping_type ?? 'flat_rate',
-                    'shipping_cost' => $request->shipping_cost ?? 0,
+                    'shipping_cost' => ($request->shipping_type ?? 'flat_rate') === 'flat_rate' ? ($request->shipping_cost ?? 0) : 0,
                     'weight' => $request->weight,
                     'length' => $request->length,
                     'width' => $request->width,
@@ -1646,7 +1646,7 @@ class ProductController extends Controller
                 ProductShipping::create([
                     'product_id' => $product->id,
                     'shipping_type' => $request->shipping_type ?? 'flat_rate',
-                    'shipping_cost' => $request->shipping_cost ?? 0,
+                    'shipping_cost' => ($request->shipping_type ?? 'flat_rate') === 'flat_rate' ? ($request->shipping_cost ?? 0) : 0,
                     'weight' => $request->weight,
                     'length' => $request->length,
                     'width' => $request->width,

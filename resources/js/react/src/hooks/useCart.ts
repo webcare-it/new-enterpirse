@@ -22,6 +22,8 @@ export interface ICartSummary {
     coupon_discount: number;
     coupon_code: string;
     shipping_id: number;
+    is_has_shipping?: boolean;
+    needs_shipping_area?: boolean;
 }
 
 export interface CartContextType {
