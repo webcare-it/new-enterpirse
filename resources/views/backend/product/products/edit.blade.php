@@ -360,47 +360,69 @@
                     {{-- Shipping --}}
                     <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0 h6">{{ translate('Shipping Configuration') }}</h5>
+                            <h5 class="mb-0 h6">
+                                {{ translate('Shipping Configuration') }}
+                            </h5>
                         </div>
+
                         <div class="card-body">
+
+                            {{-- Shipping Type --}}
                             <div class="form-group row">
-                                <label class="col-md-3 col-from-label">{{ translate('Shipping Type') }}</label>
+                                <label class="col-md-3 col-form-label">
+                                    {{ translate('Shipping Type') }}
+                                </label>
+
                                 <div class="col-md-8">
-                                    <select class="form-control aiz-selectpicker" name="shipping_type"
-                                        id="shipping_type">
+                                    <select class="form-control aiz-selectpicker" name="shipping_type" id="shipping_type"
+                                        data-live-search="true">
                                         <option value="flat_rate"
                                             {{ ($product->shipping->shipping_type ?? '') == 'flat_rate' ? 'selected' : '' }}>
                                             {{ translate('Flat Rate') }}
                                         </option>
+
                                         <option value="free"
                                             {{ ($product->shipping->shipping_type ?? '') == 'free' ? 'selected' : '' }}>
                                             {{ translate('Free Shipping') }}
                                         </option>
+
                                         <option value="local_pickup"
                                             {{ ($product->shipping->shipping_type ?? '') == 'local_pickup' ? 'selected' : '' }}>
                                             {{ translate('Local Pickup') }}
                                         </option>
                                     </select>
+
                                     <small class="text-muted">
                                         {{ translate('Free Shipping / Local Pickup: no delivery charge for this product.') }}
                                     </small>
                                 </div>
                             </div>
 
+
+                            {{-- Shipping Cost --}}
                             <div class="form-group row" id="shipping_cost_div">
-                                <label class="col-md-3 col-from-label">{{ translate('Shipping Cost') }}</label>
+                                <label class="col-md-3 col-form-label">
+                                    {{ translate('Shipping Cost') }}
+                                </label>
+
                                 <div class="col-md-8">
                                     <input type="number" lang="en" min="0" step="0.01"
                                         placeholder="{{ translate('Shipping Cost') }}" name="shipping_cost"
-                                        class="form-control" value="{{ $product->
+                                        class="form-control" value="{{ $product->shipping->shipping_cost ?? 0 }}">
+
                                     <small class="text-muted">
                                         {{ translate('Keep 0 to use the shipping area charge chosen by the customer (e.g. Inside / Outside Dhaka), charged once per order. Enter an amount to charge this product its own delivery cost instead of the area charge.') }}
-                                    </small>shipping->shipping_cost ?? 0 }}">
+                                    </small>
                                 </div>
                             </div>
 
+
+                            {{-- Weight --}}
                             <div class="form-group row">
-                                <label class="col-md-3 col-from-label">{{ translate('Weight (kg)') }}</label>
+                                <label class="col-md-3 col-form-label">
+                                    {{ translate('Weight (kg)') }}
+                                </label>
+
                                 <div class="col-md-8">
                                     <input type="number" lang="en" min="0" step="0.01"
                                         placeholder="{{ translate('Weight') }}" name="weight" class="form-control"
@@ -408,26 +430,38 @@
                                 </div>
                             </div>
 
+
+                            {{-- Dimensions --}}
                             <div class="form-group row">
-                                <label class="col-md-3 col-from-label">{{ translate('Dimensions (L x W x H)') }}</label>
+                                <label class="col-md-3 col-form-label">
+                                    {{ translate('Dimensions (L x W x H)') }}
+                                </label>
+
+                                {{-- Length --}}
                                 <div class="col-md-3">
                                     <input type="number" lang="en" min="0" step="0.01"
                                         placeholder="{{ translate('Length') }}" name="length" class="form-control"
                                         value="{{ $product->shipping->length ?? 0 }}">
                                 </div>
+
+                                {{-- Width --}}
                                 <div class="col-md-3">
                                     <input type="number" lang="en" min="0" step="0.01"
                                         placeholder="{{ translate('Width') }}" name="width" class="form-control"
                                         value="{{ $product->shipping->width ?? 0 }}">
                                 </div>
+
+                                {{-- Height --}}
                                 <div class="col-md-2">
                                     <input type="number" lang="en" min="0" step="0.01"
                                         placeholder="{{ translate('Height') }}" name="height" class="form-control"
                                         value="{{ $product->shipping->height ?? 0 }}">
                                 </div>
                             </div>
+
                         </div>
                     </div>
+
 
                     {{-- SEO --}}
                     <div class="card">
