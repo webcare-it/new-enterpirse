@@ -11,6 +11,7 @@ export const mockProduct: IProduct = {
     discount_type: "percent",
     image: "/test.jpg",
     sold: 50,
+    reviews: 100,
     has_variants: false,
     in_stock: true,
     category: "Test Category",
