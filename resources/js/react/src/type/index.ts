@@ -11,6 +11,7 @@ export interface IProduct {
     discount: number;
     discount_type: string; //flat or percent
     rating: number;
+    reviews: number;
     image: string;
     sold: number;
     has_variants: boolean;

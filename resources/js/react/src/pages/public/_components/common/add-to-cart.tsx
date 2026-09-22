@@ -54,14 +54,14 @@ export const AddToCart = ({
         return (
             <div
                 key={p?.product_id}
-                className="flex justify-between items-center gap-1 md:gap-2 mt-1"
+                className="flex justify-between items-center gap-1 md:gap-2 mt-1 md:mt-2"
             >
                 <button
                     type="button"
                     onClick={() => handleAddToCart("CHECKOUT")}
                     disabled={isAdding || !isInStock}
                     aria-label={`Add ${p?.product_id ?? "product"} to cart`}
-                    className={`flex-1 text-xs sm:text-sm md:text-base rounded-3xl w-full transition-all duration-300 cursor-pointer h-9 md:h-10 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border border-primary gap-1 md:gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`flex-1 text-xs sm:text-sm md:text-base rounded-3xl w-full transition-all duration-300 cursor-pointer h-9 md:h-10 flex items-center justify-center hover:bg-primary/90 bg-primary text-primary-foreground hover:text-primary-foreground border border-primary gap-1 md:gap-2 ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
                 >
                     <LockIcon className="size-3 sm:size-4" />
                     {isAdding ? "loading..." : " Order now"}
@@ -71,7 +71,7 @@ export const AddToCart = ({
                     onClick={() => handleAddToCart()}
                     disabled={isAdding || !isInStock}
                     aria-label={`Add ${p?.product_id ?? "product"} to cart`}
-                    className={`size-9 md:size-10 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center border border-primary bg-primary/80 text-primary-foreground hover:bg-primary-foreground hover:text-primary ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`size-9 md:size-10 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center border border-primary bg-primary text-primary-foreground hover:bg-primary-foreground hover:text-primary ${!isInStock ? "cursor-not-allowed" : "cursor-pointer"}`}
                 >
                     {isAdding ? <Spinner /> : <CartIcon />}
                 </button>
@@ -102,15 +102,15 @@ export const AddToCartLink = ({ slug }: { slug: string }) => {
     return (
         <Link
             to={slug}
-            className="flex justify-between items-center gap-2 mt-1"
+            className="flex justify-between items-center gap-2 mt-1 md:mt-2"
         >
-            <button className="flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-9 md:h-10 flex items-center justify-center hover:bg-primary/90 bg-primary-foreground text-primary hover:text-primary-foreground border text-sm md:text-base border-primary gap-1 md:gap-2">
-                <LockIcon className="size-4 md:size-5" />
+            <button className="flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-9 md:h-10 flex items-center justify-center hover:bg-primary/90 bg-primary text-primary-foreground border text-sm md:text-base border-primary gap-1 md:gap-2">
+                <LockIcon className="size-3 md:size-4" />
                 Order now
             </button>
 
             <button
-                className={`size-9 md:size-10 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center border border-primary bg-primary/90 text-primary-foreground hover:bg-primary-foreground hover:text-primary`}
+                className={`size-9 md:size-10 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center border border-primary bg-primary text-primary-foreground hover:bg-primary-foreground hover:text-primary`}
             >
                 <CartIcon />
             </button>
