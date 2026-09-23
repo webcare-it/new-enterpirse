@@ -262,7 +262,7 @@ class OrderChatController extends Controller
             $html .= "Price: ৳" . number_format((float) $ctx['price'], 2) . "<br>";
         }
         $html .= "Available stock: <strong>{$stock}</strong><br><br>";
-        $html .= "👉 <strong>Koyta</strong> order korte chan?";
+        $html .= "👉 <strong>কয়টা</strong> কয়টা অর্ডার করতে চান?";
 
         $ctx['product_id']   = $productId;
         $ctx['product_name'] = $productName;
