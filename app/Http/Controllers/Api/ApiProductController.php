@@ -279,7 +279,6 @@ class ApiProductController extends Controller
     public function productDetails(Request $request, $identifier)
     {
         try {
-            // 1. Build query with the correct relation name
             $query = Product::with([
                 'inventory',
                 'price',
@@ -297,10 +296,15 @@ class ApiProductController extends Controller
 
             $product = $query->first();
 
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found',
+                ], 404);
+            }
+
             $discount_amount = $product->price->discount ?? 0;
 
-
-            // 2. Gallery images
             $galleryImages = [];
             if ($product->photos) {
                 $photoIds = json_decode($product->photos, true);
@@ -314,7 +318,6 @@ class ApiProductController extends Controller
                 }
             }
 
-            // 3. Map variants – use the correct relation
             $variants = $product->variants->map(function ($variant) {
                 $discount_amount = $product->price->discount ?? 10;
                 $attributeValue = json_decode($variant->attribute_value, true) ?? [];
@@ -328,33 +331,30 @@ class ApiProductController extends Controller
                     'stock'           => $variant->quantity ?? 0,
                     'image'           => $variant->image ? uploaded_asset($variant->image) : null,
                     'attribute_value' => $attributeValue,
-                    'attribute_name'  => $variant->attributeRel?->name,   // <-- use attributeRel
+                    'attribute_name'  => $variant->attributeRel?->name,
                 ];
             })->values();
 
-
-            // 6. Reviews
             $reviews = $product->reviews;
             $reviewData = [
                 'rating'        => $product->rating ?? 0,
                 'reviews_count' => $product->reviews_count ?? 0,
                 'items'         => $reviews ? $reviews->map(function ($review) {
                     return [
-                        'id'           => $review->id,
-                        'rating'       => $review->rating,
+                        'id'            => $review->id,
+                        'rating'        => $review->rating,
                         'reviews_count' => $review->reviews_count ?? 0,
-                        'comment'      => $review->comment,
-                        'user'         => [
+                        'comment'       => $review->comment,
+                        'user'          => [
                             'id'     => $review->user_id,
                             'name'   => $review->user->name ?? null,
                             'avatar' => $review->user->avatar ?? null,
                         ],
-                        'created_at'   => $review->created_at->toDateTimeString(),
+                        'created_at'    => $review->created_at->toDateTimeString(),
                     ];
                 })->values() : []
             ];
 
-            // 7. Final product array
             $formattedProduct = [
                 'id'                => $product->id,
                 'name'              => $product->name,
@@ -395,19 +395,59 @@ class ApiProductController extends Controller
                     'total_sold'   => $product->inventory->total_sold ?? 0,
                 ],
 
-                'variants'        => $variants,
-                'has_variants'    => $product->variants->count() > 0,
-                'review'          => $reviewData,
-                'created_at'      => $product->created_at->toDateTimeString(),
-                'updated_at'      => $product->updated_at->toDateTimeString(),
+                'variants'     => $variants,
+                'has_variants' => $product->variants->count() > 0,
+                'review'       => $reviewData,
+                'created_at'   => $product->created_at->toDateTimeString(),
+                'updated_at'   => $product->updated_at->toDateTimeString(),
             ];
 
+            $relatedProducts = [];
+            if ($product->category_id) {
+                $relatedProducts = Product::with(['price', 'inventory'])
+                    ->where('is_published', 1)
+                    ->where('category_id', $product->category_id)
+                    ->where('id', '!=', $product->id)
+                    ->limit(10)
+                    ->get()
+                    ->map(function ($rel) {
+                        $regularPrice = (float) ($rel->price->regular_price ?? 0);
+                        $salePrice    = $rel->price->sale_price ?? null;
+                        $discount     = (float) ($rel->price->discount ?? 0);
+                        $currentPrice = $salePrice !== null
+                            ? (float) $salePrice - $discount
+                            : $regularPrice - $discount;
+
+                        $discountPercentage = 0;
+                        if ($regularPrice > 0 && $currentPrice < $regularPrice) {
+                            $discountPercentage = round((($regularPrice - $currentPrice) / $regularPrice) * 100, 2);
+                        }
+                        return [
+                            'id'        => $rel->id,
+                            'name'      => $rel->name,
+                            'slug'      => $rel->slug,
+                            'thumbnail' => $rel->thumbnail ? uploaded_asset($rel->thumbnail) : null,
+                            'price'     => [
+                                'regular'             => $regularPrice,
+                                'sale'                => $salePrice,
+                                'discount'            => $discount,
+                                'discount_percentage' => $discountPercentage,
+                                'current'             => $currentPrice,
+                            ],
+                            'rating'        => $rel->rating ?? 0,
+                            'reviews_count' => $rel->reviews_count ?? 0,
+                            'stock'         => $rel->inventory->stock ?? 0,
+                            'stock_status'  => ($rel->inventory->stock ?? 0) > 0 ? 'in_stock' : 'out_of_stock',
+                        ];
+                    })
+                    ->values();
+            }
             return response()->json([
                 'success' => true,
                 'message' => 'Product retrieved successfully',
                 'data'    => [
-                    'product' => $formattedProduct,
-                    'related_products' => []
+                    'product'          => $formattedProduct,
+                    'related_products' => $relatedProducts,
                 ]
             ]);
         } catch (\Exception $e) {
