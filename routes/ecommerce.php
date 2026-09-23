@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\LandingpageController;
 use App\Http\Controllers\Admin\ManualOrderController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\CourierController;
+use App\Http\Controllers\Admin\OrderChatController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -373,3 +374,14 @@ Route::resource('attributes', '\App\Http\Controllers\Admin\AttributeController')
 
 Route::get('/attributes/edit/{id}', [\App\Http\Controllers\Admin\AttributeController::class, 'edit'])->name('attributes.edit');
 Route::delete('/attributes/destroy/{id}', [\App\Http\Controllers\Admin\AttributeController::class, 'destroy'])->name('attributes.destroy');
+
+
+
+Route::middleware(['auth', 'admin'])
+    ->prefix('order-chat')
+    ->name('admin.order-chat.')
+    ->group(function () {
+        Route::get('/',  [OrderChatController::class, 'index'])->name('index');
+        Route::post('/ask', [OrderChatController::class, 'ask'])->name('ask');
+        Route::post('/clear', [OrderChatController::class, 'clear'])->name('clear');
+    });
