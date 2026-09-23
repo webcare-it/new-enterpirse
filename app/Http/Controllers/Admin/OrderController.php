@@ -1026,18 +1026,13 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Stock deduct hobe jokhon status 'picked_up' e jabe
             $alreadyDeductedStatuses = ['picked_up', 'on_the_way', 'delivered'];
             $isBecomingPickedUp     = $newStatus === 'picked_up'
                 && !in_array($oldStatus, $alreadyDeductedStatuses, true);
 
-            // Dropshipper profit credit hobe jokhon 'delivered' e jabe
             $isBecomingDelivered = $newStatus === 'delivered'
                 && $oldStatus !== 'delivered';
 
-            // ─────────────────────────────────────────────────────────
-            // STEP 1: Stock check + deduct — pickup er somoy
-            // ─────────────────────────────────────────────────────────
             if ($isBecomingPickedUp) {
                 $plan        = [];
                 $stockErrors = [];
@@ -1051,7 +1046,6 @@ class OrderController extends Controller
                     $quantity = (int) $detail->quantity;
                     $sku      = $detail->sku;
 
-                    // Try variant first
                     $variant = null;
                     if (!empty($sku)) {
                         $variant = ProductVarient::where('product_id', $product->id)
@@ -1071,19 +1065,18 @@ class OrderController extends Controller
                             ];
                         }
                     } else {
-                        // Fallback → inventory
                         $inventory = $product->inventory;
 
                         if (!$inventory) {
-                            $stockErrors[] = "❌ Out of stock: '{$product->name}' — no inventory record";
+                            $stockErrors[] = "Out of stock: '{$product->name}' — no inventory record";
                             continue;
                         }
 
                         if ((int) $inventory->stock <= 0) {
-                            $stockErrors[] = "❌ Out of stock: '{$product->name}' — "
+                            $stockErrors[] = "Out of stock: '{$product->name}' — "
                                 . "Stock is 0, Required: {$quantity}";
                         } elseif ((int) $inventory->stock < $quantity) {
-                            $stockErrors[] = "❌ Out of stock: '{$product->name}' — "
+                            $stockErrors[] = "Out of stock: '{$product->name}' — "
                                 . "Available: {$inventory->stock}, Required: {$quantity}";
                         } else {
                             $plan[] = [
@@ -1095,7 +1088,6 @@ class OrderController extends Controller
                     }
                 }
 
-                // If any stock issue → block (no status change, no stock change)
                 if (!empty($stockErrors)) {
                     return response()->json([
                         'success' => false,
@@ -1104,7 +1096,6 @@ class OrderController extends Controller
                     ], 422);
                 }
 
-                // Apply deductions
                 foreach ($plan as $step) {
                     if ($step['type'] === 'variant') {
                         $variant = ProductVarient::find($step['variant_id']);
@@ -1120,9 +1111,6 @@ class OrderController extends Controller
                 }
             }
 
-            // ─────────────────────────────────────────────────────────
-            // STEP 2: num_of_sale update — delivered er somoy
-            // ─────────────────────────────────────────────────────────
             if ($isBecomingDelivered) {
                 foreach ($order->orderDetails as $detail) {
                     $product = $detail->product;
@@ -1133,15 +1121,9 @@ class OrderController extends Controller
                 }
             }
 
-            // ─────────────────────────────────────────────────────────
-            // STEP 3: Order status update
-            // ─────────────────────────────────────────────────────────
             $order->delivery_status = $newStatus;
             $order->save();
 
-            // ─────────────────────────────────────────────────────────
-            // STEP 4: Dropshipper profit — delivered er somoy
-            // ─────────────────────────────────────────────────────────
             if ($isBecomingDelivered && $order->dropshipper_id && $order->dropshipper) {
                 $appKey        = $order->dropshipper->app_key;
                 $appSecret     = $order->dropshipper->app_secret;
@@ -1161,7 +1143,7 @@ class OrderController extends Controller
                     }
 
                     $wholesalePrice = $product->price->wholesale_price ?? 0;
-
+                
                     if ($product->is_variant == 1) {
                         $variantWholesale = null;
                         $sku = $detail->sku ?? null;
