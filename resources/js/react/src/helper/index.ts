@@ -136,16 +136,6 @@ export const slugify = (text: string): string => {
     return words.map((word) => word.toLowerCase()).join("-");
 };
 
-export const renderStars = (rating: number) => {
-    const full = Math.floor(rating);
-    const hasHalf = rating % 1 >= 0.5;
-    return (
-        "★".repeat(full) +
-        (hasHalf ? "½" : "") +
-        "☆".repeat(5 - full - (hasHalf ? 1 : 0))
-    );
-};
-
 export const getSplitName = (name: string) => {
     const words = name.split(" ");
 

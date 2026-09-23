@@ -1,4 +1,4 @@
-export const renderStars = (rating: number) => {
+export const renderStars = (rating: number = 0) => {
     const full = Math.floor(rating);
     const hasHalf = rating % 1 >= 0.5;
     const empty = 5 - full - (hasHalf ? 1 : 0);
