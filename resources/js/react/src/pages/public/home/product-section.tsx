@@ -3,7 +3,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { LayoutContainer } from "../_components/layout/base-layout";
 import type { ICategoryWithProducts, IProduct } from "@/type";
 import { ProductCard } from "../_components/common/product";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useProductLayout } from "@/hooks/useProductLayout";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export const ProductsSection = ({
     const [currentIndex, setCurrentIndex] = useState(0);
     const [itemsPerView, setItemsPerView] = useState(2);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const updateItemsPerView = () => {
             const width = window.innerWidth;
             const { mobile, tablet, laptop, desktop, ultrawide } = homePage;
@@ -54,9 +54,10 @@ export const ProductsSection = ({
 
     if (!products?.length) return null;
 
-    const maxIndex = Math.max(0, products.length - itemsPerView);
+    const maxIndex = Math.max(0, products?.length - itemsPerView);
     const canScrollLeft = currentIndex > 0;
     const canScrollRight = currentIndex < maxIndex;
+    const hasMore = products?.length > itemsPerView;
 
     const scrollLeft = () => {
         setCurrentIndex((p) => Math.max(p - 1, 0));
@@ -194,7 +195,7 @@ export const ProductsSection = ({
                     </motion.div>
                 </div>
 
-                {href && (
+                {href && hasMore && (
                     <div className="flex justify-center md:mt-2">
                         <Link to={href}>
                             <Button

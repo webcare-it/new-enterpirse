@@ -12,9 +12,10 @@ export const BlogSection = ({ blogs }: { blogs: IBlog[] }) => {
 
     return (
         <LayoutContainer className="py-4">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mt-1 transition-all duration-500 ease-out hover:tracking-wide hover:text-primary text-center">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground transition-all duration-500 ease-out hover:tracking-wide hover:text-primary">
                 Latest Blogs
             </h2>
+
             <BlogLayout className="my-6">
                 {blogs?.map((blog, i: number) => (
                     <AnimationWrapper
