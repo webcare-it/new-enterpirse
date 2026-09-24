@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play } from "lucide-react";
+import { ChevronDown, ChevronUp, Play } from "lucide-react";
 import { RenderHtml } from "@/components/html";
 import type { IProductDetails } from "./type";
 import { getYouTubeEmbedUrl } from "@/helper";
-import { Reviews } from "./review";
+import { ReviewItem, ReviewSummary, Reviews } from "./review";
 
 type TabId = "details" | "reviews" | "shipping" | "video";
 
@@ -35,6 +35,38 @@ type TabId = "details" | "reviews" | "shipping" | "video";
 
 export const ProductInfoTabs = ({ product }: { product: IProductDetails }) => {
     const [active, setActive] = useState<TabId>("details");
+    const [expanded, setExpanded] = useState(false);
+    const [isOverflowing, setIsOverflowing] = useState(false);
+    const descriptionRef = useRef<HTMLDivElement>(null);
+    const tabsRef = useRef<HTMLDivElement>(null);
+
+    const previewReviews = product.review?.items?.slice(0, 2) ?? [];
+
+    useEffect(() => {
+        if (active !== "details") return;
+        const el = descriptionRef.current;
+        if (!el) return;
+
+        const check = () => {
+            if (!expanded) {
+                setIsOverflowing(el.scrollHeight > el.clientHeight + 1);
+            }
+        };
+        check();
+
+        const observer =
+            typeof ResizeObserver !== "undefined"
+                ? new ResizeObserver(check)
+                : null;
+        observer?.observe(el);
+
+        return () => observer?.disconnect();
+    }, [active, expanded, product?.description]);
+
+    const showAllReviews = () => {
+        setActive("reviews");
+        tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
 
     const TABS: { id: TabId; label: string; count?: number }[] = [
         { id: "details", label: "Details" },
@@ -47,7 +79,10 @@ export const ProductInfoTabs = ({ product }: { product: IProductDetails }) => {
     ];
 
     return (
-        <div className="pt-4 border-t border-gray-200 pb-16 md:pb-20">
+        <div
+            ref={tabsRef}
+            className="pt-4 border-t border-gray-200 pb-16 md:pb-20 scroll-mt-24"
+        >
             {/* Tab buttons */}
             <div className="flex border-b border-gray-200 overflow-x-auto">
                 {TABS?.map((tab) => (
@@ -88,10 +123,58 @@ export const ProductInfoTabs = ({ product }: { product: IProductDetails }) => {
                 >
                     {/* Details */}
                     {active === "details" && (
-                        <div className="space-y-4">
-                            <RenderHtml
-                                html={(product?.description as string) || ""}
-                            />
+                        <div className="space-y-6">
+                            <div>
+                                <div
+                                    ref={descriptionRef}
+                                    className={`relative overflow-hidden transition-[max-height] duration-300 ${
+                                        expanded ? "" : "max-h-48"
+                                    }`}
+                                >
+                                    <RenderHtml
+                                        html={
+                                            (product?.description as string) ||
+                                            ""
+                                        }
+                                    />
+                                    {isOverflowing && !expanded && (
+                                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white to-transparent" />
+                                    )}
+                                </div>
+                                {isOverflowing && (
+                                    <button
+                                        onClick={() =>
+                                            setExpanded((prev) => !prev)
+                                        }
+                                        className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary cursor-pointer hover:underline"
+                                    >
+                                        {expanded ? "See less" : "See more"}
+                                        {expanded ? (
+                                            <ChevronUp className="size-4" />
+                                        ) : (
+                                            <ChevronDown className="size-4" />
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="space-y-3">
+                                <h3 className="text-base font-semibold text-gray-900">
+                                    Customer Reviews
+                                </h3>
+                                <ReviewSummary product={product} />
+                                {previewReviews.map((item) => (
+                                    <ReviewItem key={item?.id} item={item} />
+                                ))}
+                                <button
+                                    onClick={showAllReviews}
+                                    className="w-full rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-900 cursor-pointer hover:bg-gray-50 transition"
+                                >
+                                    {(product.review?.items?.length ?? 0) > 0
+                                        ? "See all reviews"
+                                        : "Write a review"}
+                                </button>
+                            </div>
                         </div>
                     )}
 

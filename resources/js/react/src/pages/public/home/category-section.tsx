@@ -50,8 +50,8 @@ export const CategorySection = () => {
     if (!categories?.length) return null;
 
     return (
-        <LayoutContainer>
-            <div className="space-y-6">
+        <LayoutContainer className="py-6">
+            <div className="space-y-4">
                 <div className="flex items-center justify-between gap-4">
                     <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground transition-all duration-500 ease-out hover:tracking-wide hover:text-primary whitespace-nowrap">
                         Categories

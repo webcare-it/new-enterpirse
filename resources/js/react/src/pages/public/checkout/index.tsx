@@ -13,7 +13,6 @@ import {
     useResendOrderOtpMutation,
 } from "@/api/checkout";
 import { useCart } from "@/hooks/useCart";
-import { TrustedBadge } from "./trusted-badge";
 import { Lock } from "lucide-react";
 import { BreadcrumbWrapper } from "@/components/common/breadcrumb-wrapper";
 import { removeLocalStorage, renderVariation } from "@/helper";
@@ -257,20 +256,19 @@ const Form = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-7 gap-6">
                     <div className="md:col-span-4">
-                        <div className="md:sticky md:top-28 space-y-6">
-                            <div className="border border-border shadow-lg rounded-3xl p-4 md:p-5 space-y-5">
+                        <div className="md:sticky md:top-20 space-y-6">
+                            <div className="border border-border rounded-3xl p-4 md:p-5 space-y-5">
                                 <h2 className="font-semibold text-lg uppercase">
                                     Shipping Information
                                 </h2>
                                 <OrderFrom form={form} setForm={setForm} />
                                 <Shipping form={form} setForm={setForm} />
-                                <TrustedBadge />
                             </div>
                         </div>
                     </div>
 
                     <div className="md:col-span-3">
-                        <div className="border border-border shadow-lg rounded-3xl p-4 md:p-5 md:sticky md:top-28 space-y-4">
+                        <div className="border border-border rounded-3xl p-4 md:p-5 md:sticky md:top-20 space-y-4">
                             <OrderSummary>
                                 <Payments form={form} setForm={setForm} />
                             </OrderSummary>
@@ -283,9 +281,9 @@ const Form = () => {
                                 <Lock className="size-4" />
                                 {isPending ? "Processing..." : "Place Order"}
                             </Button>
-                            <div className="flex items-center gap-2 text-xs justify-center mt-2">
-                                <Lock className="size-4 text-primary" /> 100%
-                                Secure checkout
+                            <div className="flex items-center gap-2 text-primary text-xs justify-center mt-2">
+                                <Lock className="size-4 " /> 100% Secure
+                                checkout
                             </div>
                         </div>
                     </div>

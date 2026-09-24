@@ -51,13 +51,14 @@ export const ProductCard = ({ p, campaign = null }: Props) => {
 
                 <div className="p-1.5 md:p-3 select-none">
                     <Link to={link}>
-                        <RatingRow p={p} />
                         <div className="relative inline-block max-w-full">
                             <h3 className="text-sm font-medium md:text-base md:font-semibold text-gray-900 truncate after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[1px] after:w-0 after:bg-gray-900 after:transition-all after:duration-300 hover:after:w-full mt-1">
                                 {p?.name}
                             </h3>
                         </div>
                     </Link>
+
+                    <RatingRow p={p} />
 
                     <RegularPrice p={p} />
 
@@ -92,7 +93,7 @@ const RatingRow = ({ p }: { p: IProduct }) => {
             aria-label={`Rating: ${rating} out of 5 from ${count} reviews`}
         >
             <div className="flex items-center gap-[1px]">
-                {renderStars(rating)}
+                <span className="text-xl">{renderStars(rating)}</span>
                 <span className="hidden md:block text-[10px] text-gray-500 md:text-xs">
                     Reviews
                 </span>
@@ -172,7 +173,7 @@ const DiscountLabel = ({ children }: { children: string }) => {
 };
 
 const OutOfStock = () => (
-    <button className="rounded-3xl w-full transition-all duration-300 cursor-not-allowed h-10 md:h-12 flex items-center justify-center bg-red-100 text-red-600 hover:text-red-600 border text-sm md:text-base border-red-600 gap-1 md:gap-2 mt-1">
+    <button className="rounded-3xl w-full transition-all duration-300 cursor-not-allowed h-9 md:h-10 flex items-center justify-center bg-red-100 text-red-600 hover:text-red-600 border text-sm md:text-base border-red-600 gap-1 md:gap-2 mt-1">
         <StockOutIcon />
         Out of stock
     </button>

@@ -32,7 +32,7 @@ export const Payments = ({ form, setForm }: Props) => {
     }, [setForm, payments]);
 
     return (
-        <div className="space-y-4 border-t pt-3 border-border">
+        <div className="space-y-2 border-t pt-3 border-border">
             <h2 className="font-semibold text-lg flex items-center gap-2">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -67,7 +67,7 @@ export const Payments = ({ form, setForm }: Props) => {
                 onValueChange={(v) =>
                     setForm((prev) => ({ ...prev, payment: v }))
                 }
-                className="space-y-3"
+                className="space-y-1"
             >
                 {payments?.map((p) => (
                     <Label

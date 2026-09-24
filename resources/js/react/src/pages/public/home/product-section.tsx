@@ -129,7 +129,7 @@ export const ProductsSection = ({
     return (
         <div className={`relative group ${className || ""}`}>
             <LayoutContainer>
-                <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center justify-between gap-2 mb-1">
                     <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground transition-all duration-500 ease-out hover:tracking-wide hover:text-primary">
                         {title}
                     </h2>
