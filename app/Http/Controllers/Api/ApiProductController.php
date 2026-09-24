@@ -17,6 +17,138 @@ use Log;
 
 class ApiProductController extends Controller
 {
+    // public function index(Request $request)
+    // {
+    //     $perPage = min(max((int) $request->get('per_page', 15), 1), 100);
+    //     $page = max((int) $request->get('page', 1), 1);
+
+    //     $minPrice = $request->filled('min_price') ? (float) $request->get('min_price') : null;
+    //     $maxPrice = $request->filled('max_price') ? (float) $request->get('max_price') : null;
+    //     $rating = $request->filled('rating') ? (float) $request->get('rating') : null;
+    //     $sort = $request->get('sort', 'select');
+    //     $brands = $request->filled('brands')
+    //         ? array_values(array_unique(array_filter(array_map(fn($value) => trim($value), explode(',', $request->get('brands'))))))
+    //         : [];
+
+    //     $products = Product::query()
+    //         ->with([
+    //             'variants' => fn($query) => $query->select('id', 'product_id', 'price', 'wholesale_price', 'attribute', 'attribute_value', 'color'),
+    //             'brand' => fn($query) => $query->select('id', 'name'),
+    //             'price' => fn($query) => $query->select('product_id', 'regular_price', 'sale_price', 'wholesale_price'), // added wholesale_price
+    //             'inventory' => fn($query) => $query->select('product_id', 'stock'),
+    //             'reviews' => fn($query) => $query->where('status', 1),
+    //         ])
+    //         ->select([
+    //             'id',
+    //             'name',
+    //             'slug',
+    //             'thumbnail',
+    //             'brand_id',
+    //             'num_of_sale',
+    //             'status',
+    //             'is_published',
+    //             'is_variant',
+    //             'created_at',
+    //             'updated_at',
+    //         ])
+    //         ->where('is_published', 1)
+    //         ->get();
+
+    //     // Filter & sort (unchanged)
+    //     $filteredProducts = $products->filter(function ($product) use ($minPrice, $maxPrice, $rating, $brands) {
+    //         $price = (float) ($product->price?->sale_price ?? $product->price?->regular_price ?? 0);
+
+    //         if ($minPrice !== null && $price < $minPrice) {
+    //             return false;
+    //         }
+
+    //         if ($maxPrice !== null && $price > $maxPrice) {
+    //             return false;
+    //         }
+
+    //         $productRating = $product->reviews->isNotEmpty()
+    //             ? round((float) $product->reviews->avg('rating'), 1)
+    //             : 0;
+
+    //         if ($rating !== null && $productRating < $rating) {
+    //             return false;
+    //         }
+
+    //         if ($brands !== []) {
+    //             $brandNames = array_map('strtolower', $brands);
+    //             $productBrand = strtolower((string) ($product->brand->name ?? ''));
+
+    //             if (! in_array($productBrand, $brandNames, true)) {
+    //                 return false;
+    //             }
+    //         }
+
+    //         return true;
+    //     })->values();
+
+    //     $filteredProducts = $filteredProducts->sortBy(function ($product) use ($sort) {
+    //         $price = (float) ($product->price?->sale_price ?? $product->price?->regular_price ?? 0);
+
+    //         return match ($sort) {
+    //             'newest' => - ($product->id ?? 0),
+    //             'oldest' => $product->id ?? 0,
+    //             'price-low' => $price,
+    //             'price-high' => -$price,
+    //             default => - ($product->id ?? 0),
+    //         };
+    //     }, SORT_REGULAR)->values();
+
+    //     $total = $filteredProducts->count();
+    //     $totalPages = $total > 0 ? (int) ceil($total / $perPage) : 0;
+    //     $currentPage = min($page, $totalPages ?: 1);
+    //     $pagedProducts = $filteredProducts->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+    //     // ---- Add wholesale_price & price_range to paged products ----
+    //     $items = ProductResource::collection($pagedProducts)->resolve();
+    //     $models = $pagedProducts; // already a collection of Product models
+
+
+
+    //     foreach ($items as $index => &$item) {
+    //         $model = $models->firstWhere('id', $item['id']);
+    //         if (! $model) {
+    //             $item['wholesale_price'] = null;
+    //             unset($item['price_range']);
+    //             continue;
+    //         }
+
+    //         if ($model->variants->isNotEmpty()) {
+    //             // Variant product → max wholesale among variants
+    //             $item['wholesale_price'] = (float) $model->variants->max('wholesale_price');
+
+    //             // Price range from variant retail prices
+    //             $prices = $model->variants->pluck('price')->map(fn($p) => (float) $p);
+    //             $item['price_range'] = [
+    //                 'min' => $prices->min(),
+    //                 'max' => $prices->max(),
+    //             ];
+    //         } else {
+    //             // Simple product → fallback to parent wholesale_price
+    //             $item['wholesale_price'] = $model->price ? (float) $model->price->wholesale_price : null;
+    //             unset($item['price_range']); // or set to null if you prefer
+    //         }
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => [
+    //             'products' => $items,
+    //             'pagination' => [
+    //                 'current_page' => $currentPage,
+    //                 'per_page' => $perPage,
+    //                 'total' => $total,
+    //                 'total_pages' => $totalPages,
+    //                 'has_more' => $currentPage < $totalPages,
+    //             ],
+    //         ],
+    //     ]);
+    // }
+
     public function index(Request $request)
     {
         $perPage = min(max((int) $request->get('per_page', 15), 1), 100);
@@ -146,7 +278,6 @@ class ApiProductController extends Controller
             ],
         ]);
     }
-
 
     public function search(Request $request)
     {
@@ -337,13 +468,12 @@ class ApiProductController extends Controller
 
             $reviews = $product->reviews;
             $reviewData = [
-                'rating'        => $product->rating ?? 0,
-                'reviews_count' => $product->reviews_count ?? 0,
+                'rating' => round($product->reviews->avg('rating') ?? 0, 1),
+                'reviews_count' => $product->reviews->count() ?? 0,
                 'items'         => $reviews ? $reviews->map(function ($review) {
                     return [
                         'id'            => $review->id,
                         'rating'        => $review->rating,
-                        'reviews_count' => $review->reviews_count ?? 0,
                         'comment'       => $review->comment,
                         'user'          => [
                             'id'     => $review->user_id,
@@ -433,7 +563,8 @@ class ApiProductController extends Controller
                             'original'        => $regularPrice,
                             'discount'        => $discount,
                             'discount_type'   => $discountType,
-                            'rating'          => $rel->rating ?? 0,
+                            'rating'          => round($rel->reviews->avg('rating') ?? 0, 1),
+                            'reviews' => (int) ($rel->relationLoaded('reviews') ? $rel->reviews->count() : $rel->reviews()->count()),
                             'image'           => $rel->thumbnail ? uploaded_asset($rel->thumbnail) : null,
                             'sold'            => $rel->num_of_sale ?? 0,
                             'has_variants'    => $rel->variants()->exists(),
