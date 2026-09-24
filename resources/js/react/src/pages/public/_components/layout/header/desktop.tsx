@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CartIcon } from "../../common/icon";
+import { CartIcon, TrackIcon } from "../../common/icon";
 import { useCart } from "@/hooks/useCart";
 import { HeaderLogo } from "@/components/common/logo";
 import { DesktopSearch } from "./desktop-search";
@@ -22,6 +22,13 @@ export function DesktopHeader() {
 
                 {/* Right Icons */}
                 <div className="flex items-center gap-4">
+                    <Link
+                        to="/track-order"
+                        aria-label="Track order"
+                        className="relative text-gray-700 cursor-pointer hover:text-primary transition p-1.5"
+                    >
+                        <TrackIcon className="size-7" />
+                    </Link>
                     <Link
                         to="/my-wishlist"
                         aria-label="View wishlist"

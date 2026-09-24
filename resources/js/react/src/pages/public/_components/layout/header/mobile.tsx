@@ -1,8 +1,7 @@
 import { useCart } from "@/hooks/useCart";
 import { useState } from "react";
 import { SearchDrawerMobile } from "./mobile-search";
-import { CartIcon, CustomSearchIcon } from "../../common/icon";
-import { UserComponent } from "./user";
+import { CartIcon, CustomSearchIcon, TrackIcon } from "../../common/icon";
 import { HeaderLogo } from "@/components/common/logo";
 
 export const MobileHeader = () => {
@@ -16,7 +15,13 @@ export const MobileHeader = () => {
                     <div className="flex items-center justify-between gap-3">
                         <HeaderLogo />
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <button
+                                aria-label="Search products"
+                                className="relative text-gray-700 cursor-pointer hover:text-primary transition p-1.5"
+                            >
+                                <TrackIcon className="size-6" />
+                            </button>
                             <button
                                 aria-label="Search products"
                                 className="relative text-gray-900 cursor-pointer hover:text-primary transition p-1.5"
@@ -37,7 +42,6 @@ export const MobileHeader = () => {
                                     </span>
                                 )}
                             </button>
-                            <UserComponent type="header" />
                         </div>
                     </div>
                 </div>

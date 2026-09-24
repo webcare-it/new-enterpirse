@@ -39,7 +39,7 @@ export const SocialMessage = ({
             <a
                 href={`https://api.whatsapp.com/send?phone=${whatsappNumber}?text=${window.location.href}`}
                 target="_blank"
-                className="fixed right-2 md:right-4 bottom-16 md:bottom-6 z-50"
+                className="fixed right-2 md:right-4 bottom-16 md:bottom-24 z-50"
             >
                 <div className="relative flex items-center justify-center">
                     <span className="absolute inline-flex size-10 md:size-14 rounded-full bg-green-500 opacity-75 animate-ping"></span>

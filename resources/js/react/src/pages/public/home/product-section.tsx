@@ -195,10 +195,11 @@ export const ProductsSection = ({
                 </div>
 
                 {href && (
-                    <div className="flex justify-center mt-2 md:mt-4">
+                    <div className="flex justify-center md:mt-2">
                         <Link to={href}>
                             <Button
                                 variant="secondary"
+                                size="xs"
                                 className="group/view-all"
                             >
                                 View all
