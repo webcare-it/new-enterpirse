@@ -123,5 +123,4 @@ Route::group(['prefix' => 'v1'], function () {
     Route::prefix('landing-page')->group(function () {
         Route::get('/{slug}', [\App\Http\Controllers\Api\ApiLandingPageController::class, 'landingpage']);
     });
-
 });

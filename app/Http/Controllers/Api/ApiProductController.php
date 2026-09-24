@@ -364,7 +364,6 @@ class ApiProductController extends Controller
                 'thumbnail'         => $product->thumbnail ? uploaded_asset($product->thumbnail) : null,
                 'yt_video_id'       => $product->video_link ?? null,
                 'images'            => $galleryImages,
-
                 'category' => $product->category ? [
                     'id'    => $product->category->id,
                     'name'  => $product->category->category_name,
@@ -392,7 +391,7 @@ class ApiProductController extends Controller
                     'sku'          => $product->inventory->sku ?? 'N/A',
                     'stock'        => $product->inventory->stock ?? 0,
                     'stock_status' => ($product->inventory->stock ?? 0) > 0 ? 'in_stock' : 'out_of_stock',
-                    'total_sold'   => $product->inventory->total_sold ?? 0,
+                    'total_sold'   => $product->num_of_sale ?? 0,
                 ],
 
                 'variants'     => $variants,
@@ -404,7 +403,7 @@ class ApiProductController extends Controller
 
             $relatedProducts = [];
             if ($product->category_id) {
-                $relatedProducts = Product::with(['price', 'inventory'])
+                $relatedProducts = Product::with(['price', 'inventory', 'category', 'brand'])
                     ->where('is_published', 1)
                     ->where('category_id', $product->category_id)
                     ->where('id', '!=', $product->id)
@@ -414,34 +413,44 @@ class ApiProductController extends Controller
                         $regularPrice = (float) ($rel->price->regular_price ?? 0);
                         $salePrice    = $rel->price->sale_price ?? null;
                         $discount     = (float) ($rel->price->discount ?? 0);
+
+                        // Current price calculation
                         $currentPrice = $salePrice !== null
                             ? (float) $salePrice - $discount
                             : $regularPrice - $discount;
 
-                        $discountPercentage = 0;
-                        if ($regularPrice > 0 && $currentPrice < $regularPrice) {
-                            $discountPercentage = round((($regularPrice - $currentPrice) / $regularPrice) * 100, 2);
+                        // Determine discount type (flat or percentage)
+                        $discountType = 'flat';
+                        if ($rel->price && isset($rel->price->discount_type)) {
+                            $discountType = $rel->price->discount_type;
                         }
+
                         return [
-                            'id'        => $rel->id,
-                            'name'      => $rel->name,
-                            'slug'      => $rel->slug,
-                            'thumbnail' => $rel->thumbnail ? uploaded_asset($rel->thumbnail) : null,
-                            'price'     => [
-                                'regular'             => $regularPrice,
-                                'sale'                => $salePrice,
-                                'discount'            => $discount,
-                                'discount_percentage' => $discountPercentage,
-                                'current'             => $currentPrice,
-                            ],
-                            'rating'        => $rel->rating ?? 0,
-                            'reviews_count' => $rel->reviews_count ?? 0,
-                            'stock'         => $rel->inventory->stock ?? 0,
-                            'stock_status'  => ($rel->inventory->stock ?? 0) > 0 ? 'in_stock' : 'out_of_stock',
+                            'id'              => $rel->id,
+                            'name'            => $rel->name,
+                            'slug'            => $rel->slug,
+                            'price'           => $currentPrice,
+                            'original'        => $regularPrice,
+                            'discount'        => $discount,
+                            'discount_type'   => $discountType,
+                            'rating'          => $rel->rating ?? 0,
+                            'image'           => $rel->thumbnail ? uploaded_asset($rel->thumbnail) : null,
+                            'sold'            => $rel->num_of_sale ?? 0,
+                            'has_variants'    => $rel->variants()->exists(),
+                            'in_stock'        => ($rel->inventory->stock ?? 0) > 0,
+                            'category'        => $rel->category ? [
+                                'id'   => $rel->category->id,
+                                'name' => $rel->category->category_name,
+                                'slug' => $rel->category->slug,
+                            ] : null,
+                            'brand'           => $rel->brand?->name,
+                            'wholesale_price' => (float) ($rel->wholesale_price ?? 0),
                         ];
                     })
                     ->values();
             }
+
+
             return response()->json([
                 'success' => true,
                 'message' => 'Product retrieved successfully',
