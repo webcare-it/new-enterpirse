@@ -91,15 +91,7 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <button class="btn btn-sm btn-secondary qty-minus" type="button">
-                                                        <i class="las la-minus"></i>
-                                                    </button>
-                                                    <input type="number" class="form-control form-control-sm item-qty mx-1"
-                                                        value="{{ $detail->quantity }}" min="1"
-                                                        style="width: 60px; text-align: center;">
-                                                    <button class="btn btn-sm btn-secondary qty-plus" type="button">
-                                                        <i class="las la-plus"></i>
-                                                    </button>
+                                                    {{ $detail->quantity }}
                                                 </div>
                                             </td>
                                             <td class="item-total">
@@ -203,8 +195,8 @@
 
                     <div class="form-group">
                         <label>{{ translate('Order Date') }}</label>
-                        <input type="text" class="form-control"
-                            value="{{ $order->created_at->format('d M Y, h:i A') }}" readonly>
+                        <input type="text" class="form-control" value="{{ $order->created_at->format('d M Y, h:i A') }}"
+                            readonly>
                     </div>
                 </div>
             </div>

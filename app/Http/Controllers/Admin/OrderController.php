@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Order;
 use App\Models\Admin\Product;
+use App\Models\Admin\ProductInventory;
 use App\Models\Admin\ProductVarient;
 use App\Models\OrderDetail;
 use Illuminate\Http\Request;
@@ -1000,10 +1001,13 @@ class OrderController extends Controller
         try {
             $request->validate([
                 'order_id' => 'required|exists:orders,id',
-                'status' => 'required|in:pending,confirmed,picked_up,on_the_way,delivered,transfer,cancelled'
+                'status'   => 'required|in:pending,confirmed,picked_up,on_the_way,delivered,transfer,cancelled'
             ]);
 
-            $order = Order::with('orderDetails.product')->findOrFail($request->order_id);
+            $order = Order::with([
+                'orderDetails.product.inventory',
+                'orderDetails.product.variants',
+            ])->findOrFail($request->order_id);
 
             if ($request->status === 'transfer') {
                 return response()->json([
@@ -1013,30 +1017,119 @@ class OrderController extends Controller
             }
 
             $oldStatus = $order->delivery_status;
+            $newStatus = $request->status;
 
-            $isBecomingDelivered = $request->status === 'delivered' && $oldStatus !== 'delivered';
+            if ($oldStatus === $newStatus) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order is already in ' . ucfirst($newStatus) . ' status.'
+                ]);
+            }
+
+            $alreadyDeductedStatuses = ['picked_up', 'on_the_way', 'delivered'];
+            $isBecomingPickedUp     = $newStatus === 'picked_up'
+                && !in_array($oldStatus, $alreadyDeductedStatuses, true);
+
+            $isBecomingDelivered = $newStatus === 'delivered'
+                && $oldStatus !== 'delivered';
+
+            if ($isBecomingPickedUp) {
+                $plan        = [];
+                $stockErrors = [];
+
+                foreach ($order->orderDetails as $detail) {
+                    $product = $detail->product;
+                    if (!$product) {
+                        continue;
+                    }
+
+                    $quantity = (int) $detail->quantity;
+                    $sku      = $detail->sku;
+
+                    $variant = null;
+                    if (!empty($sku)) {
+                        $variant = ProductVarient::where('product_id', $product->id)
+                            ->where('sku', $sku)
+                            ->first();
+                    }
+
+                    if ($variant) {
+                        if ((int) $variant->quantity < $quantity) {
+                            $stockErrors[] = "❌ Out of stock: '{$product->name}' (SKU: {$sku}) — "
+                                . "Available: {$variant->quantity}, Required: {$quantity}";
+                        } else {
+                            $plan[] = [
+                                'type'       => 'variant',
+                                'variant_id' => $variant->id,
+                                'quantity'   => $quantity,
+                            ];
+                        }
+                    } else {
+                        $inventory = $product->inventory;
+
+                        if (!$inventory) {
+                            $stockErrors[] = "Out of stock: '{$product->name}' — no inventory record";
+                            continue;
+                        }
+
+                        if ((int) $inventory->stock <= 0) {
+                            $stockErrors[] = "Out of stock: '{$product->name}' — "
+                                . "Stock is 0, Required: {$quantity}";
+                        } elseif ((int) $inventory->stock < $quantity) {
+                            $stockErrors[] = "Out of stock: '{$product->name}' — "
+                                . "Available: {$inventory->stock}, Required: {$quantity}";
+                        } else {
+                            $plan[] = [
+                                'type'         => 'inventory',
+                                'inventory_id' => $inventory->id,
+                                'quantity'     => $quantity,
+                            ];
+                        }
+                    }
+                }
+
+                if (!empty($stockErrors)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "🚫 Pickup failed — Out of stock:\n• " . implode("\n• ", $stockErrors),
+                        'errors'  => $stockErrors,
+                    ], 422);
+                }
+
+                foreach ($plan as $step) {
+                    if ($step['type'] === 'variant') {
+                        $variant = ProductVarient::find($step['variant_id']);
+                        if ($variant && $variant->quantity >= $step['quantity']) {
+                            $variant->decrement('quantity', $step['quantity']);
+                        }
+                    } else {
+                        $inventory = ProductInventory::find($step['inventory_id']);
+                        if ($inventory && $inventory->stock >= $step['quantity']) {
+                            $inventory->decrement('stock', $step['quantity']);
+                        }
+                    }
+                }
+            }
 
             if ($isBecomingDelivered) {
                 foreach ($order->orderDetails as $detail) {
                     $product = $detail->product;
                     if ($product) {
-                        $product->num_of_sale = ($product->num_of_sale ?? 0) + $detail->quantity;
+                        $product->num_of_sale = ($product->num_of_sale ?? 0) + (int) $detail->quantity;
                         $product->save();
                     }
                 }
             }
 
-            $order->delivery_status = $request->status;
+            $order->delivery_status = $newStatus;
             $order->save();
 
-            // Only credit profit when the order transitions TO delivered
             if ($isBecomingDelivered && $order->dropshipper_id && $order->dropshipper) {
                 $appKey        = $order->dropshipper->app_key;
                 $appSecret     = $order->dropshipper->app_secret;
                 $userName      = $order->dropshipper->user_name;
                 $invoiceNumber = $order->code;
 
-                // Step 1: Calculate product selling total & total wholesale cost
                 $orderTotal         = 0;
                 $totalWholesaleCost = 0;
 
@@ -1050,48 +1143,18 @@ class OrderController extends Controller
                     }
 
                     $wholesalePrice = $product->price->wholesale_price ?? 0;
-
-                    // For variant products, wholesale price always comes from product_varients table
+                
                     if ($product->is_variant == 1) {
                         $variantWholesale = null;
                         $sku = $detail->sku ?? null;
 
                         if ($sku) {
-                            // Try to match the variant by SKU (SKU is unique in product_varients)
                             $variant = ProductVarient::where('sku', $sku)->first();
-
                             if ($variant) {
                                 $variantWholesale = $variant->wholesale_price;
                             }
                         }
 
-                        // Fallback: match by the color-size variation (orders without SKU)
-                        if (is_null($variantWholesale)) {
-                            $attributeValue = '';
-                            $variation = json_decode($detail->variation, true);
-
-                            if (!empty($variation['color'])) {
-                                $attributeValue .= str_replace(' ', '', $variation['color']);
-                            }
-                            if (!empty($variation['size'])) {
-                                if ($attributeValue !== '') {
-                                    $attributeValue .= '-';
-                                }
-                                $attributeValue .= $variation['size'];
-                            }
-
-                            if ($attributeValue !== '') {
-                                $variant = $product->variants()
-                                    ->where('attribute_value', $attributeValue)
-                                    ->first();
-
-                                if ($variant) {
-                                    $variantWholesale = $variant->wholesale_price;
-                                }
-                            }
-                        }
-
-                        // Wholesale price taken from product_varients table
                         if (!is_null($variantWholesale)) {
                             $wholesalePrice = $variantWholesale;
                         }
@@ -1100,12 +1163,9 @@ class OrderController extends Controller
                     $totalWholesaleCost += (float) $wholesalePrice * $quantity;
                 }
 
-                // Step 2: Calculate profit = selling revenue - wholesale cost (product profit)
-                // Shipping cost is always credited to the dropshipper, even when product profit is 0.
                 $productProfit = $orderTotal - $totalWholesaleCost;
                 $profitAmount  = max(0, $productProfit) + (float) $order->shipping_cost;
 
-                // Step 3: Send profit to balance API
                 $balanceResponse = Http::withHeaders([
                     'App-Secret' => $appSecret,
                     'App-Key'    => $appKey,
@@ -1127,7 +1187,7 @@ class OrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Delivery status updated from ' . ucfirst($oldStatus) . ' to ' . ucfirst($request->status) . '!'
+                'message' => 'Delivery status updated from ' . ucfirst($oldStatus) . ' to ' . ucfirst($newStatus) . '!'
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -1136,6 +1196,7 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Update payment status only

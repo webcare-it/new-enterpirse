@@ -21,116 +21,6 @@ use Illuminate\Support\Facades\Validator;
 
 class ApiCartController extends Controller
 {
-    public function index1(Request $request)
-    {
-        $requestedUserId = $request->header('User-Id');
-
-        $user = User::where('id', $requestedUserId)->first();
-
-        // Eager load product + its shipping record to avoid N+1 and get correct shipping cost
-        $query = Cart::with(['product.shippings']);
-
-        if ($user) {
-            $cartItems = $query->where(function ($q) use ($user, $requestedUserId) {
-                $q->where('user_id', $user->id)
-                    ->orWhere('temp_user_id', $requestedUserId);
-            })->get();
-        } else {
-            $cartItems = $query->where('temp_user_id', $requestedUserId)->get();
-        }
-
-        // Coupon data (summed from all items)
-        $couponDiscount = round($cartItems->sum('coupon_discount'), 2);
-        $couponCode     = $cartItems->isNotEmpty() ? $cartItems->first()->coupon_code : null;
-
-        $formatted = $cartItems->map(function ($item) {
-            $product = $item->product;
-
-            // ---- Variation handling ----
-            $variation = [];
-            if ($item->variation) {
-                $variation = is_array($item->variation)
-                    ? $item->variation
-                    : json_decode($item->variation, true);
-            }
-
-            if (isset($variation['color']) && !isset($variation['color_name'])) {
-                $color = Color::find($variation['color']);
-                if ($color) {
-                    $variation['color_name'] = $color->name;
-                }
-            }
-
-            // ---- Shipping from product_shippings ----
-            // Assumes Product model has a `shippings` relation (hasMany).
-            $shipping     = $product?->shippings?->first();
-            $shippingCost = (float) ($shipping?->shipping_cost ?? 0);
-            $shippingArea = $shipping?->id; // this is product_shippings.id
-            // If you actually store a separate shipping "area"/zone id, use that column instead.
-
-            // ---- Totals per item ----
-            $subtotal      = (float) ($item->price * $item->quantity);
-            $totalTax      = (float) ($item->tax * $item->quantity);
-            $totalDiscount = (float) ($item->discount * $item->quantity);
-
-            return [
-                'id' => (int) $item->id,
-                'product' => [
-                    'id'        => (int) $item->product_id,
-                    'name'      => $product?->name ?? 'Product not found',
-                    'slug'      => $product?->slug,
-                    'price'     => (float) $item->price,
-                    'image'     => $product?->thumbnail ? uploaded_asset($product->thumbnail) : null,
-                    'quantity'  => (int) $item->quantity,
-                    'variation' => isset($variation['attribute_value'])
-                        ? json_decode($variation['attribute_value'], true)
-                        : null,
-                    'shipping_cost' => $shippingCost,
-                ],
-                'subtotal'       => $subtotal,
-                'total_tax'      => $totalTax,
-                'total_discount' => $totalDiscount,
-                'shipping_cost'  => $shippingCost,
-                'shipping_area'  => $shippingArea,
-                'total_item'     => (int) $item->quantity,
-            ];
-        });
-
-        // ---- Compute summary totals ----
-        $subtotal        = $formatted->sum('subtotal');
-        $totalTax        = $formatted->sum('total_tax');
-        $productDiscount = $formatted->sum('total_discount');
-        $shippingCost    = $formatted->sum('shipping_cost'); // now correct
-        $productShipping = $formatted->sum('product.shipping_cost'); // now correct
-        $totalItems      = $formatted->sum('total_item');
-
-        // Total = subtotal + tax - product_discount - coupon_discount + shipping shipping_area
-        $total = $subtotal + $totalTax - $productDiscount - $couponDiscount + $shippingCost;
-
-        // Shipping id (product_shippings.id) of first item, or null
-        $shippingId = $formatted->isNotEmpty() ? $formatted->first()['shipping_area'] : null;
-
-        return response()->json([
-            'success' => true,
-            'id'      => $requestedUserId,
-            'data'    => [
-                'items'   => $formatted,
-                'summary' => [
-                    'total'           => round($total, 2),
-                    'subtotal'        => round($subtotal, 2),
-                    'total_tax'       => round($totalTax, 2),
-                    'total_discount'  => round($productDiscount, 2),
-                    'shipping_cost'   => round($shippingCost, 2),
-                    'total_item'      => $totalItems,
-                    'coupon_discount' => $couponDiscount,
-                    'coupon_code'     => $couponCode,
-                    'shipping_id'     => $shippingId,
-                    'is_has_shipping'     => $shippingCost == 0 ? false : true,
-                ],
-            ],
-        ]);
-    }
-
     public function index(Request $request)
     {
         $requestedUserId = $request->header('User-Id');
@@ -298,6 +188,164 @@ class ApiCartController extends Controller
     /**
      * Add a product to cart.
      */
+    // public function add(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'product_id' => 'required|exists:products,id',
+    //         'quantity'   => 'sometimes|integer|min:1',
+    //         'variation'  => 'sometimes|array',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+    //     }
+
+    //     $campaignId = $request->header('campaign_id');
+    //     $campaign = null;
+    //     $campaignDiscountAmount = null;
+    //     $campaignDiscountType = null;
+
+    //     if ($campaignId) {
+    //         $campaign = Campaign::where('id', $campaignId)->where('status', 1)->first();
+    //         if ($campaign) {
+    //             $campaignDiscountAmount = (float) $campaign->discount_amount;
+    //             $campaignDiscountType = $campaign->discount_type ?? 'flat';
+    //         }
+    //     }
+
+    //     // Eager load inventory + shippings so we can read product-level shipping cost
+    //     $product = Product::with(['inventory', 'shippings'])->find($request->product_id);
+    //     if (!$product) {
+    //         return response()->json(['success' => false, 'message' => 'Product not found'], 404);
+    //     }
+
+    //     $quantity = $request->quantity ?? 1;
+    //     $variation = $request->variation ?? [];
+
+    //     $regularPrice = (float) optional($product->price)->regular_price ?? 0;
+    //     $productDiscount = (float) optional($product->price)->discount ?? 0;
+    //     $salePrice = (float) optional($product->price)->sale_price ?? $regularPrice;
+    //     $tax = (float) $product->tax ?? 0;
+
+    //     // ---- Shipping cost from product_shippings ----
+    //     // 0 hole cart e 0 save hobe; place() e area cost diye replace hobe.
+    //     $productShipping = $product->shippings->first()?->shipping_cost;
+    //     $shippingCost = (float) ($productShipping ?? 0);
+
+    //     $sku = $variation['sku'] ?? $product->sku;
+
+    //     $colorId = null;
+    //     $attributeValue = null;
+    //     $variantPrice = null;
+
+    //     if ($sku && $sku !== $product->sku) {
+    //         $variant = ProductVarient::where('product_id', $product->id)
+    //             ->where('sku', $sku)
+    //             ->first();
+
+    //         if (!$variant) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Variant not found'
+    //             ], 404);
+    //         }
+
+    //         if ($variant->quantity < $quantity) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Insufficient stock for this variant'
+    //             ], 400);
+    //         }
+
+    //         $variantPrice = $variant->price !== null ? (float) $variant->price : null;
+    //         $colorId = $variant->color ?? null;
+    //         $attributeValue = $variant->attribute_value ?? null;
+    //     }
+
+    //     if ($variantPrice !== null) {
+    //         $basePrice = $variantPrice;
+    //     } else {
+    //         $basePrice = $salePrice > 0 ? $salePrice : $regularPrice;
+    //     }
+
+    //     if ($campaign) {
+    //         if ($campaignDiscountType === 'flat') {
+    //             $finalPrice = max(0, $regularPrice - $campaignDiscountAmount);
+    //         } else { // percent
+    //             $finalPrice = $regularPrice * (1 - $campaignDiscountAmount / 100);
+    //         }
+    //         $discountToSave = $campaignDiscountAmount;
+    //         $discountTypeToSave = $campaignDiscountType;
+    //     } else {
+    //         $finalPrice = $basePrice;
+    //         $discountToSave = $productDiscount;
+    //         $discountTypeToSave = optional($product->price)->discount_type ?? 'percent';
+    //     }
+
+    //     $userId = null;
+    //     $tempUserId = null;
+    //     $requestedUserId = $request->header('User-Id') ?? $request->input('user_id');
+
+    //     if ($requestedUserId && \App\Models\User::where('id', $requestedUserId)->exists()) {
+    //         $userId = $requestedUserId;
+    //     } else {
+    //         $tempUserId = $request->input('temp_user_id') ?? $requestedUserId ?? (string) \Illuminate\Support\Str::uuid();
+    //     }
+
+    //     $cartItem = Cart::where('product_id', $product->id)
+    //         ->where('sku', $sku)
+    //         ->when($userId, function ($query) use ($userId) {
+    //             return $query->where('user_id', $userId);
+    //         })
+    //         ->when(!$userId && $tempUserId, function ($query) use ($tempUserId) {
+    //             return $query->where('temp_user_id', $tempUserId);
+    //         })
+    //         ->first();
+
+    //     $variationForStorage = [
+    //         'sku'             => $sku,
+    //         'color'           => $colorId,
+    //         'attribute_value' => $attributeValue,
+    //     ];
+
+    //     if (!empty($variation)) {
+    //         $variationForStorage = array_merge($variation, $variationForStorage);
+    //     }
+
+    //     if ($cartItem) {
+    //         $cartItem->quantity += $quantity;
+    //         $cartItem->price = $finalPrice;
+    //         $cartItem->discount = $discountToSave;
+    //         $cartItem->shipping_cost = $shippingCost; // refresh in case product shipping changed
+    //         $cartItem->save();
+    //         $message = 'Cart updated successfully';
+    //     } else {
+    //         $cartItem = Cart::create([
+    //             'product_id'    => $product->id,
+    //             'sku'           => $sku ?? $product->inventory->sku,
+    //             'user_id'       => $userId,
+    //             'temp_user_id'  => $tempUserId,
+    //             'variation'     => json_encode($variationForStorage),
+    //             'price'         => $finalPrice,
+    //             'tax'           => $tax,
+    //             'discount'      => $discountToSave,
+    //             'shipping_cost' => $shippingCost,
+    //             'shipping_type' => $product->shippings->first()?->shipping_type ?? 'flat_rate',
+    //             'quantity'      => $quantity,
+    //             'owner_id'      => $product->vendor_id ?? null,
+    //         ]);
+    //         $message = 'Added to cart';
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => $message,
+    //     ]);
+    // }
+
+    /**
+     * Add a product to cart.
+     */
     public function add(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -319,98 +367,101 @@ class ApiCartController extends Controller
             $campaign = Campaign::where('id', $campaignId)->where('status', 1)->first();
             if ($campaign) {
                 $campaignDiscountAmount = (float) $campaign->discount_amount;
-                $campaignDiscountType = $campaign->discount_type ?? 'flat';
+                $campaignDiscountType   = $campaign->discount_type ?? 'flat';
             }
         }
 
-        // Eager load inventory + shippings so we can read product-level shipping cost
-        $product = Product::with(['inventory', 'shippings'])->find($request->product_id);
+        $product = Product::with('inventory')->find($request->product_id);
         if (!$product) {
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
 
-        $quantity = $request->quantity ?? 1;
+        $quantity  = $request->quantity ?? 1;
         $variation = $request->variation ?? [];
 
-        $regularPrice = (float) optional($product->price)->regular_price ?? 0;
+        $regularPrice    = (float) optional($product->price)->regular_price ?? 0;
         $productDiscount = (float) optional($product->price)->discount ?? 0;
-        $salePrice = (float) optional($product->price)->sale_price ?? $regularPrice;
-        $tax = (float) $product->tax ?? 0;
-
-        // ---- Shipping cost from product_shippings ----
-        // 0 hole cart e 0 save hobe; place() e area cost diye replace hobe.
-        $productShipping = $product->shippings->first()?->shipping_cost;
-        $shippingCost = (float) ($productShipping ?? 0);
-
-        $sku = $variation['sku'] ?? $product->sku;
+        $salePrice       = (float) optional($product->price)->sale_price ?? $regularPrice;
+        $tax             = (float) $product->tax ?? 0;
+        $shippingCost    = (float) $product->shipping_cost ?? 0;
+        $sku = $variation['sku']
+            ?? $product->sku
+            ?? ('P-' . $product->id);
 
         $colorId = null;
         $attributeValue = null;
         $variantPrice = null;
 
-        if ($sku && $sku !== $product->sku) {
+        if ($sku && $sku !== $product->sku && $sku !== ('P-' . $product->id)) {
             $variant = ProductVarient::where('product_id', $product->id)
                 ->where('sku', $sku)
                 ->first();
 
             if (!$variant) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Variant not found'
-                ], 404);
+                return response()->json(['success' => false, 'message' => 'Variant not found'], 404);
             }
 
             if ($variant->quantity < $quantity) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Insufficient stock for this variant'
-                ], 400);
+                return response()->json(['success' => false, 'message' => 'Insufficient stock for this variant'], 400);
             }
 
-            $variantPrice = $variant->price !== null ? (float) $variant->price : null;
-            $colorId = $variant->color ?? null;
+            $variantPrice   = $variant->price !== null ? (float) $variant->price : null;
+            $colorId        = $variant->color ?? null;
             $attributeValue = $variant->attribute_value ?? null;
         }
 
-        if ($variantPrice !== null) {
-            $basePrice = $variantPrice;
-        } else {
-            $basePrice = $salePrice > 0 ? $salePrice : $regularPrice;
-        }
+        $basePrice = $variantPrice !== null
+            ? $variantPrice
+            : ($salePrice > 0 ? $salePrice : $regularPrice);
 
         if ($campaign) {
             if ($campaignDiscountType === 'flat') {
                 $finalPrice = max(0, $regularPrice - $campaignDiscountAmount);
-            } else { // percent
+            } else {
                 $finalPrice = $regularPrice * (1 - $campaignDiscountAmount / 100);
             }
             $discountToSave = $campaignDiscountAmount;
-            $discountTypeToSave = $campaignDiscountType;
         } else {
-            $finalPrice = $basePrice;
+            $finalPrice     = $basePrice;
             $discountToSave = $productDiscount;
-            $discountTypeToSave = optional($product->price)->discount_type ?? 'percent';
         }
 
         $userId = null;
         $tempUserId = null;
         $requestedUserId = $request->header('User-Id') ?? $request->input('user_id');
+        $requestTempId   = $request->input('temp_user_id');
 
         if ($requestedUserId && \App\Models\User::where('id', $requestedUserId)->exists()) {
             $userId = $requestedUserId;
         } else {
-            $tempUserId = $request->input('temp_user_id') ?? $requestedUserId ?? (string) \Illuminate\Support\Str::uuid();
+            $tempUserId = $requestTempId ?? $requestedUserId ?? (string) \Illuminate\Support\Str::uuid();
         }
 
-        $cartItem = Cart::where('product_id', $product->id)
-            ->where('sku', $sku)
-            ->when($userId, function ($query) use ($userId) {
-                return $query->where('user_id', $userId);
-            })
-            ->when(!$userId && $tempUserId, function ($query) use ($tempUserId) {
-                return $query->where('temp_user_id', $tempUserId);
-            })
-            ->first();
+        $query = Cart::where('product_id', $product->id);
+
+        if ($sku) {
+            $query->where('sku', $sku);
+        } else {
+            $query->where(function ($q) {
+                $q->whereNull('sku')->orWhere('sku', '');
+            });
+        }
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } else {
+            $query->where('temp_user_id', $tempUserId);
+        }
+
+        $cartItem = $query->first();
+
+        \Log::info('Cart Add Debug', [
+            'product_id'   => $product->id,
+            'sku'          => $sku,
+            'user_id'      => $userId,
+            'temp_user_id' => $tempUserId,
+            'found_cart'   => $cartItem?->id,
+        ]);
 
         $variationForStorage = [
             'sku'             => $sku,
@@ -423,16 +474,19 @@ class ApiCartController extends Controller
         }
 
         if ($cartItem) {
-            $cartItem->quantity += $quantity;
-            $cartItem->price = $finalPrice;
-            $cartItem->discount = $discountToSave;
-            $cartItem->shipping_cost = $shippingCost; // refresh in case product shipping changed
+            $cartItem->quantity     += $quantity;
+            $cartItem->price         = $finalPrice;
+            $cartItem->discount      = $discountToSave;
+            $cartItem->tax           = $tax;
+            $cartItem->shipping_cost = $shippingCost;
+            $cartItem->variation     = json_encode($variationForStorage);
             $cartItem->save();
+
             $message = 'Cart updated successfully';
         } else {
             $cartItem = Cart::create([
                 'product_id'    => $product->id,
-                'sku'           => $sku ?? $product->inventory->sku,
+                'sku'           => $sku,
                 'user_id'       => $userId,
                 'temp_user_id'  => $tempUserId,
                 'variation'     => json_encode($variationForStorage),
@@ -440,16 +494,17 @@ class ApiCartController extends Controller
                 'tax'           => $tax,
                 'discount'      => $discountToSave,
                 'shipping_cost' => $shippingCost,
-                'shipping_type' => $product->shippings->first()?->shipping_type ?? 'flat_rate',
+                'shipping_type' => $product->shipping_type ?? 'flat_rate',
                 'quantity'      => $quantity,
                 'owner_id'      => $product->vendor_id ?? null,
             ]);
+
             $message = 'Added to cart';
         }
 
         return response()->json([
-            'success' => true,
-            'message' => $message,
+            'success'   => true,
+            'message'   => $message
         ]);
     }
 
