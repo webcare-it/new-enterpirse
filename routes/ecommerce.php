@@ -86,7 +86,7 @@ Route::prefix('product')->name('products.')->group(function () {
     Route::get('/{id}/edit', [\App\Http\Controllers\Admin\ProductController::class, 'edit'])->name('edit');
     Route::put('/{id}', [\App\Http\Controllers\Admin\ProductController::class, 'update'])->name('update');
     Route::delete('/{id}', [\App\Http\Controllers\Admin\ProductController::class, 'destroy'])->name('destroy');
-    Route::delete('/delete-all/fasjgdfasfhrwer/werwerwe', [\App\Http\Controllers\Admin\ProductController::class, 'deleteAll'])->name('delete-all');
+    Route::delete('/delete-all/delete-all/delete-all', [\App\Http\Controllers\Admin\ProductController::class, 'deleteAll'])->name('delete-all');
     Route::get('/{id}', [\App\Http\Controllers\Admin\ProductController::class, 'show'])->name('show');
     Route::post('/update-status', [\App\Http\Controllers\Admin\ProductController::class, 'updateStatus'])->name('update-status');
 

@@ -55,7 +55,7 @@ export const Shipping = ({ form, setForm }: Props) => {
     };
 
     return (
-        <>
+        <div className="space-y-2">
             <h2 className="font-semibold text-lg flex items-center gap-2 mt-2">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -108,8 +108,14 @@ export const Shipping = ({ form, setForm }: Props) => {
                 </div>
             ) : (
                 <>
+                    {!form.shipping && summary?.needs_shipping_area && (
+                        <p className="text-sm text-amber-700">
+                            Select a shipping area to see the final shipping
+                            cost.
+                        </p>
+                    )}
                     {ownShippingItems?.length > 0 && (
-                        <p className="-mt-2 text-xs md:text-sm text-gray-500">
+                        <p className="-mt-2 text-xs md:text-sm text-gray-600">
                             {`The area charge is added once per order. ${ownShippingItems.length} ${ownShippingItems.length > 1 ? "items also have their" : "item also has its"} own delivery charge. See the order summary.`}
                         </p>
                     )}
@@ -140,14 +146,8 @@ export const Shipping = ({ form, setForm }: Props) => {
                             </Label>
                         ))}
                     </RadioGroup>
-                    {!form.shipping && summary?.needs_shipping_area && (
-                        <p className="text-sm text-amber-600">
-                            Select a shipping area to see the final shipping
-                            cost.
-                        </p>
-                    )}
                 </>
             )}
-        </>
+        </div>
     );
 };

@@ -262,7 +262,7 @@ class OrderChatController extends Controller
             $html .= "Price: ৳" . number_format((float) $ctx['price'], 2) . "<br>";
         }
         $html .= "Available stock: <strong>{$stock}</strong><br><br>";
-        $html .= "👉 <strong>Koyta</strong> order korte chan?";
+        $html .= "👉 <strong>কয়টা</strong> কয়টা অর্ডার করতে চান?";
 
         $ctx['product_id']   = $productId;
         $ctx['product_name'] = $productName;
@@ -336,7 +336,7 @@ class OrderChatController extends Controller
         }
         $html .= "</strong> × {$qty}<br><br>";
         $html .= $this->renderCartHtml($items);
-        $html .= "<br>👉 <strong>Aro product kinte chan?</strong>";
+        $html .= "<br>👉 <strong> আরো প্রডাক্ট অর্ডার করতে চান তাহলে প্রডাক্টের লিংক পেস্ট করুন</strong>";
 
         return $this->reply('order_more_items', $html, [
             'state' => 'awaiting_more_items',

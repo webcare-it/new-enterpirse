@@ -28,7 +28,7 @@ export const CartQuantity = ({ item }: { item: ICartItem }) => {
                 title="Decrease Quantity"
                 disabled={isUpdating || quantity <= 1}
                 onClick={() => handleUpdate(quantity - 1)}
-                className="flex size-8 cursor-pointer items-center justify-center rounded-l-full bg-gray-300 text-gray-900 transition-all duration-100 hover:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex size-8 cursor-pointer items-center justify-center rounded-l-full bg-gray-200 text-gray-900 transition-all duration-100 hover:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
                 <Minus className="size-4" />
             </button>
@@ -48,7 +48,7 @@ export const CartQuantity = ({ item }: { item: ICartItem }) => {
                 title="Increase Quantity"
                 disabled={isUpdating}
                 onClick={() => handleUpdate(quantity + 1)}
-                className="flex size-8 cursor-pointer items-center justify-center rounded-r-full bg-gray-300 text-gray-900 transition-all duration-100 hover:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex size-8 cursor-pointer items-center justify-center rounded-r-full bg-gray-200 text-gray-900 transition-all duration-100 hover:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
                 <Plus className="size-4" />
             </button>

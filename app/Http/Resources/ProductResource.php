@@ -106,6 +106,7 @@ class ProductResource extends JsonResource
             'discount'          => $discount,
             'discount_type'     => $discountType,
             'rating'            => (float) $rating,
+            'reviews'     => (int) ($this->relationLoaded('reviews') ? $this->reviews->count() : $this->reviews()->count()),
             'image'             => (string) $image,
             'sold'              => (int) ($this->num_of_sale ?? 0),
             'has_variants'      => $hasVariants,

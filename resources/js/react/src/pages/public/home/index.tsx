@@ -132,7 +132,7 @@ export const HomePage = () => {
                         <Loading />
                     </section>
                 ) : (
-                    <section className="space-y-12 pb-12 md:mb-16">
+                    <section className="space-y-6 pb-12 md:mb-16">
                         {renderSections.map((section) => (
                             <React.Fragment key={section.key}>
                                 {section.component}

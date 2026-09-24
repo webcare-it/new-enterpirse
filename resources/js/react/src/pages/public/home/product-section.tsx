@@ -3,7 +3,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { LayoutContainer } from "../_components/layout/base-layout";
 import type { ICategoryWithProducts, IProduct } from "@/type";
 import { ProductCard } from "../_components/common/product";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useProductLayout } from "@/hooks/useProductLayout";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export const ProductsSection = ({
     const [currentIndex, setCurrentIndex] = useState(0);
     const [itemsPerView, setItemsPerView] = useState(2);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const updateItemsPerView = () => {
             const width = window.innerWidth;
             const { mobile, tablet, laptop, desktop, ultrawide } = homePage;
@@ -54,9 +54,10 @@ export const ProductsSection = ({
 
     if (!products?.length) return null;
 
-    const maxIndex = Math.max(0, products.length - itemsPerView);
+    const maxIndex = Math.max(0, products?.length - itemsPerView);
     const canScrollLeft = currentIndex > 0;
     const canScrollRight = currentIndex < maxIndex;
+    const hasMore = products?.length > itemsPerView;
 
     const scrollLeft = () => {
         setCurrentIndex((p) => Math.max(p - 1, 0));
@@ -129,7 +130,7 @@ export const ProductsSection = ({
     return (
         <div className={`relative group ${className || ""}`}>
             <LayoutContainer>
-                <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center justify-between gap-2 mb-1">
                     <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground transition-all duration-500 ease-out hover:tracking-wide hover:text-primary">
                         {title}
                     </h2>
@@ -194,11 +195,12 @@ export const ProductsSection = ({
                     </motion.div>
                 </div>
 
-                {href && (
-                    <div className="flex justify-center mt-2 md:mt-4">
+                {href && hasMore && (
+                    <div className="flex justify-center md:mt-2">
                         <Link to={href}>
                             <Button
                                 variant="secondary"
+                                size="xs"
                                 className="group/view-all"
                             >
                                 View all

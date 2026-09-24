@@ -131,7 +131,7 @@ export function Footer() {
                             (config?.payment_method_images as string) ||
                             "https://enterprise.droploo.com/uploads/all/YdpGVlKYYie2IvjFc3wGHX6eSsvlmpvYxIgWkS3k.png"
                         }
-                        className="h-20 w-fit"
+                        className="h-fit w-fit"
                     />
                 </div>
                 <div className="border-t border-gray-200 pt-6 pb-8 flex justify-center items-center flex-wrap gap-4">

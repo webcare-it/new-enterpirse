@@ -104,7 +104,7 @@ export const AddToCartLink = ({ slug }: { slug: string }) => {
             to={slug}
             className="flex justify-between items-center gap-2 mt-1 md:mt-2"
         >
-            <button className="flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-9 md:h-10 flex items-center justify-center hover:bg-primary/90 bg-primary text-primary-foreground border text-sm md:text-base border-primary gap-1 md:gap-2">
+            <button className="text-xs sm:text-sm md:text-base flex-1 rounded-3xl w-full transition-all duration-300 cursor-pointer h-9 md:h-10 flex items-center justify-center hover:bg-primary/90 bg-primary text-primary-foreground border border-primary gap-1 md:gap-2">
                 <LockIcon className="size-3 md:size-4" />
                 Order now
             </button>
