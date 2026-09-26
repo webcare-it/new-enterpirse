@@ -18,9 +18,10 @@ class ProductResource extends JsonResource
     {
         $campaign = $this->whenLoaded('campaigns') ? $this->campaigns->first() : null;
 
-        $priceData = ProductPrice::where('product_id', $this->id)->first();
+        $priceData = $this->relationLoaded('price')
+            ? $this->price
+            : ProductPrice::where('product_id', $this->id)->first();
 
-        $wholesale_price = $priceData ? (float) $priceData->wholesale_price : null;
         $regularPrice = $priceData ? (float) $priceData->regular_price : null;
         $salePrice    = $priceData ? (float) $priceData->sale_price : null;
 

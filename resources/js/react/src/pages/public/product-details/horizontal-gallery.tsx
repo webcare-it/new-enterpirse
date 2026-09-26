@@ -58,7 +58,7 @@ export const HorizontalGalleryStrip = ({
     };
 
     return (
-        <div className="relative mt-4 md:block">
+        <div className="relative md:block">
             {showButtons && canScrollLeft && (
                 <button
                     type="button"
@@ -87,7 +87,7 @@ export const HorizontalGalleryStrip = ({
                         <OptimizedImage
                             src={img.src}
                             alt={img.alt}
-                            className="w-full h-full object-contain p-1 rounded-none bg-white"
+                            className="w-full h-full object-contain rounded-none bg-white"
                         />
                     </button>
                 ))}

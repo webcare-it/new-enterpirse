@@ -192,10 +192,43 @@ if (!function_exists('api_asset')) {
 if (!function_exists('uploaded_asset')) {
     function uploaded_asset($id)
     {
+        if ($id === null || $id === '') {
+            return null;
+        }
+
+        $preloaded = preload_uploaded_assets();
+        if ((is_int($id) || (is_string($id) && ctype_digit($id))) && array_key_exists((int) $id, $preloaded)) {
+            return $preloaded[(int) $id];
+        }
+
         if (($asset = \App\Models\Upload::find($id)) != null) {
             return my_asset($asset->file_name);
         }
         return null;
+    }
+}
+
+//load many uploads with one query so the uploaded_asset() calls that follow skip the database
+if (!function_exists('preload_uploaded_assets')) {
+    function preload_uploaded_assets($ids = [])
+    {
+        static $urls = [];
+
+        $missing = [];
+        foreach ($ids as $id) {
+            if ((is_int($id) || (is_string($id) && ctype_digit($id))) && !array_key_exists((int) $id, $urls)) {
+                $missing[(int) $id] = (int) $id;
+            }
+        }
+
+        if ($missing) {
+            $fileNames = \App\Models\Upload::whereIn('id', array_values($missing))->pluck('file_name', 'id');
+            foreach ($missing as $id) {
+                $urls[$id] = $fileNames->has($id) ? my_asset($fileNames[$id]) : null;
+            }
+        }
+
+        return $urls;
     }
 }
 

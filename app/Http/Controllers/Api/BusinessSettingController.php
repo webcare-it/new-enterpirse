@@ -69,8 +69,30 @@ class BusinessSettingController extends Controller
             ->latest('id')
             ->get();
 
+        $paymentSystems = PaymentSystem::all();
+
+        $categoryModels = Category::select(['id', 'slug', 'category_name', 'category_image'])
+            ->oldest('position')
+            ->get();
+
+        $brands = Brand::all();
+
+        // ─── Business settings (only allowed keys) ───
+        $settings = BusinessSetting::all()
+            ->pluck('value', 'type')
+            ->only($allowed)
+            ->toArray();
+
+        // ─── One query for every image in the response ───
+        preload_uploaded_assets(array_merge(
+            $paymentSystems->pluck('image')->all(),
+            array_values(array_intersect_key($settings, array_flip($imageKeys))),
+            $categoryModels->pluck('category_image')->all(),
+            $brands->pluck('brand_image')->all()
+        ));
+
         // ─── Payment systems ───
-        $payments = PaymentSystem::all()->map(function ($ps) {
+        $payments = $paymentSystems->map(function ($ps) {
             return [
                 'id'         => $ps->id,
                 'title'      => $ps->title,
@@ -85,12 +107,6 @@ class BusinessSettingController extends Controller
             ->oldest('order')
             ->get();
 
-        // ─── Business settings (only allowed keys) ───
-        $settings = BusinessSetting::all()
-            ->pluck('value', 'type')
-            ->only($allowed)
-            ->toArray();
-
         // ─── Convert image IDs to URLs ───
         foreach ($imageKeys as $key) {
             if (!empty($settings[$key]) && is_numeric($settings[$key])) {
@@ -99,17 +115,14 @@ class BusinessSettingController extends Controller
         }
 
         // ─── Categories ───
-        $categories = Category::select(['id', 'slug', 'category_name', 'category_image'])
-            ->oldest('position')
-            ->get()
-            ->map(function ($category) {
-                return [
-                    'id'    => $category->id,
-                    'slug'  => $category->slug,
-                    'name'  => $category->category_name,
-                    'image' => $category->category_image  ? uploaded_asset($category->category_image) : null,
-                ];
-            });
+        $categories = $categoryModels->map(function ($category) {
+            return [
+                'id'    => $category->id,
+                'slug'  => $category->slug,
+                'name'  => $category->category_name,
+                'image' => $category->category_image  ? uploaded_asset($category->category_image) : null,
+            ];
+        });
 
         // ─── Currency settings ───
         $currency = BusinessSetting::whereIn('type', [
@@ -160,7 +173,7 @@ class BusinessSettingController extends Controller
         $data['shippings']          = $shippings;
         $data['payments']           = $payments;
         $data['currency_setting']   = $currency_setting;
-        $data['brands']             = BrandResource::collection(Brand::all())->resolve();
+        $data['brands']             = BrandResource::collection($brands)->resolve();
         $data['layout_breakpoints'] = $layoutConfig;
         $data['customer_ip']        = $customer_ip;
         $data['session_id']         = $session_id;

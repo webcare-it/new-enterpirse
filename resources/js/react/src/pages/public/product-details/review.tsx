@@ -1,6 +1,5 @@
 import { Pencil, Star, Loader2, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
-import { OptimizedImage } from "@/components/common/optimized-image";
 import type { IProductDetails, IReviewItem } from "./type";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +7,7 @@ import { isAuthenticated } from "@/helper";
 import toast from "react-hot-toast";
 import { useReviewStoreMutation } from "@/api/product";
 import { renderStars } from "../_components/common/star-ratting";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const Reviews = ({ product }: { product: IProductDetails }) => {
     const { isPending, mutate } = useReviewStoreMutation();
@@ -202,11 +202,12 @@ export const ReviewItem = ({ item }: { item: IReviewItem }) => (
     <div className="bg-gray-50 rounded-xl p-4 space-y-2">
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-                <OptimizedImage
-                    src={item?.user?.avatar}
-                    alt={item?.user?.name}
-                    className="w-8 h-8 rounded-full object-cover"
-                />
+                <Avatar className="border border-primary text-primary size-10 rounded-full">
+                    <AvatarImage src={item?.user?.avatar} />
+                    <AvatarFallback>
+                        {item?.user?.name?.charAt(0) || "U"}
+                    </AvatarFallback>
+                </Avatar>
 
                 <div>
                     <p className="text-sm font-medium">{item?.user?.name}</p>
@@ -217,9 +218,8 @@ export const ReviewItem = ({ item }: { item: IReviewItem }) => (
                 </div>
             </div>
 
-            <span className="text-sm text-amber-400">
-                {"★".repeat(item?.rating)}
-                {"☆".repeat(5 - item?.rating)}
+            <span className="text-xl text-amber-400">
+                {renderStars(item?.rating ?? 0)}
             </span>
         </div>
 
