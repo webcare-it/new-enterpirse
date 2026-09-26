@@ -16,6 +16,7 @@ use App\Models\Admin\Campaign;
 use App\Models\Admin\Newsletter;
 use App\Models\Admin\Slider;
 use App\Models\BusinessSetting;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -34,25 +35,10 @@ class ApiHomeController extends Controller
         $categoryProductLimit = (int) (get_setting('h_category_p_limit') ?? 10);
         $blogIds = json_decode(get_setting('home_blogs'), true) ?? [];
 
-        // ---- BASE QUERY (with eager loads) ----
+        // ---- BASE QUERY (relations are eager loaded once for all sections below) ----
         $baseQuery = Product::query()
             ->where('is_published', true)
             ->latest()
-            ->with([
-                'brand' => fn($q) => $q->select('id', 'name'),
-                'category' => fn($q) => $q->select('id', 'category_name', 'slug'),
-                'price' => fn($q) => $q->select(
-                    'product_id',
-                    'regular_price',
-                    'sale_price',
-                    'discount',
-                    'discount_type',
-                    'wholesale_price'   // make sure this column exists
-                ),
-                'inventory' => fn($q) => $q->select('product_id', 'stock'),
-                'reviews' => fn($q) => $q->where('status', 1),
-                'variants' => fn($q) => $q->select('id', 'product_id', 'price', 'wholesale_price'),
-            ])
             ->select([
                 'id',
                 'name',
@@ -68,43 +54,99 @@ class ApiHomeController extends Controller
                 'updated_at',
             ]);
 
-        // ---- Helper to add extra fields to a product resource array ----
+        // ---- Helper to add price_range (variant products only) to a product resource array ----
         $addExtraFields = function (array $items, $models) {
-            // $models should be a collection of Product models in the same order
-            foreach ($items as $index => &$item) {
-                $model = $models->firstWhere('id', $item['id']);
-                if (! $model) {
-                    unset($item['price_range']);
-                    continue;
-                }
-
+            // $items and $models are in the same order
+            foreach ($models as $index => $model) {
                 if ($model->variants->isNotEmpty()) {
-
                     // Add price range from variant retail prices
                     $prices = $model->variants->pluck('price')->map(fn($p) => (float) $p);
-                    $item['price_range'] = [
+                    $items[$index]['price_range'] = [
                         'min' => $prices->min(),
                         'max' => $prices->max(),
                     ];
-                } else {
-                    // Simple product → fallback to parent wholesale_price
-                    unset($item['price_range']); // or set to null
                 }
             }
             return $items;
         };
 
         // ---- Sliders ----
-        $sliders = SliderResource::collection(
-            !empty($sliderIds)
-                ? Slider::whereIn('id', $sliderIds)->latest('id')->get()
-                : Slider::latest('id')->get()
-        );
+        $sliderModels = !empty($sliderIds)
+            ? Slider::whereIn('id', $sliderIds)->latest('id')->get()
+            : Slider::latest('id')->get();
 
         // ---- Campaigns ----
+        $campaignModels = !empty($campaignIds)
+            ? Campaign::whereIn('id', $campaignIds)->latest()->get()
+            : collect();
+
+        // ---- Product sections ----
+        $todaysDealModels = !empty($todaysDealIds)
+            ? (clone $baseQuery)->whereIn('id', $todaysDealIds)->get()
+            : (clone $baseQuery)->where('todays_deal', '>', 0)->limit(10)->get();
+
+        $bestSellingModels = !empty($bestSellingIds)
+            ? (clone $baseQuery)->whereIn('id', $bestSellingIds)->get()
+            : (clone $baseQuery)->where('best_selling', true)->limit(10)->get();
+
+        $featuredModels = !empty($featuredIds)
+            ? (clone $baseQuery)->whereIn('id', $featuredIds)->get()
+            : (clone $baseQuery)->where('is_featured', true)->limit(10)->get();
+
+        $newArrivalModels = !empty($newArrivalIds)
+            ? (clone $baseQuery)->whereIn('id', $newArrivalIds)->get()
+            : (clone $baseQuery)->where('is_new_arrival', true)->orderBy('created_at', 'desc')->limit(10)->get();
+
+        // ---- Categories with products ----
+        $targetCategoryIds = !empty($categoryIds) ? $categoryIds : Category::pluck('id')->toArray();
+        $categoriesById = Category::whereIn('id', $targetCategoryIds)->get()->keyBy('id');
+
+        $categorySections = [];
+        foreach ($targetCategoryIds as $categoryId) {
+            $category = $categoriesById->get($categoryId) ?? Category::find($categoryId);
+            if (! $category) continue;
+
+            $categorySections[] = [
+                'category' => $category,
+                'products' => (clone $baseQuery)
+                    ->where('category_id', $categoryId)
+                    ->limit($categoryProductLimit)
+                    ->get(),
+            ];
+        }
+
+        // ---- Eager load product relations once for every section ----
+        $allProducts = new EloquentCollection(array_merge(
+            $todaysDealModels->all(),
+            $bestSellingModels->all(),
+            $featuredModels->all(),
+            $newArrivalModels->all(),
+            ...array_map(fn($section) => $section['products']->all(), $categorySections)
+        ));
+
+        $allProducts->load([
+            'brand' => fn($q) => $q->select('id', 'name'),
+            'category' => fn($q) => $q->select('id', 'category_name', 'slug'),
+            'price' => fn($q) => $q->select('product_id', 'regular_price', 'sale_price', 'discount', 'discount_type'),
+            'inventory' => fn($q) => $q->select('product_id', 'stock'),
+            'reviews' => fn($q) => $q->select('id', 'product_id', 'rating')->where('status', 1),
+            'variants' => fn($q) => $q->select('id', 'product_id', 'price'),
+            'campaigns',
+        ]);
+
+        // ---- One query for every image on the page ----
+        preload_uploaded_assets(array_merge(
+            $allProducts->pluck('thumbnail')->all(),
+            $sliderModels->pluck('photos')->all(),
+            $campaignModels->pluck('image')->all(),
+            array_map(fn($section) => $section['category']->hero_image, $categorySections)
+        ));
+
+        $sliders = SliderResource::collection($sliderModels);
+
         $campaigns = [];
         if (!empty($campaignIds)) {
-            $campaigns = Campaign::whereIn('id', $campaignIds)->latest()->get()->map(function ($campaign) {
+            $campaigns = $campaignModels->map(function ($campaign) {
                 return [
                     'id' => $campaign->id,
                     'name' => $campaign->name,
@@ -118,59 +160,26 @@ class ApiHomeController extends Controller
             });
         }
 
-        // ---- Today's deals ----
-        $todaysDealModels = !empty($todaysDealIds)
-            ? (clone $baseQuery)->whereIn('id', $todaysDealIds)->get()
-            : (clone $baseQuery)->where('todays_deal', '>', 0)->limit(10)->get();
         $todays_deal = $addExtraFields(
             ProductResource::collection($todaysDealModels)->resolve(),
             $todaysDealModels
         );
-
-        // ---- Best selling ----
-        $bestSellingModels = !empty($bestSellingIds)
-            ? (clone $baseQuery)->whereIn('id', $bestSellingIds)->get()
-            : (clone $baseQuery)->where('best_selling', true)->limit(10)->get();
         $best_sellers = $addExtraFields(
             ProductResource::collection($bestSellingModels)->resolve(),
             $bestSellingModels
         );
-
-        // ---- Featured ----
-        $featuredModels = !empty($featuredIds)
-            ? (clone $baseQuery)->whereIn('id', $featuredIds)->get()
-            : (clone $baseQuery)->where('is_featured', true)->limit(10)->get();
         $featured = $addExtraFields(
             ProductResource::collection($featuredModels)->resolve(),
             $featuredModels
         );
-
-        // ---- New arrivals ----
-        $newArrivalModels = !empty($newArrivalIds)
-            ? (clone $baseQuery)->whereIn('id', $newArrivalIds)->get()
-            : (clone $baseQuery)->where('is_new_arrival', true)->orderBy('created_at', 'desc')->limit(10)->get();
         $new_arrivals = $addExtraFields(
             ProductResource::collection($newArrivalModels)->resolve(),
             $newArrivalModels
         );
 
-        // ---- Categories with products ----
         $categories = [];
-        $targetCategoryIds = !empty($categoryIds) ? $categoryIds : Category::pluck('id')->toArray();
-
-        foreach ($targetCategoryIds as $categoryId) {
-            $category = Category::find($categoryId);
-            if (! $category) continue;
-
-            $categoryProductModels = (clone $baseQuery)
-                ->where('category_id', $categoryId)
-                ->limit($categoryProductLimit)
-                ->get();
-
-            $categoryProducts = $addExtraFields(
-                ProductResource::collection($categoryProductModels)->resolve(),
-                $categoryProductModels
-            );
+        foreach ($categorySections as $section) {
+            $category = $section['category'];
 
             $categories[] = [
                 'id' => (int) $category->id,
@@ -178,7 +187,10 @@ class ApiHomeController extends Controller
                 'slug' => $category->slug,
                 'image' => $category->category_image,
                 'hero_image' => uploaded_asset($category->hero_image),
-                'products' => $categoryProducts,
+                'products' => $addExtraFields(
+                    ProductResource::collection($section['products'])->resolve(),
+                    $section['products']
+                ),
             ];
         }
 
@@ -228,10 +240,11 @@ class ApiHomeController extends Controller
         ];
 
         $query = Product::with([
-            'price' => fn($q) => $q->select('product_id', 'regular_price', 'sale_price', 'discount', 'discount_type', 'wholesale_price'),
+            'price' => fn($q) => $q->select('product_id', 'regular_price', 'sale_price', 'discount', 'discount_type'),
             'inventory' => fn($q) => $q->select('product_id', 'stock'),
-            'variants' => fn($q) => $q->select('id', 'product_id', 'price', 'wholesale_price'),
-            'reviews' => fn($q) => $q->where('status', 1),
+            'variants' => fn($q) => $q->select('id', 'product_id', 'price'),
+            'reviews' => fn($q) => $q->select('id', 'product_id', 'rating')->where('status', 1),
+            'campaigns',
         ])
             ->where('status', 1)
             ->where('is_published', 1);
@@ -270,31 +283,19 @@ class ApiHomeController extends Controller
         $perPage = $request->input('per_page', 15);
         $products = $query->paginate($perPage);
 
-        // ---- Add extra fields (wholesale_price & price_range) ----
-        $items = ProductResource::collection($products)->resolve();
+        // ---- Add price_range (variant products only) ----
         $models = $products->getCollection();
+        preload_uploaded_assets($models->pluck('thumbnail'));
+        $items = ProductResource::collection($products)->resolve();
 
-        foreach ($items as $index => &$item) {
-            $model = $models->firstWhere('id', $item['id']);
-            if (! $model) {
-                $item['wholesale_price'] = null;
-                unset($item['price_range']);
-                continue;
-            }
-
+        foreach ($models as $index => $model) {
             if ($model->variants->isNotEmpty()) {
-                // Variant product → max wholesale among variants
-                $item['wholesale_price'] = (float) $model->variants->max('wholesale_price');
-
                 // Price range from variant retail prices
                 $prices = $model->variants->pluck('price')->map(fn($p) => (float) $p);
-                $item['price_range'] = [
+                $items[$index]['price_range'] = [
                     'min' => $prices->min(),
                     'max' => $prices->max(),
                 ];
-            } else {
-                $item['wholesale_price'] = $model->price ? (float) $model->price->wholesale_price : null;
-                unset($item['price_range']);
             }
         }
 
