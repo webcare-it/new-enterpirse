@@ -329,7 +329,7 @@
                                 </td>
                                 <td class="text-right">
                                     <div class="btn-group" role="group">
-                                        <a href="{{ env('APP_URL') }}/products/{{ $product->slug }}"
+                                        <a href="{{ env('APP_URL') }}products/{{ $product->slug }}"
                                             class="btn btn-sm btn-icon btn-success"
                                             title="{{ translate('Frontend View') }}" target="_blank">
                                             <i class="las la-external-link-alt"></i>
