@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import type { IProductImage } from "./type";
+import { HorizontalGalleryStrip } from "./horizontal-gallery";
 
 interface Props {
     onOpenModal: (index: number) => void;
@@ -67,7 +68,7 @@ export const ProductImageSliderMobile = ({
                         initial="enter"
                         animate="center"
                         exit="exit"
-                        className="absolute inset-0 w-full h-full object-contain p-3"
+                        className="absolute inset-0 w-full h-full object-contain"
                     />
                 </AnimatePresence>
                 <button
@@ -116,6 +117,12 @@ export const ProductImageSliderMobile = ({
                     </button>
                 ))}
             </div>
+
+            <HorizontalGalleryStrip
+                images={productImages}
+                onOpenModal={onOpenModal}
+                selectedImageIndex={current}
+            />
         </div>
     );
 };

@@ -168,7 +168,7 @@ export const ProductInfo = ({ product, onVariantImage }: Props) => {
                         {renderStars(product?.review?.rating)}
                     </div>
                     <span className="text-gray-700 text-base">
-                        {product?.review?.reviews_count || 0} •
+                        {product?.review?.reviews_count || 0} •{" "}
                         {product?.review?.reviews_count > 0
                             ? "Reviews"
                             : "Review"}
