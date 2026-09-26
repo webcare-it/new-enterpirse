@@ -880,6 +880,13 @@
                             <span class="aiz-side-nav-text">{{ translate('Visitor Logs') }}</span>
                         </a>
                     </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('admin.order-chat.index') }}"
+                            class="aiz-side-nav-link {{ areActiveRoutes(['admin.order-chat.index']) }}">
+                            <i class="las la-eye aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Chat') }}</span>
+                        </a>
+                    </li>
                 @endif
             </ul>
         </div>
